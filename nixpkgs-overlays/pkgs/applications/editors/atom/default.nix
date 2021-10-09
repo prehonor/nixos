@@ -3,9 +3,7 @@
 let
   versions = {
     atom = {
-      # version = "1.48.0";
-      # sha256 = "1693bxbylf6jhld9bdcr5pigk36wqlbj89praldpz9s96yxig9s1";
-      version = "1.50.0";
+      version = "1.55.0";
       sha256 = "1h2kn16iq7vf0yhiypaqys5ijkr9xjzkn71hp1zzmi9cc62lwqf1";
     };
 
@@ -23,11 +21,14 @@ let
     inherit name;
     version = fullVersion;
 
+/*
     src = fetchurl {
       url = "https://github.com/atom/atom/releases/download/v${fullVersion}/atom-amd64.deb";
       name = "${name}.deb";
-      inherit sha256;
+      inherit sha256;    
     };
+    */
+    src = /home/prehonor/Downloads/atom-amd64.deb;
 
     nativeBuildInputs = [
       wrapGAppsHook  # Fix error: GLib-GIO-ERROR **: No GSettings schemas are installed on the system

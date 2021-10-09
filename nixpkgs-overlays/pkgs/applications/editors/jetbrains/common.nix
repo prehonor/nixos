@@ -1,11 +1,11 @@
 { stdenv, lib, makeDesktopItem, makeWrapper, patchelf, writeText
-, coreutils, gnugrep, which, git, unzip, libsecret, libnotify
+, coreutils, gnugrep, which, git, unzip, libsecret, libnotify, e2fsprogs
 , vmopts ? null
 }:
 
-{ name, product, version, src, wmClass, jdk, meta }:
+{ name, product, version, src, wmClass, jdk, meta, extraLdPath ? [] }:
 
-with stdenv.lib;
+with lib;
 
 let loName = toLower product;
     hiName = toUpper product;
@@ -48,7 +48,7 @@ with stdenv; lib.makeOverridable mkDerivation rec {
         truncate --size=$size $fname
       }
       interpreter=$(echo ${stdenv.glibc.out}/lib/ld-linux*.so.2)
-      if [ "${stdenv.hostPlatform.system}" == "x86_64-linux" ]; then
+      if [[ "${stdenv.hostPlatform.system}" == "x86_64-linux" && -e bin/fsnotifier64 ]]; then
         target_size=$(get_file_size bin/fsnotifier64)
         patchelf --set-interpreter "$interpreter" bin/fsnotifier64
         munge_size_hack bin/fsnotifier64 $target_size
@@ -67,12 +67,12 @@ with stdenv; lib.makeOverridable mkDerivation rec {
     jdk=${jdk.home}
     item=${desktopItem}
     makeWrapper "$out/$name/bin/${loName}.sh" "$out/bin/${execName}" \
-      --prefix PATH : "$out/libexec/${name}:${lib.optionalString (stdenv.isDarwin) "${jdk}/jdk/Contents/Home/bin:"}${stdenv.lib.makeBinPath [ jdk coreutils gnugrep which git ]}" \
-      --prefix LD_LIBRARY_PATH : "${stdenv.lib.makeLibraryPath [
+      --prefix PATH : "$out/libexec/${name}:${lib.optionalString (stdenv.isDarwin) "${jdk}/jdk/Contents/Home/bin:"}${lib.makeBinPath [ jdk coreutils gnugrep which git ]}" \
+      --prefix LD_LIBRARY_PATH : "${lib.makeLibraryPath ([
         # Some internals want libstdc++.so.6
-        stdenv.cc.cc.lib libsecret
+        stdenv.cc.cc.lib libsecret e2fsprogs
         libnotify
-      ]}" \
+      ] ++ extraLdPath)}" \
       --set JDK_HOME "$jdk" \
       --set ${hiName}_JDK "$jdk" \
       --set ANDROID_JAVA_HOME "$jdk" \
@@ -81,6 +81,6 @@ with stdenv; lib.makeOverridable mkDerivation rec {
     ln -s "$item/share/applications" $out/share
   '';
 
-} // stdenv.lib.optionalAttrs (!(meta.license.free or true)) {
+} // lib.optionalAttrs (!(meta.license.free or true)) {
   preferLocalBuild = true;
 }

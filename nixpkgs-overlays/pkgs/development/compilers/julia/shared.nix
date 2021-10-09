@@ -20,7 +20,7 @@
 , CoreServices, ApplicationServices
 }:
 
-with stdenv.lib;
+with lib;
 
 assert (!blas.isILP64) && (!lapack.isILP64);
 
@@ -115,7 +115,7 @@ stdenv.mkDerivation rec {
     pcre2.dev blas lapack openlibm openspecfun readline utf8proc
     zlib
   ]
-  ++ stdenv.lib.optionals stdenv.isDarwin [CoreServices ApplicationServices]
+  ++ lib.optionals stdenv.isDarwin [CoreServices ApplicationServices]
   ;
 
   nativeBuildInputs = [ curl gfortran m4 makeWrapper patchelf perl python2 which ];
@@ -203,7 +203,7 @@ stdenv.mkDerivation rec {
     # broken = true; # yes, all versions are currently broken
     description = "High-level performance-oriented dynamical language for technical computing";
     homepage = "https://julialang.org/";
-    license = stdenv.lib.licenses.mit;
+    license = lib.licenses.mit;
     maintainers = with stdenv.lib.maintainers; [ raskin rob garrison ];
     platforms = [ "i686-linux" "x86_64-linux" "x86_64-darwin" ];
     broken = stdenv.isi686;

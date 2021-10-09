@@ -1,7 +1,7 @@
 # Edit this configuration file to define what should be installed on
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
-
+ 
 { config, pkgs, options, ... }:
 
 {
@@ -9,7 +9,7 @@
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
     ];
-  # nix.binaryCaches = [ "https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store" ];
+ # nix.binaryCaches = [ "https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store" ];
   # nix.binaryCaches = [ "https://mirrors.bfsu.edu.cn/nix-channels/store" ];
 
   # Use the GRUB 2 boot loader.
@@ -59,7 +59,7 @@
   # Configure network proxy if necessary
    
   networking.proxy.default = "socks5://127.0.0.1:1080/";
-#  networking.proxy.noProxy = "127.0.0.1,localhost,mirrors.tuna.tsinghua.edu.cn,download.jetbrains.com,prehonor-generic.pkg.coding.net";
+ # networking.proxy.noProxy = "127.0.0.1,localhost,mirrors.tuna.tsinghua.edu.cn,download.jetbrains.com,prehonor-generic.pkg.coding.net";
 
   # Select internationalisation properties.
 
@@ -74,12 +74,12 @@
   console = {
      font = "Hack-11";
      keyMap = "dvorak-programmer";
-     packages = with pkgs; [ hack-font kbdKeymaps.dvp ];
+     packages = with pkgs; [ hack-font kbd ];
   };
 
   fonts = {
     fontconfig.enable = true;
-    enableFontDir = true;
+    fontDir.enable = true;
     enableGhostscriptFonts = true;
     fonts = with pkgs; [
       noto-fonts
@@ -117,9 +117,7 @@
    #   };
    # };
   };
- # vscode-with-extensions = pkgs.vscode-with-extensions.override {
- #      ms-vscode.cpptools
- # };
+
   environment.variables = rec {
    # ahome = "/ah/prehonor";
    # ghome = "/gh/prehonor";
@@ -140,36 +138,39 @@
 
   environment.systemPackages = with pkgs; [
      sudo finger_bsd pciutils file binutils-unwrapped bind bashInteractive getconf fontconfig # steam-run
-     graphviz dos2unix grpc dpkg unzip tmux ntfs3g usbutils lsof unrar # appimage-run # p7zip
+     graphviz dos2unix grpc dpkg unzip zip tmux ntfs3g usbutils lsof unrar # appimage-run # p7zip
 
-     wget tsocks curl wireshark charles ghidra-bin radare2 radare2-cutter nasm wineWowPackages.stable # playonlinux
+     wget tsocks curl wireshark ghidra-bin radare2 radare2-cutter nasm fasm wineWowPackages.stable winetricks # charles
      parted
-    # unstable.v2ray
-    # v2ray #github 手工维护
-    # qv2ray
+
+    # v2ray #github 手工维护 qv2ray
+
      fcitx fcitx-configtool
-     ark yakuake okular vim notepadqq masterpdfeditor sublime3 # sigil # zathura
-     tdesktop lyx google-chrome vlc qtcreator rstudio onlyoffice #  wpsoffice
-     dbeaver bcompare vscode atom # vscode-with-extensions
-     goldendict  # gitkraken 
-    # jetbrains.prpycharm-professional jetbrains.prwebstorm jetbrains.pridea-ultimate
-    # jetbrains.prdatagrip  #  pencil
-     jetbrains.pycharm-professional 
-     jetbrains.webstorm 
-     jetbrains.idea-ultimate
-     jetbrains.rider
-     android-studio
-     #steam
-     blender flameshot peek digikam # gimp   inkscape   synfigstudio # natron #scribus 不好使，删 
-    # genymotion
-    # xmind
+     ark yakuake okular vim notepadqq sublime4 xournalpp # krita sigil # zathura 
+     tdesktop lyx google-chrome tor-browser-bundle-bin vlc qtcreator rstudio onlyoffice
+     dbeaver atom  bcompare android-studio aria
+     goldendict  
+
+    # jetbrains.prpycharm-professional jetbrains.prwebstorm jetbrains.pridea-ultimate jetbrains.prdatagrip
+     jetbrains.pycharm-professional jetbrains.webstorm jetbrains.idea-ultimate jetbrains.clion # jetbrains.rider
+     vscode
+     nmap
+
+     # steam genymotion
+     blender flameshot peek gimp  # digikam gimp   inkscape   synfigstudio # natron #scribus 不好使，删   edraw
+
      podman runc conmon slirp4netns fuse-overlayfs
-    # mathematica # 手动安装
-     qt5.full cmake gcc gdb llvm clang pkg-config gitFull nix-index patchelf jdk11 jdk go lua5_3 mono nodejs-12_x yarn perl flutter # julia # rust  nodePackages.yarn
+
+     electron_9
+     qt5.full libsForQt5.qt3d libsForQt5.kproperty libsForQt5.qt5.qtsensors
+     # libsForQt5.qt5.qtgamepad libsForQt5.qt5.qtserialbus
+     cmake gcc gdb llvm_12 lldb_12 clang_12 pkg-config gitFull subversion nix-index patchelf jdk11 jdk go lua5_3
+      mono dotnet-sdk_5 nodejs-14_x yarn perl flutter  julia-stable rustup autoconf
      (python3.withPackages(ps: with ps; [ pip urllib3 ]))
      (pypy3.withPackages(ps: with ps; [ pip urllib3 ]))
      boost172_my.dev
-     libfakeXinerama libselinux libmysqlclient
+     libfakeXinerama libselinux libmysqlconnectorcpp
+     libmysqlclient_315
   ];
 
 
@@ -183,23 +184,24 @@
   services.mysql = {
     user = "root";
     enable = true;
-    package = pkgs.mysql;
-  configFile = pkgs.writeText "my.cnf" ''
-  	[mysqld]
-      # basedir=/home/prehonor/Public/Program/mysql
-      # datadir=/ah/prehonor/Programmers/mysql/data0
-      # socket=/tmp/mysql.sock
-      user=root
-      port=3306
-      character_set_server=utf8mb4
-      # Disabling symbolic-links is recommended to prevent assorted security risks
-      symbolic-links=0
-        # skip-grant-tables
-      [mysqld_safe]
-      # log-error=/ah/prehonor/Programmers/mysql/data0/error.log
-      # pid-file=/ah/prehonor/Programmers/mysql/data0/mysqld.pid
-      # tmpdir=/tmp
-   '';
+    package = pkgs.mysql80;
+    configFile = pkgs.writeText "my.cnf" ''
+      [mysqld]
+        datadir=/var/lib/mysql
+        plugin-load-add=auth_socket.so
+        user=root
+        port=3306
+        character_set_server=utf8mb4
+
+        performance_schema=OFF
+        skip-external-locking
+        max_connections=10
+        performance_schema_max_table_instances=60
+        table_definition_cache=60
+        table_open_cache=16
+        innodb_buffer_pool_size=16M
+  '';
+   
   };
    
 
@@ -211,6 +213,17 @@
   security.sudo = {
      enable = true;
      wheelNeedsPassword = false;
+     extraRules = [
+        {  
+          users = [ "prehonor" ];
+          commands = [
+            { 
+              command = "ALL" ;
+              options= [ "NOPASSWD" ]; # "SETENV" # Adding the following could be a good idea
+            }
+          ];
+        }
+     ];
   };
 
   nix.optimise.automatic = true;
@@ -218,11 +231,11 @@
   #  nix.sandboxPaths = [ "/ah" "/gh" "/home" ];
   nix.useSandbox = false; 
   networking = {
-    # timeServers =  [ "ntp.example.com" ]; # options.networking.timeServers.default ++ [ "ntp.example.com" ];
+    timeServers =  [ "ntp.aliyun.com" "time1.cloud.tencent.com" "cn.pool.ntp.org" "asia.pool.ntp.org" "time.windows.com" ]; # options.networking.timeServers.default ++ [ "ntp.example.com" ];
     hostName = "prehonor";
     networkmanager.enable = true;
-    useDHCP = false;
-    interfaces.enp3s0.useDHCP = true;
+ #   useDHCP = false;
+ #   interfaces.enp3s0.useDHCP = true;
     nameservers = [ "::1" ];
     resolvconf.useLocalResolver = true;
     # If using dhcpcd:
@@ -230,8 +243,8 @@
     # If using NetworkManager:
     networkmanager.dns = "dnsmasq";
   };
-  services.ntp.enable = true;
-  services.ntp.extraConfig = " NTPD_OPTS='-4 -g' \n  SYNC_HWCLOCK=yes ";
+  # services.ntp.enable = true;
+  # services.ntp.extraConfig = " NTPD_OPTS='-4 -g' \n  SYNC_HWCLOCK=yes ";
   services.dnscrypt-proxy2 = {
     enable = true;
     settings = {
@@ -261,15 +274,15 @@
         minisign_key = "RWQf6LRCGA9i53mlYecO4IzT51TGPpvWucNSCh1CBM0QTaLn73Y7GFO3";
         refresh_delay = 72;   
       };
-      # You can choose a specific set of servers from https://github.com/DNSCrypt/dnscrypt-resolvers/blob/master/v2/public-resolvers.md
-      server_names = [ "cloudflare" "yandex" "google" ];
+      # You can choose a specific set of servers from https://github.com/DNSCrypt/dnscrypt-resolvers/blob/master/v2/public-resolvers.md "alidns-doh" "cisco" "adguard-dns" "adguard-dns-doh" 
+      server_names = [ "cloudflare-security" "ahadns-doh-in" "acsacsar-ams-ipv4" "cloudflare"  "circl-doh" "cisco-doh" "cloudflare-ipv6" "acsacsar-ams-ipv6" ];
       
       fallback_resolvers = ["114.114.114.114:53"];
     };
   };
 
   systemd.services.dnscrypt-proxy2.serviceConfig = {
-    StateDirectory = "dnscrypt-proxy2";
+    StateDirectory = "dnscrypt-proxy";
   };
   
   services.fstrim = {
@@ -309,7 +322,7 @@
   # Enable the X11 windowing system.
   services.xserver.enable = true;
   services.xserver.layout = "us";
-  # services.xserver.xkbOptions = "eurosign:e";
+  services.xserver.xkbOptions = "eurosign:e";
   
   services.xserver.videoDrivers = [ "nvidia" ];
   
@@ -320,8 +333,8 @@
   services.xserver.displayManager.sddm = { 
     enable = true;
   };
-  services.xserver.displayManager.autoLogin.user = "prehonor";
-  services.xserver.displayManager.autoLogin.enable = true;
+  # services.xserver.displayManager.autoLogin.user = "prehonor";
+  # services.xserver.displayManager.autoLogin.enable = true;
 
   services.xserver.desktopManager.plasma5.enable = true;
   
@@ -334,7 +347,48 @@
      subUidRanges = [{ startUid = 100000; count = 65536; }];
      subGidRanges = [{ startGid = 100000; count = 65536; }];
   };
+
   services.netdata.enable = true;
+  /*
+  services.samba = {
+  enable = true;
+  enableNmbd = false;
+  securityType = "user";
+  extraConfig = ''
+    workgroup = WORKGROUP
+    server string = smbnix
+    netbios name = smbnix
+    security = user 
+    #use sendfile = yes
+    #max protocol = smb2
+    hosts allow = 192.168.0  localhost
+    hosts deny = 0.0.0.0/0
+    guest account = nobody
+    map to guest = bad user
+  '';
+  shares = {
+    public = {
+      path = "/mnt/Shares/Public";
+      browseable = "yes";
+      "read only" = "no";
+      "guest ok" = "yes";
+      "create mask" = "0644";
+      "directory mask" = "0755";
+      "force user" = "prehonor";
+      "force group" = "samba";
+    };
+    private = {
+      path = "/mnt/Shares/Private";
+      browseable = "yes";
+      "read only" = "no";
+      "guest ok" = "no";
+      "create mask" = "0644";
+      "directory mask" = "0755";
+      "force user" = "prehonor";
+      "force group" = "samba";
+    };
+  };
+}; */
   environment.etc."containers/policy.json" = {
     mode="0644";
     text=''
@@ -368,7 +422,7 @@
   # this value at the release version of the first install of this system.
   # Before changing this value read the documentation for this option
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
-  system.stateVersion = "20.09"; # Did you read the comment?
+  system.stateVersion = "21.05"; # Did you read the comment?
 
 }
 
