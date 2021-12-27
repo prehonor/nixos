@@ -2,7 +2,7 @@
 
 { fetchurl, stdenv, lib, xorg, glib, libglvnd, glibcLocales, gtk3, cairo, pango, makeWrapper, wrapGAppsHook
 , writeShellScript, common-updater-scripts, curl
-, openssl, bzip2, bash, unzip, zip, libredirect
+, openssl, bzip2, bash, unzip, zip, libredirect_x 
 , pkexecPath ? "/run/wrappers/bin/pkexec"
 }:
 
@@ -85,10 +85,10 @@ in let
 
     postFixup = ''
       wrapProgram $out/sublime_bash \
-        --set LD_PRELOAD "${stdenv.cc.cc.lib}/lib${stdenv.lib.optionalString stdenv.is64bit "64"}/libgcc_s.so.1"
+        --set LD_PRELOAD "${stdenv.cc.cc.lib}/lib${lib.optionalString stdenv.is64bit "64"}/libgcc_s.so.1"
         
       wrapProgram $out/${primaryBinary} \
-        --set LD_PRELOAD "${libredirect}/lib/libredirect.so" \
+        --set LD_PRELOAD "${libredirect_x}/lib/libredirect.so" \
         --set NIX_REDIRECTS ${builtins.concatStringsSep ":" redirects} \
         --set LOCALE_ARCHIVE "${glibcLocales.out}/lib/locale/locale-archive" \
         "''${gappsWrapperArgs[@]}"

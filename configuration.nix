@@ -9,8 +9,18 @@
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
     ];
- # nix.binaryCaches = [ "https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store" ];
-  # nix.binaryCaches = [ "https://mirrors.bfsu.edu.cn/nix-channels/store" ];
+ nix = {
+  binaryCaches = [  
+    "https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store"  
+    "https://cache.nixos.org/" 
+    "https://nix-community.cachix.org"
+    "https://mirrors.bfsu.edu.cn/nix-channels/store" 
+  ];
+  binaryCachePublicKeys = [
+    "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+  ];
+
+  };
 
   # Use the GRUB 2 boot loader.
   boot.loader.grub.enable = true;
@@ -58,7 +68,7 @@
 */
   # Configure network proxy if necessary
    
-  networking.proxy.default = "socks5://127.0.0.1:1080/";
+  # networking.proxy.default = "socks5://127.0.0.1:1080/";
  # networking.proxy.noProxy = "127.0.0.1,localhost,mirrors.tuna.tsinghua.edu.cn,download.jetbrains.com,prehonor-generic.pkg.coding.net";
 
   # Select internationalisation properties.
@@ -109,6 +119,7 @@
     # Allow proprietary packages
     allowUnfree = true;
 
+
     # Create an alias for the unstable channel
 
    # packageOverrides = pkgs: {
@@ -137,40 +148,44 @@
 
 
   environment.systemPackages = with pkgs; [
-     sudo finger_bsd pciutils file binutils-unwrapped bind bashInteractive getconf fontconfig # steam-run
+     sudo parted finger_bsd pciutils file binutils-unwrapped bind bashInteractive.dev getconf fontconfig # steam-run
      graphviz dos2unix grpc dpkg unzip zip tmux ntfs3g usbutils lsof unrar # appimage-run # p7zip
 
-     wget tsocks curl wireshark ghidra-bin radare2 radare2-cutter nasm fasm wineWowPackages.stable winetricks # charles
-     parted
+     wget tsocks curl wireshark netcat tcpdump
+     mcrypt thc-hydra nmap-graphical john crunch
+     ghidra-bin nasm fasm wineWowPackages.stable  # charles cutter winetricks
+     
 
     # v2ray #github 手工维护 qv2ray
+    # ventoy-bin
 
-     fcitx fcitx-configtool
-     ark yakuake okular vim notepadqq sublime4 xournalpp # krita sigil # zathura 
-     tdesktop lyx google-chrome tor-browser-bundle-bin vlc qtcreator rstudio onlyoffice
-     dbeaver atom  bcompare android-studio aria
-     goldendict  
+     fcitx5 fcitx5-configtool
+     ark yakuake okular neovim xournalpp sublime4 # krita sigil #  zathura vlc blender alacritty
+     tdesktop lyx google-chrome qtcreator rstudio onlyoffice-bin # tor-browser-bundle-bin
+     dbeaver android-studio atom # bcompare aria  
+     goldendict qv2ray 
 
-    # jetbrains.prpycharm-professional jetbrains.prwebstorm jetbrains.pridea-ultimate jetbrains.prdatagrip
-     jetbrains.pycharm-professional jetbrains.webstorm jetbrains.idea-ultimate jetbrains.clion # jetbrains.rider
-     vscode
+     jetbrains.idea-ultimate jetbrains_x.clion #  jetbrains.rider jetbrains.webstorm jetbrains.pycharm-professional
+    # vscode
      nmap
 
      # steam genymotion
-     blender flameshot peek gimp  # digikam gimp   inkscape   synfigstudio # natron #scribus 不好使，删   edraw
+      flameshot peek gimp libsForQt5.gwenview  opencv
+      jpegoptim
+      # digikam gimp   inkscape   synfigstudio  natron  scribus 不好使，删   edraw
 
      podman runc conmon slirp4netns fuse-overlayfs
 
-     electron_9
-     qt5.full libsForQt5.qt3d libsForQt5.kproperty libsForQt5.qt5.qtsensors
-     # libsForQt5.qt5.qtgamepad libsForQt5.qt5.qtserialbus
-     cmake gcc gdb llvm_12 lldb_12 clang_12 pkg-config gitFull subversion nix-index patchelf jdk11 jdk go lua5_3
-      mono dotnet-sdk_5 nodejs-14_x yarn perl flutter  julia-stable rustup autoconf
+     electron
+     qt5.full libsForQt5.qt3d libsForQt5.kproperty libsForQt5.qt5.qtsensors libsForQt5.syntax-highlighting 
+     libsForQt5.qt5.qtgamepad libsForQt5.qt5.qtserialbus
+     cmake gcc gcc11 llvm_x lld_x lldb_x clang_x libclang_x pkg-config gitFull nix-index patchelf jdk11 jdk go lua_x chez
+     mono dotnet-sdk nodejs_x yarn perl flutter rustup autoconf julia-bin 
+     # spyder
      (python3.withPackages(ps: with ps; [ pip urllib3 ]))
-     (pypy3.withPackages(ps: with ps; [ pip urllib3 ]))
-     boost172_my.dev
+     # boost_x.dev
      libfakeXinerama libselinux libmysqlconnectorcpp
-     libmysqlclient_315
+     libmysqlclient #libmysqlclient_315
   ];
 
 
@@ -182,26 +197,25 @@
     pkgs.android-udev-rules
   ];
   services.mysql = {
-    user = "root";
     enable = true;
     package = pkgs.mysql80;
-    configFile = pkgs.writeText "my.cnf" ''
-      [mysqld]
-        datadir=/var/lib/mysql
-        plugin-load-add=auth_socket.so
-        user=root
-        port=3306
-        character_set_server=utf8mb4
-
-        performance_schema=OFF
-        skip-external-locking
-        max_connections=10
-        performance_schema_max_table_instances=60
-        table_definition_cache=60
-        table_open_cache=16
-        innodb_buffer_pool_size=16M
-  '';
-   
+    user = "prehonor"; #这里不能设置root 或mysql 
+    group = "users";
+    dataDir = "/ah/prehonor/Programmers/mysql/data_5";
+    settings = {
+      mysqld = {
+        # socket = "/tmp/mysql.sock"; -> our module is hard coded to expect /run/mysql/mysqld.sock
+        plugin-load-add = "auth_socket.so";
+        character_set_server = "utf8mb4";
+        performance_schema = false;
+        skip-external-locking = true;
+        max_connections = 10;
+        performance_schema_max_table_instances = 60;
+        table_definition_cache = 60;
+        table_open_cache = 16;
+        innodb_buffer_pool_size = "16M";
+      };
+    };
   };
    
 
@@ -229,7 +243,7 @@
   nix.optimise.automatic = true;
   nix.trustedUsers = [ "root" "@wheel" ];
   #  nix.sandboxPaths = [ "/ah" "/gh" "/home" ];
-  nix.useSandbox = false; 
+  #  nix.useSandbox = false; 
   networking = {
     timeServers =  [ "ntp.aliyun.com" "time1.cloud.tencent.com" "cn.pool.ntp.org" "asia.pool.ntp.org" "time.windows.com" ]; # options.networking.timeServers.default ++ [ "ntp.example.com" ];
     hostName = "prehonor";
@@ -290,7 +304,6 @@
     interval = "tuesday";  
 };
   
-#  services.flatpak.enable = true;
 #  xdg.portal.extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
@@ -320,23 +333,18 @@
   hardware.pulseaudio.enable = true;
 
   # Enable the X11 windowing system.
-  services.xserver.enable = true;
-  services.xserver.layout = "us";
-  services.xserver.xkbOptions = "eurosign:e";
-  
-  services.xserver.videoDrivers = [ "nvidia" ];
-  
-  # Enable touchpad support.
-  # services.xserver.libinput.enable = true;
-
-  # Enable the KDE Desktop Environment.
-  services.xserver.displayManager.sddm = { 
+  services.xserver = {
     enable = true;
+    layout = "us";
+    videoDrivers = [ "nvidia" ];
+    displayManager.sddm = { 
+      enable = true;
+    };
+    desktopManager.plasma5.enable = true;
   };
-  # services.xserver.displayManager.autoLogin.user = "prehonor";
-  # services.xserver.displayManager.autoLogin.enable = true;
 
-  services.xserver.desktopManager.plasma5.enable = true;
+  # services.xserver.xkbOptions = "eurosign:e";
+
   
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
@@ -422,7 +430,7 @@
   # this value at the release version of the first install of this system.
   # Before changing this value read the documentation for this option
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
-  system.stateVersion = "21.05"; # Did you read the comment?
+  system.stateVersion = "21.11";
 
 }
 
