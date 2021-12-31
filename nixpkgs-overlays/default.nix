@@ -3,7 +3,7 @@ self: super:
 let 
    # 暂时没有临时变量 
 in rec {
-    ventoy-bin = super.callPackage ./pkgs/tools/cd-dvd/ventoy-bin { };
+   # ventoy-bin = super.callPackage ./pkgs/tools/cd-dvd/ventoy-bin { };
     tor-browser-bundle-bin = super.tor-browser-bundle-bin.overrideAttrs (
       oldAttrs: rec {
         src = /home/prehonor/Downloads/tor-browser-linux64-10.5.6_en-US.tar.xz;
@@ -16,6 +16,19 @@ in rec {
     clang_x = super.clang_12;
     lua_x = super.lua5_3;
     nodejs_x = super.nodejs-14_x;
+    python3 = super.python3.override {
+        packageOverrides = self: super: {
+          python-lsp-server = self.callPackage ./pkgs/development/python-modules/python-lsp-server {};
+          qdarkstyle = self.callPackage ./pkgs/development/python-modules/qdarkstyle {};
+          qtconsole = self.callPackage ./pkgs/development/python-modules/qtconsole {};
+          spyder-kernels = self.callPackage ./pkgs/development/python-modules/spyder-kernels {};
+          qstylizer = self.callPackage ./pkgs/development/python-modules/qstylizer {};
+          autopep8 = self.callPackage ./pkgs/development/python-modules/autopep8 {};
+         # pbr = self.callPackage ./pkgs/development/python-modules/pbr {}; # 代价太大了
+         spyder = self.callPackage ./pkgs/development/python-modules/spyder {};
+        };
+    };
+   # python-lsp-server = super.python3.pkgs.callPackage ./pkgs/development/python-modules/python-lsp-server { };
 
 /*
   	boost_x = super.boost175.override { enablePython = true; python = super.pkgs.python3; };

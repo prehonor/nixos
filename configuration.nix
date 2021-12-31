@@ -84,6 +84,7 @@
   console = {
      font = "Hack-11";
      keyMap = "dvorak-programmer";
+     # useXkbConfig = true;
      packages = with pkgs; [ hack-font kbd ];
   };
 
@@ -98,6 +99,7 @@
       wqy_microhei
       wqy_zenhei
       symbola
+     # aggregator
      # ttf-wps-fonts
     ];
   };
@@ -160,7 +162,7 @@
     # ventoy-bin
 
      fcitx5 fcitx5-configtool
-     ark yakuake okular neovim xournalpp sublime4 # krita sigil #  zathura vlc blender alacritty
+     ark yakuake okular neovim xournalpp sublime4  alacritty # krita sigil #  zathura vlc blender
      tdesktop lyx google-chrome qtcreator rstudio onlyoffice-bin # tor-browser-bundle-bin
      dbeaver android-studio atom # bcompare aria  
      goldendict qv2ray 
@@ -178,11 +180,12 @@
 
      electron
      qt5.full libsForQt5.qt3d libsForQt5.kproperty libsForQt5.qt5.qtsensors libsForQt5.syntax-highlighting 
-     libsForQt5.qt5.qtgamepad libsForQt5.qt5.qtserialbus
-     cmake gcc gcc11 llvm_x lld_x lldb_x clang_x libclang_x pkg-config gitFull nix-index patchelf jdk11 jdk go lua_x chez
+     libsForQt5.qt5.qtgamepad libsForQt5.qt5.qtserialbus libsForQt5.qt5.qtspeech
+     cmake gcc gcc11 llvm_x lld_x lldb_x clang_x libclang_x pkg-config gitFull mercurial nix-index patchelf jdk11 jdk go lua_x chez
      mono dotnet-sdk nodejs_x yarn perl flutter rustup autoconf julia-bin 
      # spyder
-     (python3.withPackages(ps: with ps; [ pip urllib3 ]))
+     (python3.withPackages(ps: with ps; [ pip urllib3 spyder ]))
+
      # boost_x.dev
      libfakeXinerama libselinux libmysqlconnectorcpp
      libmysqlclient #libmysqlclient_315
@@ -336,6 +339,8 @@
   services.xserver = {
     enable = true;
     layout = "us";
+    xkbVariant = "workman,";
+    xkbOptions = "eurosign:e";
     videoDrivers = [ "nvidia" ];
     displayManager.sddm = { 
       enable = true;
@@ -343,7 +348,6 @@
     desktopManager.plasma5.enable = true;
   };
 
-  # services.xserver.xkbOptions = "eurosign:e";
 
   
 
