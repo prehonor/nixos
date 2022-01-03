@@ -17,15 +17,26 @@ in rec {
     lua_x = super.lua5_3;
     nodejs_x = super.nodejs-14_x;
     python3 = super.python3.override {
-        packageOverrides = self: super: {
-          python-lsp-server = self.callPackage ./pkgs/development/python-modules/python-lsp-server {};
-          qdarkstyle = self.callPackage ./pkgs/development/python-modules/qdarkstyle {};
-          qtconsole = self.callPackage ./pkgs/development/python-modules/qtconsole {};
-          spyder-kernels = self.callPackage ./pkgs/development/python-modules/spyder-kernels {};
-          qstylizer = self.callPackage ./pkgs/development/python-modules/qstylizer {};
-          autopep8 = self.callPackage ./pkgs/development/python-modules/autopep8 {};
-         # pbr = self.callPackage ./pkgs/development/python-modules/pbr {}; # 代价太大了
-         spyder = self.callPackage ./pkgs/development/python-modules/spyder {};
+        packageOverrides = final: prev: {
+          python-lsp-server = final.callPackage ./pkgs/development/python-modules/python-lsp-server {};
+          qdarkstyle = final.callPackage ./pkgs/development/python-modules/qdarkstyle {};
+          qtconsole = final.callPackage ./pkgs/development/python-modules/qtconsole {};
+          spyder-kernels = final.callPackage ./pkgs/development/python-modules/spyder-kernels {};
+          qstylizer = final.callPackage ./pkgs/development/python-modules/qstylizer {};
+          autopep8 = final.callPackage ./pkgs/development/python-modules/autopep8 {};
+         # pbr = final.callPackage ./pkgs/development/python-modules/pbr {}; # 代价太大了
+          spyder = final.callPackage ./pkgs/development/python-modules/spyder {};
+         
+          pyqtchart = final.callPackage ./pkgs/development/python-modules/pyqtchart { 
+            inherit (super.libsForQt5.qt5) qtbase qmake qtcharts; # inherit (super.libsForQt5) ;
+            
+          };
+         
+          pyqtchart-qt = final.callPackage ./pkgs/development/python-modules/pyqtchart-qt {
+            inherit (super.libsForQt5.qt5) full ; 
+          };
+
+          eric6 = final.callPackage ./pkgs/development/python-modules/eric-ide {};
         };
     };
    # python-lsp-server = super.python3.pkgs.callPackage ./pkgs/development/python-modules/python-lsp-server { };

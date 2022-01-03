@@ -38,18 +38,19 @@ buildPythonPackage rec {
   */
   # No tests available
   doCheck = false;
-
+  nativeBuildInputs = [
+    pbr
+  ];
   propagatedBuildInputs = [ 
     sphinx 
     sphinx_rtd_theme 
     tinycss2 
     inflection
-    pbr
   ];
 
   meta = with lib; {
-    description = "A dark stylesheet for Python and Qt applications";
-    homepage = "https://github.com/ColinDuquesnoy/QDarkStyleSheet";
+    description = "qstylizer is a python package designed to help with the construction of PyQt/PySide stylesheets";
+    homepage = "https://github.com/blambright/qstylizer";
     license = licenses.mit;
     maintainers = with maintainers; [ blambright ];
   };

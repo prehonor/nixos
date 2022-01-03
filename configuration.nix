@@ -107,14 +107,24 @@
   # Set your time zone.
   time.timeZone = "Asia/Shanghai";
   
-  programs.bash.enableCompletion = true;  
 
-  nix.extraOptions = ''
-      experimental-features = nix-command
-   '';
-   # this is required until nix 2.4 is released
-  nix.package = pkgs.nixUnstable;
+  programs = {
+    bash.enableCompletion = true;
+    neovim = {
+      enable = true;
+      viAlias = true;
+      vimAlias = true;
+    };
+    wireshark.enable = true;
+  };
 
+
+  nix = {
+    package = pkgs.nixUnstable;
+    extraOptions = ''
+      experimental-features = nix-command flakes
+    '';
+   };
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   nixpkgs.config = {
@@ -153,7 +163,7 @@
      sudo parted finger_bsd pciutils file binutils-unwrapped bind bashInteractive.dev getconf fontconfig # steam-run
      graphviz dos2unix grpc dpkg unzip zip tmux ntfs3g usbutils lsof unrar # appimage-run # p7zip
 
-     wget tsocks curl wireshark netcat tcpdump
+     wget tsocks curl wireshark netcat tcpdump ltrace
      mcrypt thc-hydra nmap-graphical john crunch
      ghidra-bin nasm fasm wineWowPackages.stable  # charles cutter winetricks
      
@@ -162,7 +172,7 @@
     # ventoy-bin
 
      fcitx5 fcitx5-configtool
-     ark yakuake okular neovim xournalpp sublime4  alacritty # krita sigil #  zathura vlc blender
+     ark yakuake okular xournalpp sublime4  alacritty # krita sigil #  zathura vlc blender
      tdesktop lyx google-chrome qtcreator rstudio onlyoffice-bin # tor-browser-bundle-bin
      dbeaver android-studio atom # bcompare aria  
      goldendict qv2ray 
@@ -184,7 +194,7 @@
      cmake gcc gcc11 llvm_x lld_x lldb_x clang_x libclang_x pkg-config gitFull mercurial nix-index patchelf jdk11 jdk go lua_x chez
      mono dotnet-sdk nodejs_x yarn perl flutter rustup autoconf julia-bin 
      # spyder
-     (python3.withPackages(ps: with ps; [ pip urllib3 spyder ]))
+     (python3.withPackages(ps: with ps; [ pip urllib3 spyder eric6 ]))
 
      # boost_x.dev
      libfakeXinerama libselinux libmysqlconnectorcpp
@@ -327,7 +337,7 @@
   # networking.firewall.allowedUDPPorts = [ ... ];
   # Or disable the firewall altogether.
   # networking.firewall.enable = false;
-  programs.wireshark.enable = true;
+
   # Enable CUPS to print documents.
   services.printing.enable = true;
 
