@@ -2,23 +2,30 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
  
-{ config, pkgs, options, ... }:
+{ config, pkgs, options, lib, ... }:
 
 {
   imports =
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
     ];
- nix = {
-  binaryCaches = [  
-    "https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store"  
-    "https://cache.nixos.org/" 
-    "https://nix-community.cachix.org"
-    "https://mirrors.bfsu.edu.cn/nix-channels/store" 
-  ];
-  binaryCachePublicKeys = [
-    "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
-  ];
+  nix = {
+    binaryCachePublicKeys = [
+      "nixos-cn.cachix.org-1:L0jEaL6w7kwQOPlLoCR3ADx+E3Q8SEFEcB9Jaibl0Xg="
+      "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+    ];
+    binaryCaches = [
+      "https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store"  
+      "https://cache.nixos.org/" 
+      "https://mirrors.bfsu.edu.cn/nix-channels/store" 
+      "https://nixos-cn.cachix.org"
+      "https://nix-community.cachix.org"
+    ];
+
+    package = pkgs.nixUnstable;
+    extraOptions = ''
+      experimental-features = nix-command flakes
+    '';
 
   };
 
@@ -72,20 +79,26 @@
  # networking.proxy.noProxy = "127.0.0.1,localhost,mirrors.tuna.tsinghua.edu.cn,download.jetbrains.com,prehonor-generic.pkg.coding.net";
 
   # Select internationalisation properties.
-
-  i18n.defaultLocale = "en_US.UTF-8";
-  i18n.supportedLocales = [ "zh_CN.UTF-8/UTF-8" "en_US.UTF-8/UTF-8" ];
-  i18n.inputMethod = {
-    enabled = "fcitx";
-    fcitx.engines = with pkgs.fcitx-engines; [ libpinyin cloudpinyin ];
+  i18n = {
+    defaultLocale = "zh_CN.UTF-8";
+    supportedLocales = [ "zh_CN.UTF-8/UTF-8" "en_US.UTF-8/UTF-8" ];
+    inputMethod = {
+      enabled = "fcitx5";
+     # fcitx5.engines = with pkgs.fcitx-engines; [ libpinyin cloudpinyin ];
+      fcitx5.addons = with pkgs; [
+        # fcitx5-rime
+        fcitx5-chinese-addons
+      ];
+    };
   };
 
 
+
+
   console = {
-     font = "Hack-11";
-     keyMap = "dvorak-programmer";
-     # useXkbConfig = true;
-     packages = with pkgs; [ hack-font kbd ];
+     font = "Lat2-Terminus16";
+     useXkbConfig = true;
+     # packages = with pkgs; [ hack-font kbd ];
   };
 
   fonts = {
@@ -99,6 +112,7 @@
       wqy_microhei
       wqy_zenhei
       symbola
+      roboto # need for sddm
      # aggregator
      # ttf-wps-fonts
     ];
@@ -118,27 +132,11 @@
     wireshark.enable = true;
   };
 
-
-  nix = {
-    package = pkgs.nixUnstable;
-    extraOptions = ''
-      experimental-features = nix-command flakes
-    '';
-   };
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   nixpkgs.config = {
-    # Allow proprietary packages
     allowUnfree = true;
 
-
-    # Create an alias for the unstable channel
-
-   # packageOverrides = pkgs: {
-   #   unstable = import <nixos-unstable> { # pass the nixpkgs config to the unstable alias # to ensure `allowUnfree = true;` is propagated:
-   #     config = config.nixpkgs.config;
-   #   };
-   # };
   };
 
   environment.variables = rec {
@@ -169,10 +167,9 @@
      
 
     # v2ray #github 手工维护 qv2ray
-    # ventoy-bin
+     ventoy-bin
 
-     fcitx5 fcitx5-configtool
-     ark yakuake okular xournalpp sublime4  alacritty # krita sigil #  zathura vlc blender
+     ark yakuake okular xournalpp sublime4 alacritty mpv # krita sigil  #  zathura vlc blender foliate
      tdesktop lyx google-chrome qtcreator rstudio onlyoffice-bin # tor-browser-bundle-bin
      dbeaver android-studio atom # bcompare aria  
      goldendict qv2ray 
@@ -195,6 +192,7 @@
      mono dotnet-sdk nodejs_x yarn perl flutter rustup autoconf julia-bin 
      # spyder
      (python3.withPackages(ps: with ps; [ pip urllib3 spyder eric6 ]))
+     streamlink you-get youtube-dl
 
      # boost_x.dev
      libfakeXinerama libselinux libmysqlconnectorcpp
@@ -270,8 +268,7 @@
     # If using NetworkManager:
     networkmanager.dns = "dnsmasq";
   };
-  # services.ntp.enable = true;
-  # services.ntp.extraConfig = " NTPD_OPTS='-4 -g' \n  SYNC_HWCLOCK=yes ";
+
   services.dnscrypt-proxy2 = {
     enable = true;
     settings = {
@@ -317,26 +314,8 @@
     interval = "tuesday";  
 };
   
-#  xdg.portal.extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
-  # Some programs need SUID wrappers, can be configured further or are
-  # started in user sessions.
-  # programs.mtr.enable = true;
-  # programs.gnupg.agent = {
-  #   enable = true;
-  #   enableSSHSupport = true;
-  #   pinentryFlavor = "gnome3";
-  # };
 
-  # List services that you want to enable:
 
-  # Enable the OpenSSH daemon.
-  # services.openssh.enable = true;
-
-  # Open ports in the firewall.
-  # networking.firewall.allowedTCPPorts = [ ... ];
-  # networking.firewall.allowedUDPPorts = [ ... ];
-  # Or disable the firewall altogether.
-  # networking.firewall.enable = false;
 
   # Enable CUPS to print documents.
   services.printing.enable = true;
@@ -349,11 +328,14 @@
   services.xserver = {
     enable = true;
     layout = "us";
-    xkbVariant = "workman,";
-    xkbOptions = "eurosign:e";
+    xkbVariant = "euro";
+    xkbOptions = "esperanto:qwerty";# "caps:capslock,grp:win_space_toggle"; # win+Space switch layout
+    xkbModel = "pc105";
+
     videoDrivers = [ "nvidia" ];
     displayManager.sddm = { 
       enable = true;
+      # settings.Wayland.SessionDir = "${pkgs.plasma5Packages.plasma-workspace}/share/wayland-sessions";
     };
     desktopManager.plasma5.enable = true;
   };

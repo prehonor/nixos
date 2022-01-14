@@ -30,21 +30,21 @@ buildPythonPackage rec {
 
   nativeBuildInputs = [ pyqtwebengine.wrapQtAppsHook ];
   propagatedBuildInputs = [ 
-        wheel
-        pyqt5
-        pyqtchart
-        pyqtwebengine
-        qscintilla-qt5
-        docutils
-        markdown
-        pyyaml
-        toml
-        chardet
-        asttokens
-        editorconfig
-        send2trash
-        pygments
-   ];
+    wheel
+    pyqt5
+    pyqtchart
+    pyqtwebengine
+    qscintilla-qt5
+    docutils
+    markdown
+    pyyaml
+    toml
+    chardet
+    asttokens
+    editorconfig
+    send2trash
+    pygments
+  ];
   doCheck = false;
 
   desktopItem = makeDesktopItem {
