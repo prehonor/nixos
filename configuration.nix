@@ -35,6 +35,9 @@
   boot.loader.grub.efiSupport = true;
   boot.loader.grub.efiInstallAsRemovable = true;
   boot.loader.efi.efiSysMountPoint = "/boot";
+  # boot.kernelParams = [
+  #    "nvidia-drm.modeset=1"
+  # ];
   # Define on which hard drive you want to install Grub.
  # boot.loader.grub.systemd-boot.enable = true;
   boot.loader.grub.device = "nodev"; # or "nodev" for efi only
@@ -80,15 +83,18 @@
 
   # Select internationalisation properties.
   i18n = {
-    defaultLocale = "zh_CN.UTF-8";
-    supportedLocales = [ "zh_CN.UTF-8/UTF-8" "en_US.UTF-8/UTF-8" ];
+    defaultLocale = "en_US.UTF-8";
+    supportedLocales = [ "en_US.UTF-8/UTF-8" "zh_CN.UTF-8/UTF-8" ];
     inputMethod = {
+    
       enabled = "fcitx5";
-     # fcitx5.engines = with pkgs.fcitx-engines; [ libpinyin cloudpinyin ];
       fcitx5.addons = with pkgs; [
-        # fcitx5-rime
         fcitx5-chinese-addons
       ];
+    /*
+      enabled = "ibus";
+      ibus.engines = with pkgs.ibus-engines; [ libpinyin ];
+      */
     };
   };
 
@@ -109,6 +115,8 @@
       noto-fonts
       noto-fonts-cjk
       noto-fonts-emoji
+      source-han-serif
+      source-han-serif-traditional-chinese 
       wqy_microhei
       wqy_zenhei
       symbola
@@ -130,13 +138,45 @@
       vimAlias = true;
     };
     wireshark.enable = true;
+    dconf.enable = true; # gnome 环境配置
+    # xwayland.enable = true; # gnome 环境配置
   };
+
+  services.gnome.evolution-data-server.enable = true; # gnome 环境配置
+
+  services.gnome.gnome-online-accounts.enable = true; # gnome 环境配置
+
+  services.gnome.gnome-keyring.enable = true; # gnome 环境配置
+
+  services.gnome.chrome-gnome-shell.enable = true; # gnome 环境配置
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   nixpkgs.config = {
     allowUnfree = true;
 
+    # packageOverrides = pkgs: {
+    #   vaapiIntel = pkgs.vaapiIntel.override { enableHybridCodec = true; };
+    # };
+  };
+
+  hardware = {
+    opengl = {
+      driSupport32Bit = true;
+      extraPackages = with pkgs; [ 
+        # intel-media-driver # LIBVA_DRIVER_NAME=iHD
+        # vaapiIntel  # LIBVA_DRIVER_NAME=i965 (older but works better for Firefox/Chromium)
+        vaapiVdpau libvdpau-va-gl 
+      ]; 
+      extraPackages32 = with pkgs.pkgsi686Linux; [ 
+        libva 
+        # vaapiIntel  # LIBVA_DRIVER_NAME=i965 (older but works better for Firefox/Chromium)
+      ];
+    };
+    pulseaudio = {
+      enable = true;
+      support32Bit = true;
+    };
   };
 
   environment.variables = rec {
@@ -158,29 +198,40 @@
 
 
   environment.systemPackages = with pkgs; [
-     sudo parted finger_bsd pciutils file binutils-unwrapped bind bashInteractive.dev getconf fontconfig # steam-run
+     sudo parted finger_bsd pciutils libva-utils vdpauinfo file binutils-unwrapped bind bashInteractive.dev getconf fontconfig
+     # steam-run
      graphviz dos2unix grpc dpkg unzip zip tmux ntfs3g usbutils lsof unrar # appimage-run # p7zip
 
      wget tsocks curl wireshark netcat tcpdump ltrace
-     mcrypt thc-hydra nmap-graphical john crunch
+     mcrypt thc-hydra nmap-graphical nmap john crunch
      ghidra-bin nasm fasm wineWowPackages.stable  # charles cutter winetricks
      
 
     # v2ray #github 手工维护 qv2ray
      ventoy-bin
 
-     ark yakuake okular xournalpp sublime4 alacritty mpv # krita sigil  #  zathura vlc blender foliate
-     tdesktop lyx google-chrome qtcreator rstudio onlyoffice-bin # tor-browser-bundle-bin
+     # ark yakuake libsForQt5.gwenview okular # kde 桌面
+     
+     gnome.adwaita-icon-theme gnomeExtensions.appindicator gnomeExtensions.vitals gnomeExtensions.dash-to-dock gnome.gnome-tweaks gnomeExtensions.gsconnect guake gnome.nautilus-python
+     # gnomeExtensions.frippery-applications-menu 
+     # gnomeExtensions.ddterm
+ # gnome 桌面
+
+     xournalpp sublime4  mpv # krita sigil alacritty 
+     #  zathura vim风格 epub pdf 阅读器
+     # foliate epub阅读器
+     # vlc blender  分别为视频和3d建模软件
+     tdesktop lyx microsoft-edge-stable firefox qtcreator rstudio onlyoffice-bin # tor-browser-bundle-bin
      dbeaver android-studio atom # bcompare aria  
      goldendict qv2ray 
-
-     jetbrains.idea-ultimate jetbrains_x.clion #  jetbrains.rider jetbrains.webstorm jetbrains.pycharm-professional
+     jetbrains_x.idea-ultimate jetbrains_x.clion #  jetbrains.rider jetbrains.webstorm jetbrains.pycharm-professional
     # vscode
-     nmap
-
-     # steam genymotion
-      flameshot peek gimp libsForQt5.gwenview  opencv
-      jpegoptim
+     
+     masterpdfeditor
+      steam 
+      flameshot peek 
+      opencv
+      jpegoptim # Optimize JPEG files
       # digikam gimp   inkscape   synfigstudio  natron  scribus 不好使，删   edraw
 
      podman runc conmon slirp4netns fuse-overlayfs
@@ -190,8 +241,7 @@
      libsForQt5.qt5.qtgamepad libsForQt5.qt5.qtserialbus libsForQt5.qt5.qtspeech
      cmake gcc gcc11 llvm_x lld_x lldb_x clang_x libclang_x pkg-config gitFull mercurial nix-index patchelf jdk11 jdk go lua_x chez
      mono dotnet-sdk nodejs_x yarn perl flutter rustup autoconf julia-bin 
-     # spyder
-     (python3.withPackages(ps: with ps; [ pip urllib3 spyder eric6 ]))
+     (python3.withPackages(ps: with ps; [ pip urllib3 spyder eric6 ansible ]))
      streamlink you-get youtube-dl
 
      # boost_x.dev
@@ -200,13 +250,11 @@
   ];
 
 
-  hardware.opengl.driSupport32Bit = true;
-  hardware.opengl.extraPackages32 = with pkgs.pkgsi686Linux; [ libva ];
-  hardware.pulseaudio.support32Bit = true;
-
-  services.udev.packages = [
-    pkgs.android-udev-rules
+  services.udev.packages = with pkgs; [
+    android-udev-rules
+    gnome.gnome-settings-daemon # gnome 桌面
   ];
+  services.dbus.packages = with pkgs; [ gnome2.GConf ]; # gnome 桌面
   services.mysql = {
     enable = true;
     package = pkgs.mysql80;
@@ -231,6 +279,7 @@
    
 
   # virtualisation.anbox.enable = true;
+  virtualisation.waydroid.enable = true;
   virtualisation.docker.enable = false;
   virtualisation.virtualbox.host.enable = true;
   users.extraGroups.vboxusers.members = [ "user-with-access-to-virtualbox" ];
@@ -267,12 +316,17 @@
     dhcpcd.extraConfig = "nohook resolv.conf";
     # If using NetworkManager:
     networkmanager.dns = "dnsmasq";
+    firewall = { 
+      enable = true; # 默认值为true 不用设置，这里仅做提醒
+      allowedTCPPorts = [ 1716 ];
+      allowedUDPPorts = [ 1716 ];
+    };
   };
 
   services.dnscrypt-proxy2 = {
     enable = true;
     settings = {
-      listen_addresses = [ "127.0.0.1:5353" "[::1]:5353" ];
+      listen_addresses = [ "127.0.0.1:5658" "[::1]:5658" ];
       ipv4_servers = true;
       ipv6_servers = true;
       dnscrypt_servers = true;
@@ -322,9 +376,13 @@
 
   # Enable sound.
   sound.enable = true;
-  hardware.pulseaudio.enable = true;
+
 
   # Enable the X11 windowing system.
+
+  # boot.kernelPackages = pkgs.linuxPackages.nvidia_x11; # gnome 环境
+  # hardware.nvidia.package = config.boot.kernelPackages.nvidiaPackages.beta; # gnome 环境
+
   services.xserver = {
     enable = true;
     layout = "us";
@@ -332,13 +390,33 @@
     xkbOptions = "esperanto:qwerty";# "caps:capslock,grp:win_space_toggle"; # win+Space switch layout
     xkbModel = "pc105";
 
-    videoDrivers = [ "nvidia" ];
-    displayManager.sddm = { 
-      enable = true;
-      # settings.Wayland.SessionDir = "${pkgs.plasma5Packages.plasma-workspace}/share/wayland-sessions";
+    videoDrivers = [ "nvidia" ]; # nouveau 
+
+    displayManager = { 
+      # lightdm.enable = true;
+      
+      # gnome 环境
+      gdm = {
+        enable = true;
+        # wayland = true;
+        # nvidiaWayland = true;
+      };
+
     };
-    desktopManager.plasma5.enable = true;
+
+    desktopManager = {
+      # plasma5.enable = true;
+      gnome.enable = true; # gnome 环境
+      # xterm.enable = false; #  没效果   
+    };
+
   };
+  hardware.nvidia.modesetting.enable = true; # gnome 环境
+
+
+  environment.gnome.excludePackages = with pkgs; [ gnome.cheese gnome-photos gnome.gnome-music  gnome.gedit epiphany evince gnome.gnome-characters gnome.totem gnome.tali gnome.iagno gnome.hitori gnome.atomix gnome-tour gnome.geary 
+  # gnome.gnome-terminal
+  ];
 
 
   
@@ -347,12 +425,12 @@
   users.users.prehonor = {
      home = "/home/prehonor";
      isNormalUser = true;
-     extraGroups = [ "wheel" "networkmanager" "docker" "audio" "video" "power" "users" "pulseaudio" "mysql" "wireshark" ]; # Enable ‘sudo’ for the user.
+     extraGroups = [ "wheel" "networkmanager" "docker" "audio" "video" "power" "users" "pulseaudio" "mysql" "wireshark" "adbusers" ]; # Enable ‘sudo’ for the user.
      subUidRanges = [{ startUid = 100000; count = 65536; }];
      subGidRanges = [{ startGid = 100000; count = 65536; }];
   };
 
-  services.netdata.enable = true;
+  # services.netdata.enable = true; # kde 环境
   /*
   services.samba = {
   enable = true;

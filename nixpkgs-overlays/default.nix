@@ -9,6 +9,10 @@ in rec {
         src = /home/prehonor/Downloads/tor-browser-linux64-10.5.6_en-US.tar.xz;
       }
     );
+    microsoft-edge-stable = super.callPackage (import ./pkgs/applications/networking/browsers/edge).stable { };
+    microsoft-edge-beta = super.callPackage (import ./pkgs/applications/networking/browsers/edge).beta { };
+    microsoft-edge-dev = super.callPackage (import ./pkgs/applications/networking/browsers/edge).dev { };
+
     llvm_x = super.llvmPackages_12.llvm;
     libclang_x = super.llvmPackages_12.libclang;
     lld_x = super.lld_12;
@@ -18,27 +22,48 @@ in rec {
     nodejs_x = super.nodejs-14_x;
     python3 = super.python3.override {
         packageOverrides = final: prev: {
-          python-lsp-server = final.callPackage ./pkgs/development/python-modules/python-lsp-server {};
-          qdarkstyle = final.callPackage ./pkgs/development/python-modules/qdarkstyle {};
-          qtconsole = final.callPackage ./pkgs/development/python-modules/qtconsole {};
-          spyder-kernels = final.callPackage ./pkgs/development/python-modules/spyder-kernels {};
-          qstylizer = final.callPackage ./pkgs/development/python-modules/qstylizer {};
-          autopep8 = final.callPackage ./pkgs/development/python-modules/autopep8 {};
-         # pbr = final.callPackage ./pkgs/development/python-modules/pbr {}; # 代价太大了
-          spyder = final.callPackage ./pkgs/development/python-modules/spyder {};
+            python-lsp-server = final.callPackage ./pkgs/development/python-modules/python-lsp-server {};
+            qdarkstyle = final.callPackage ./pkgs/development/python-modules/qdarkstyle {};
+            qtconsole = final.callPackage ./pkgs/development/python-modules/qtconsole {};
+            spyder-kernels = final.callPackage ./pkgs/development/python-modules/spyder-kernels {};
+            qstylizer = final.callPackage ./pkgs/development/python-modules/qstylizer {};
+            autopep8 = final.callPackage ./pkgs/development/python-modules/autopep8 {};
+            # pbr = final.callPackage ./pkgs/development/python-modules/pbr {}; # 代价太大了
+            spyder = final.callPackage ./pkgs/development/python-modules/spyder {};
          
-          pyqtchart = final.callPackage ./pkgs/development/python-modules/pyqtchart { 
-            inherit (super.libsForQt5.qt5) qtbase qmake qtcharts; # inherit (super.libsForQt5) ;
-            
-          };
+            pyqtchart = final.callPackage ./pkgs/development/python-modules/pyqtchart { 
+                inherit (super.libsForQt5.qt5) qtbase qmake qtcharts; # inherit (super.libsForQt5) ;        
+            };
          
-          pyqtchart-qt = final.callPackage ./pkgs/development/python-modules/pyqtchart-qt {
-            inherit (super.libsForQt5.qt5) full ; 
-          };
+            pyqtchart-qt = final.callPackage ./pkgs/development/python-modules/pyqtchart-qt {
+                inherit (super.libsForQt5.qt5) full ; 
+            };
 
-          eric6 = final.callPackage ./pkgs/development/python-modules/eric-ide {};
+            ipykernel = prev.ipykernel.overridePythonAttrs (oldAttrs: 
+                rec {
+                    version = "6.7.0";
+                    pname = oldAttrs.pname;
+                    src = prev.fetchPypi {
+                        inherit pname version;
+                        sha256 = "d82b904fdc2fd8c7b1fbe0fa481c68a11b4cd4c8ef07e6517da1f10cc3114d24";
+                    };
+                }
+            );
+            jupyter-client = prev.jupyter-client.overridePythonAttrs (oldAttrs: 
+                rec {
+                    version = "7.1.0";
+                    pname = oldAttrs.pname;
+                    src = prev.fetchPypi {
+                        inherit pname version;
+                        sha256 = "a5f995a73cffb314ed262713ae6dfce53c6b8216cea9f332071b8ff44a6e1654";
+                    };
+                }
+            );
+
+            eric6 = final.callPackage ./pkgs/development/python-modules/eric-ide {};
         };
     };
+    fildem = super.callPackage ./pkgs/gnome/extensions/fildem/default.nix {};
    # python-lsp-server = super.python3.pkgs.callPackage ./pkgs/development/python-modules/python-lsp-server { };
 
 /*
@@ -49,9 +74,9 @@ in rec {
   	libmysqlconnectorcpp = super.libmysqlconnectorcpp.override { boost = boost_x; };
     */
     libredirect_x = super.callPackage ./pkgs/build-support/libredirect { };
-/*
+
     masterpdfeditor = super.libsForQt5.callPackage  ./pkgs/applications/misc/masterpdfeditor { };
-*/
+
 
 
   	jetbrains_x = (super.recurseIntoAttrs (super.callPackages ./pkgs/applications/editors/jetbrains {

@@ -2,16 +2,14 @@
 
 stdenv.mkDerivation rec {
   pname = "masterpdfeditor";
-  version = "5.7.53";
-
+  version = "5.8.32";
 /*
   src = fetchurl {
-    url = "https://code-industry.net/public/master-pdf-editor-${version}-qt5.amd64.tar.gz";
-    sha256 = "0v9j6fwr0xl03kr77vf4wdb06zlplmn4mr3jyzxhvs8a77scmfzb";
+    url = "https://code-industry.net/public/master-pdf-editor-${version}-qt5.x86_64.tar.gz";
+    sha256 = "sha256-2YfjTRTC/ZvgnV4tEY4wwoqUeUG8+0SCYuRPBzQ8ba4=";
   };
-*/
-  
-  src = /home/prehonor/Downloads/master-pdf-editor-5.7.53-qt5.x86_64.tar.gz;
+  */
+  src = /home/prehonor/Downloads/master-pdf-editor-5.8.32-qt5.x86_64.tar.gz;
 
   nativeBuildInputs = [ autoPatchelfHook wrapQtAppsHook ];
 
@@ -21,18 +19,22 @@ stdenv.mkDerivation rec {
 
   installPhase = ''
     runHook preInstall
+
     p=$out/opt/masterpdfeditor
     mkdir -p $out/bin
-    substituteInPlace net.code-industry.masterpdfeditor5.desktop \
+
+    substituteInPlace masterpdfeditor5.desktop \
       --replace 'Exec=/opt/master-pdf-editor-5' "Exec=$out/bin" \
       --replace 'Path=/opt/master-pdf-editor-5' "Path=$out/bin" \
       --replace 'Icon=/opt/master-pdf-editor-5' "Icon=$out/share/pixmaps"
+
     install -Dm644 -t $out/share/pixmaps      masterpdfeditor5.png
-    install -Dm644 -t $out/share/applications net.code-industry.masterpdfeditor5.desktop
+    install -Dm644 -t $out/share/applications masterpdfeditor5.desktop
     install -Dm755 -t $p                      masterpdfeditor5
     install -Dm644 license.txt $out/share/$name/LICENSE
     ln -s $p/masterpdfeditor5 $out/bin/masterpdfeditor5
     cp -v -r stamps templates lang fonts $p
+
     runHook postInstall
   '';
 
@@ -41,6 +43,6 @@ stdenv.mkDerivation rec {
     homepage = "https://code-industry.net/free-pdf-editor/";
     license = licenses.unfreeRedistributable;
     platforms = with platforms; [ "x86_64-linux" ];
-    maintainers = with maintainers; [ cmcdragonkai flokli ];
+    maintainers = with maintainers; [ cmcdragonkai ];
   };
 }

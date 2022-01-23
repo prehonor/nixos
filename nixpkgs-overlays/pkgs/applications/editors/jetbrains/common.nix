@@ -3,7 +3,7 @@
 , vmopts ? null
 }:
 
-{ name, product, version, src, wmClass, jdk, meta, extraLdPath ? [] }@args:
+{ name, product, version, src, wmClass, jdk, meta, extraLdPath ? [], extraWrapperArgs ? [] }@args:
 
 with lib;
 
@@ -43,12 +43,14 @@ with stdenv; lib.makeOverridable mkDerivation (rec {
         local fname="$1"
         echo $(ls -l $fname | cut -d ' ' -f5)
       }
+
       munge_size_hack() {
         local fname="$1"
         local size="$2"
         strip $fname
         truncate --size=$size $fname
       }
+
       interpreter=$(echo ${stdenv.glibc.out}/lib/ld-linux*.so.2)
       if [[ "${stdenv.hostPlatform.system}" == "x86_64-linux" && -e bin/fsnotifier64 ]]; then
         target_size=$(get_file_size bin/fsnotifier64)
@@ -63,12 +65,15 @@ with stdenv; lib.makeOverridable mkDerivation (rec {
 
   installPhase = ''
     runHook preInstall
+
     mkdir -p $out/{bin,$name,share/pixmaps,libexec/${name}}
     cp -a . $out/$name
     ln -s $out/$name/bin/${loName}.png $out/share/pixmaps/${mainProgram}.png
     mv bin/fsnotifier* $out/libexec/${name}/.
+
     jdk=${jdk.home}
     item=${desktopItem}
+
     makeWrapper "$out/$name/bin/${loName}.sh" "$out/bin/${mainProgram}" \
       --prefix PATH : "$out/libexec/${name}:${lib.optionalString (stdenv.isDarwin) "${jdk}/jdk/Contents/Home/bin:"}${lib.makeBinPath [ jdk coreutils gnugrep which git ]}" \
       --prefix LD_LIBRARY_PATH : "${lib.makeLibraryPath ([
@@ -76,12 +81,15 @@ with stdenv; lib.makeOverridable mkDerivation (rec {
         stdenv.cc.cc.lib libsecret e2fsprogs
         libnotify
       ] ++ extraLdPath)}" \
+      ${lib.concatStringsSep " " extraWrapperArgs} \
       --set JDK_HOME "$jdk" \
       --set ${hiName}_JDK "$jdk" \
       --set ANDROID_JAVA_HOME "$jdk" \
       --set JAVA_HOME "$jdk" \
       --set ${hiName}_VM_OPTIONS ${vmoptsFile}
+
     ln -s "$item/share/applications" $out/share
+
     runHook postInstall
   '';
 
