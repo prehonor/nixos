@@ -140,6 +140,11 @@
     wireshark.enable = true;
     dconf.enable = true; # gnome 环境配置
     # xwayland.enable = true; # gnome 环境配置
+    steam.enable = true;
+    evolution = {
+      enable = true;
+      plugins = [ pkgs.evolution-ews ];
+    };
   };
 
   services.gnome.evolution-data-server.enable = true; # gnome 环境配置
@@ -149,6 +154,11 @@
   services.gnome.gnome-keyring.enable = true; # gnome 环境配置
 
   services.gnome.chrome-gnome-shell.enable = true; # gnome 环境配置
+
+  services.emacs = {
+    enable = true;
+    package = pkgs.emacsPgtkGcc;
+  };
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
@@ -164,13 +174,13 @@
     opengl = {
       driSupport32Bit = true;
       extraPackages = with pkgs; [ 
-        # intel-media-driver # LIBVA_DRIVER_NAME=iHD
-        # vaapiIntel  # LIBVA_DRIVER_NAME=i965 (older but works better for Firefox/Chromium)
+        intel-media-driver # LIBVA_DRIVER_NAME=iHD
+        vaapiIntel  # LIBVA_DRIVER_NAME=i965 (older but works better for Firefox/Chromium)
         vaapiVdpau libvdpau-va-gl 
       ]; 
       extraPackages32 = with pkgs.pkgsi686Linux; [ 
         libva 
-        # vaapiIntel  # LIBVA_DRIVER_NAME=i965 (older but works better for Firefox/Chromium)
+        vaapiIntel  # LIBVA_DRIVER_NAME=i965 (older but works better for Firefox/Chromium)
       ];
     };
     pulseaudio = {
@@ -190,7 +200,7 @@
 
 
   
-  nixpkgs.overlays = [ (import ./nixpkgs-overlays) ];
+  nixpkgs.overlays = [ (import ./nixpkgs-overlays) ( import ./emacs-overlay )] ;
 
   nix.nixPath =
     options.nix.nixPath.default ++ 
@@ -206,30 +216,29 @@
      mcrypt thc-hydra nmap-graphical nmap john crunch
      ghidra-bin nasm fasm wineWowPackages.stable  # charles cutter winetricks
      
-
+     unityhub 
     # v2ray #github 手工维护 qv2ray
      ventoy-bin
 
      # ark yakuake libsForQt5.gwenview okular # kde 桌面
      
-     gnome.adwaita-icon-theme gnomeExtensions.appindicator gnomeExtensions.vitals gnomeExtensions.dash-to-dock gnome.gnome-tweaks gnomeExtensions.gsconnect guake gnome.nautilus-python
+     gnome.adwaita-icon-theme gnomeExtensions.appindicator gnomeExtensions.vitals gnomeExtensions.dash-to-dock gnome.gnome-tweaks gnomeExtensions.gsconnect guake gnome.nautilus-python glade gnome-builder
      # gnomeExtensions.frippery-applications-menu 
      # gnomeExtensions.ddterm
  # gnome 桌面
 
-     xournalpp sublime4  mpv # krita sigil alacritty 
+     xournalpp sublime4 zim mpv # krita sigil alacritty 
      #  zathura vim风格 epub pdf 阅读器
      # foliate epub阅读器
      # vlc blender  分别为视频和3d建模软件
      tdesktop lyx microsoft-edge-stable firefox qtcreator rstudio onlyoffice-bin # tor-browser-bundle-bin
      dbeaver android-studio atom # bcompare aria  
      goldendict qv2ray 
-     jetbrains_x.idea-ultimate jetbrains_x.clion #  jetbrains.rider jetbrains.webstorm jetbrains.pycharm-professional
+     jetbrains_x.idea-ultimate jetbrains_x.clion jetbrains_x.rider #  jetbrains.webstorm jetbrains.pycharm-professional
     # vscode
      
-     masterpdfeditor
-      steam 
-      flameshot peek 
+      masterpdfeditor
+      ksnip peek
       opencv
       jpegoptim # Optimize JPEG files
       # digikam gimp   inkscape   synfigstudio  natron  scribus 不好使，删   edraw
@@ -279,7 +288,7 @@
    
 
   # virtualisation.anbox.enable = true;
-  virtualisation.waydroid.enable = true;
+  # virtualisation.waydroid.enable = true;
   virtualisation.docker.enable = false;
   virtualisation.virtualbox.host.enable = true;
   users.extraGroups.vboxusers.members = [ "user-with-access-to-virtualbox" ];
@@ -303,7 +312,7 @@
   nix.optimise.automatic = true;
   nix.trustedUsers = [ "root" "@wheel" ];
   #  nix.sandboxPaths = [ "/ah" "/gh" "/home" ];
-  #  nix.useSandbox = false; 
+  nix.useSandbox = true; 
   networking = {
     timeServers =  [ "ntp.aliyun.com" "time1.cloud.tencent.com" "cn.pool.ntp.org" "asia.pool.ntp.org" "time.windows.com" ]; # options.networking.timeServers.default ++ [ "ntp.example.com" ];
     hostName = "prehonor";
@@ -414,7 +423,7 @@
   hardware.nvidia.modesetting.enable = true; # gnome 环境
 
 
-  environment.gnome.excludePackages = with pkgs; [ gnome.cheese gnome-photos gnome.gnome-music  gnome.gedit epiphany evince gnome.gnome-characters gnome.totem gnome.tali gnome.iagno gnome.hitori gnome.atomix gnome-tour gnome.geary 
+  environment.gnome.excludePackages = with pkgs; [ gnome.cheese gnome-photos gnome.gnome-music  gnome.gedit epiphany evince gnome.gnome-characters gnome.totem gnome.tali gnome.iagno gnome.hitori gnome.atomix gnome-tour gnome.geary
   # gnome.gnome-terminal
   ];
 

@@ -20,6 +20,21 @@ in rec {
     clang_x = super.clang_12;
     lua_x = super.lua5_3;
     nodejs_x = super.nodejs-14_x;
+          /*
+    unityhub = super.unityhub.overrideAttrs (
+      oldAttrs: rec {
+
+          version = "2.4.6";
+          src = super.fetchurl {
+           
+            url = "https://prehonor-generic.pkg.coding.net/yigeren/pkgs/UnityHub.AppImage?version=${version}";
+            sha256 = "0yp3rhv2jbi1bg7wws4nhr46slp2wnya7ly9j894ccllhnzijshn";
+          };
+          
+        src = /home/prehonor/Downloads/UnityHub.AppImage;
+      }
+    );
+    */
     python3 = super.python3.override {
         packageOverrides = final: prev: {
             python-lsp-server = final.callPackage ./pkgs/development/python-modules/python-lsp-server {};

@@ -1,4 +1,4 @@
 let
-  overlays =  ( import ../nixpkgs-overlays ); 
+  overlays =  ( import ../nixpkgs-overlays ) ; #  (import ../emacs-overlay)
 in
   overlays

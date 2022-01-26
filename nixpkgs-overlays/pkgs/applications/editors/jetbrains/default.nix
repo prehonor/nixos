@@ -1,6 +1,6 @@
 { lib, stdenv, callPackage, fetchurl
 , jdk, cmake, zlib, python3
-, dotnet-sdk_5
+, dotnet-sdk
 , maven
 , autoPatchelfHook
 , libdbusmenu
@@ -205,8 +205,9 @@ let
     }).overrideAttrs (attrs: {
       postPatch = lib.optionalString (!stdenv.isDarwin) (attrs.postPatch + ''
         rm -rf lib/ReSharperHost/linux-x64/dotnet
+        rm -r jbr
         mkdir -p lib/ReSharperHost/linux-x64/dotnet/
-        ln -s ${dotnet-sdk_5}/bin/dotnet lib/ReSharperHost/linux-x64/dotnet/dotnet
+        ln -s ${dotnet-sdk}/bin/dotnet lib/ReSharperHost/linux-x64/dotnet/dotnet
       '');
     });
 
