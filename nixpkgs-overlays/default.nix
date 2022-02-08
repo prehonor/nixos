@@ -18,7 +18,7 @@ in rec {
     lld_x = super.lld_12;
     lldb_x = super.lldb_12;
     clang_x = super.clang_12;
-    lua_x = super.lua5_3;
+    lua_x = super.lua5_4;
     nodejs_x = super.nodejs-14_x;
           /*
     unityhub = super.unityhub.overrideAttrs (
