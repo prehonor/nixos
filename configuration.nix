@@ -153,7 +153,7 @@
     wireshark.enable = true;
     dconf.enable = true; # gnome 环境配置
     # xwayland.enable = true; # gnome 环境配置
-    steam.enable = true;
+    # steam.enable = true;
     evolution = {
       enable = true;
       plugins = [ pkgs.evolution-ews ];
@@ -183,8 +183,7 @@
 
   services.emacs = {
     install = true;
-    # enable = true;
-    package = pkgs.emacsGcc; # emacsPgtkGcc
+    package = pkgs.emacsGcc;
   };
 
   # List packages installed in system profile. To search, run:
@@ -234,11 +233,13 @@
     options.nix.nixPath.default ++ 
     [ "nixpkgs-overlays=/etc/nixos/overlays-compat" ];  
 
-
   environment.systemPackages = with pkgs; [
      sudo parted finger_bsd pciutils libva-utils vdpauinfo file binutils-unwrapped bind bashInteractive.dev getconf fontconfig
+     xorg.xhost
      # steam-run
-     graphviz dos2unix grpc dpkg unzip zip tmux ntfs3g usbutils lsof unrar fd ripgrep glslang rtags nixfmt sqlite texlive.combined.scheme-medium shellcheck sbcl rnix-lsp # mu isync msmtp w3m appimage-run p7zip
+     graphviz dos2unix grpc dpkg unzip zip tmux ntfs3g usbutils lsof unrar fd ripgrep glslang rtags nixfmt sqlite texlive.combined.scheme-medium shellcheck sbcl rnix-lsp bear gnuplot
+     wmctrl xdotool aria xorg.xprop xclip xorg.xwininfo
+     # mu isync msmtp w3m appimage-run p7zip
 
      wget tsocks curl wireshark netcat tcpdump ltrace
      mcrypt thc-hydra nmap-graphical nmap john crunch
@@ -265,17 +266,17 @@
      # gnomeExtensions.ddterm
      # gnome 桌面
 
-     xournalpp sublime4 zim mpv llpp # krita sigil alacritty  
+     xournalpp sublime4 zim mpv # krita sigil alacritty
      # zathura vim风格 epub pdf 阅读器
      # foliate epub阅读器
      # vlc blender  分别为视频和3d建模软件
-     tdesktop lyx microsoft-edge-stable firefox qtcreator rstudio onlyoffice-bin # tor-browser-bundle-bin
-     dbeaver zotero # bcompare aria  
+     tdesktop lyx texmacs firefox qtcreator rstudio onlyoffice-bin # tor-browser-bundle-bin
+     dbeaver zotero # bcompare
      goldendict qv2ray 
-     jetbrains_x.idea-ultimate jetbrains_x.clion jetbrains_x.rider android-studio #  jetbrains.webstorm jetbrains.pycharm-professional
-    # vscode
-     
-      masterpdfeditor
+     jetbrains_x.idea-ultimate jetbrains_x.clion jetbrains_x.rider android-studio
+     # oni2  masterpdfeditor
+     vscode logseq
+      
       ksnip peek
       opencv convmv
       jpegoptim # Optimize JPEG files
@@ -286,16 +287,17 @@
      electron
      qt5.full libsForQt5.qt3d libsForQt5.kproperty libsForQt5.qt5.qtsensors libsForQt5.syntax-highlighting 
      libsForQt5.qt5.qtgamepad libsForQt5.qt5.qtserialbus libsForQt5.qt5.qtspeech
-     cmake gcc gcc11 llvm_x lld_x lldb_x clang_x libclang_x pkg-config gitFull mercurial nix-index patchelf jdk11 jdk go lua_x chez
-     mono dotnet-sdk nodejs_x yarn perl flutter rustup autoconf julia-bin 
-     (python3.withPackages(ps: with ps; [ pip urllib3 spyder eric6 ansible jupyter]))
+     cmake gcc gcc11 llvm_x lld_x lldb_x clang_x libclang_x pkg-config gitFull mercurial nix-index patchelf jdk11 jdk go lua_x racket chez
+     mono dotnet-sdk nodejs yarn perl flutter rustup autoconf julia-bin 
+     cmake-language-server
+     # (python3.withPackages(ps: with ps; [ pip urllib3 spyder ansible jupyter sip pyqt5 pyqtwebengine epc lxml pysocks pymupdf]))
+     python-with-my-packages
      streamlink you-get youtube-dl
 
      # boost_x.dev
      libfakeXinerama libselinux libmysqlconnectorcpp libmysqlclient #libmysqlclient_315
 
   ];
-
 
   services.udev.packages = with pkgs; [
     android-udev-rules
@@ -497,7 +499,7 @@
       "create mask" = "0644";
       "directory mask" = "0755";
       "force user" = "prehonor";
-      "force group" = "samba";
+       "force group" = "samba";
     };
     private = {
       path = "/mnt/Shares/Private";

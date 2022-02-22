@@ -20,7 +20,22 @@ in rec {
     clang_x = super.clang_12;
     lua_x = super.lua5_4;
     nodejs_x = super.nodejs-14_x;
-          /*
+    logseq = super.callPackage ./pkgs/applications/misc/logseq { };
+    /*
+    logseq = super.logseq.overrideAttrs (
+      oldAttrs: rec {
+
+        pname = "logseq";
+        version = "0.5.4";
+
+        src = super.fetchurl {
+          url = "https://github.com/logseq/logseq/releases/download/${version}/logseq-linux-x64-${version}.AppImage";
+          sha256 = "PGrx2JBYmp5vQ8jLpOfiT1T1+SNeRt0W5oHUjHNKuBE=";
+          name = "${pname}-${version}.AppImage";
+        };
+
+      }
+    );
     unityhub = super.unityhub.overrideAttrs (
       oldAttrs: rec {
 
@@ -79,6 +94,11 @@ in rec {
         };
     };
     fildem = super.callPackage ./pkgs/gnome/extensions/fildem/default.nix {};
+    python-with-my-packages = python3.withPackages (python3Packages: with python3Packages; [
+        pip urllib3 spyder ansible jupyter sip pyqtwebengine epc lxml pysocks pymupdf 
+        pytaglib qrcode pyqt5  # pyqt5_with_qtmultimedia
+    ]);
+   # texmacs = super.texmacs.override { chineseFonts = true; };
    # python-lsp-server = super.python3.pkgs.callPackage ./pkgs/development/python-modules/python-lsp-server { };
 
 /*
@@ -98,7 +118,7 @@ in rec {
     	vmopts = super.config.jetbrains.vmopts or null;
         jdk = super.jetbrains.jdk;
 	  }) // {
-	    jdk = super.callPackage ./pkgs/development/compilers/jetbrains-jdk {  };
+	   # jdk = super.callPackage ./pkgs/development/compilers/jetbrains-jdk {  };
 	  });
 
 /*

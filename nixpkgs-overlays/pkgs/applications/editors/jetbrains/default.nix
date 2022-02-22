@@ -1,6 +1,6 @@
 { lib, stdenv, callPackage, fetchurl
 , jdk, cmake, zlib, python3
-, dotnet-sdk
+, dotnet-sdk_5
 , maven
 , autoPatchelfHook
 , libdbusmenu
@@ -44,9 +44,7 @@ let
           rm -rf bin/cmake/linux
           rm -r jbr
           ln -s ${cmake} bin/cmake/linux
-
           autoPatchelf $PWD/bin
-
           wrapProgram $out/bin/clion \
             --set CL_JDK "${jdk}"
         )
@@ -90,9 +88,7 @@ let
       postFixup = (attrs.postFixup or "") + ''
         interp="$(cat $NIX_CC/nix-support/dynamic-linker)"
         patchelf --set-interpreter $interp $out/goland*/plugins/go/lib/dlv/linux/dlv
-
         chmod +x $out/goland*/plugins/go/lib/dlv/linux/dlv
-
         # fortify source breaks build since delve compiles with -O0
         wrapProgram $out/bin/goland \
           --prefix CGO_CPPFLAGS " " "-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0"
@@ -207,7 +203,7 @@ let
         rm -rf lib/ReSharperHost/linux-x64/dotnet
         rm -r jbr
         mkdir -p lib/ReSharperHost/linux-x64/dotnet/
-        ln -s ${dotnet-sdk}/bin/dotnet lib/ReSharperHost/linux-x64/dotnet/dotnet
+        ln -s ${dotnet-sdk_5}/bin/dotnet lib/ReSharperHost/linux-x64/dotnet/dotnet
       '');
     });
 
@@ -266,12 +262,12 @@ in
 
   datagrip = buildDataGrip rec {
     name = "datagrip-${version}";
-    version = "2021.3.3"; /* updated by script */
+    version = "2021.3.4"; /* updated by script */
     description = "Your Swiss Army Knife for Databases and SQL";
     license = lib.licenses.unfree;
     src = fetchurl {
       url = "https://download.jetbrains.com/datagrip/${name}.tar.gz";
-      sha256 = "0wbr7hjbj9zvxn4j7nrp7sdzjk78hcg7ssz430y35x9isfiqv5py"; /* updated by script */
+      sha256 = "09dkxj5vn99gkgc1yd18w7gqkw2vzci0z9q2fcih0zn7lvqp0im3"; /* updated by script */
     };
     wmClass = "jetbrains-datagrip";
     update-channel = "DataGrip RELEASE";
@@ -279,12 +275,12 @@ in
 
   goland = buildGoland rec {
     name = "goland-${version}";
-    version = "2021.3.2"; /* updated by script */
+    version = "2021.3.3"; /* updated by script */
     description = "Up and Coming Go IDE";
     license = lib.licenses.unfree;
     src = fetchurl {
       url = "https://download.jetbrains.com/go/${name}.tar.gz";
-      sha256 = "0csc52wwqggdxc61qkmbs84hdvyj3x60rcv5jrxcwp3bjq94kskw"; /* updated by script */
+      sha256 = "18z4mvxhds5fgdwcfywc4pj8s9ifvsknhradgzmxsvji0fbp0awx"; /* updated by script */
     };
     wmClass = "jetbrains-goland";
     update-channel = "GoLand RELEASE";
@@ -292,12 +288,12 @@ in
 
   idea-community = buildIdea rec {
     name = "idea-community-${version}";
-    version = "2021.3.1"; /* updated by script */
+    version = "2021.3.2"; /* updated by script */
     description = "Integrated Development Environment (IDE) by Jetbrains, community edition";
     license = lib.licenses.asl20;
     src = fetchurl {
       url = "https://download.jetbrains.com/idea/ideaIC-${version}.tar.gz";
-      sha256 = "19xxbjcn17n3fk1vdb31nihn9cv5q65wfxdan6dx7z0wq5c4x9zd"; /* updated by script */
+      sha256 = "1j889b2r950bl9wiqq1z8v8s2qicidfcdar300cy666i8rc25qlr"; /* updated by script */
     };
     wmClass = "jetbrains-idea-ce";
     update-channel = "IntelliJ IDEA RELEASE";
@@ -305,12 +301,12 @@ in
 
   idea-ultimate = buildIdea rec {
     name = "idea-ultimate-${version}";
-    version = "2021.3.1"; /* updated by script */
+    version = "2021.3.2"; /* updated by script */
     description = "Integrated Development Environment (IDE) by Jetbrains, requires paid license";
     license = lib.licenses.unfree;
     src = fetchurl {
       url = "https://download.jetbrains.com/idea/ideaIU-${version}-no-jbr.tar.gz";
-      sha256 = "0ys8f2h0qaj8s9ga94hg73vah552a6al4r1ypdp05f7j1m7lzajf"; /* updated by script */
+      sha256 = "0w36qnqgkvw6j1ks09h515237bhqfaixrimzg2r494ic98amvkps"; /* updated by script */
     };
     wmClass = "jetbrains-idea";
     update-channel = "IntelliJ IDEA RELEASE";
@@ -345,12 +341,12 @@ in
 
   pycharm-community = buildPycharm rec {
     name = "pycharm-community-${version}";
-    version = "2021.3.1"; /* updated by script */
+    version = "2021.3.2"; /* updated by script */
     description = "PyCharm Community Edition";
     license = lib.licenses.asl20;
     src = fetchurl {
       url = "https://download.jetbrains.com/python/${name}.tar.gz";
-      sha256 = "1xd88rd1w3ghkm6jq8ilhhjy972qfm57si581rnsjpz65rj6xpgm"; /* updated by script */
+      sha256 = "1s36basydp7cxgbgdapjhkslx0x9vv3639xhm84ny76hf7s03bpi"; /* updated by script */
     };
     wmClass = "jetbrains-pycharm-ce";
     update-channel = "PyCharm RELEASE";
@@ -358,12 +354,12 @@ in
 
   pycharm-professional = buildPycharm rec {
     name = "pycharm-professional-${version}";
-    version = "2021.3.1"; /* updated by script */
+    version = "2021.3.2"; /* updated by script */
     description = "PyCharm Professional Edition";
     license = lib.licenses.unfree;
     src = fetchurl {
       url = "https://download.jetbrains.com/python/${name}.tar.gz";
-      sha256 = "0639mzjh1hw158gmf4qqld03371z60k3xyca21l1pnv3551svd6d"; /* updated by script */
+      sha256 = "0rwykngqgby05mh47kls8wzi68gfka2z04k6kdmsxwn1hhx5gnbb"; /* updated by script */
     };
     wmClass = "jetbrains-pycharm";
     update-channel = "PyCharm RELEASE";
@@ -371,12 +367,12 @@ in
 
   rider = buildRider rec {
     name = "rider-${version}";
-    version = "2021.3.2"; /* updated by script */
+    version = "2021.3.3"; /* updated by script */
     description = "A cross-platform .NET IDE based on the IntelliJ platform and ReSharper";
     license = lib.licenses.unfree;
     src = fetchurl {
       url = "https://download.jetbrains.com/rider/JetBrains.Rider-${version}.tar.gz";
-      sha256 = "0arnh9wlw874jqlgad00q0nf1kjp7pvb4xixwrb6v1l9fbr9nsan"; /* updated by script */
+      sha256 = "13q6hk5l3fqmz818z5wj014jd5iglpdcpi8zlpgaim1jg5fpvi8x"; /* updated by script */
     };
     wmClass = "jetbrains-rider";
     update-channel = "Rider RELEASE";
@@ -384,12 +380,12 @@ in
 
   ruby-mine = buildRubyMine rec {
     name = "ruby-mine-${version}";
-    version = "2021.3.1"; /* updated by script */
+    version = "2021.3.2"; /* updated by script */
     description = "The Most Intelligent Ruby and Rails IDE";
     license = lib.licenses.unfree;
     src = fetchurl {
       url = "https://download.jetbrains.com/ruby/RubyMine-${version}.tar.gz";
-      sha256 = "1xax3738myxjzm0p8zm8aaa2nw0336h80nrm9dqby2j7dass2jnm"; /* updated by script */
+      sha256 = "18ny40zl9hgkynkc5yyy2xqngl9diifh2gqrfnz7rfq14kp10xb9"; /* updated by script */
     };
     wmClass = "jetbrains-rubymine";
     update-channel = "RubyMine RELEASE";
