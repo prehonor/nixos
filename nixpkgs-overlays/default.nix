@@ -12,12 +12,13 @@ in rec {
     microsoft-edge-stable = super.callPackage (import ./pkgs/applications/networking/browsers/edge).stable { };
     microsoft-edge-beta = super.callPackage (import ./pkgs/applications/networking/browsers/edge).beta { };
     microsoft-edge-dev = super.callPackage (import ./pkgs/applications/networking/browsers/edge).dev { };
+    
+    llvm_x = super.llvmPackages_latest.llvm;
+    libclang_x = super.llvmPackages_latest.libclang;
+    lld_x = super.llvmPackages_latest.lld;
+    lldb_x = super.llvmPackages_latest.lldb;
+    clang_x = super.llvmPackages_latest.clang;
 
-    llvm_x = super.llvmPackages_12.llvm;
-    libclang_x = super.llvmPackages_12.libclang;
-    lld_x = super.lld_12;
-    lldb_x = super.lldb_12;
-    clang_x = super.clang_12;
     lua_x = super.lua5_4;
     nodejs_x = super.nodejs-14_x;
     logseq = super.callPackage ./pkgs/applications/misc/logseq { };

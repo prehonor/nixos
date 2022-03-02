@@ -13,6 +13,8 @@
     binaryCachePublicKeys = [
       "nixos-cn.cachix.org-1:L0jEaL6w7kwQOPlLoCR3ADx+E3Q8SEFEcB9Jaibl0Xg="
       "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+      "hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ="
+      "iohk.cachix.org-1:DpRUyj7h7V830dp/i6Nti+NEO2/nhblbov/8MW7Rqoo="
     ];
     binaryCaches = [
       "https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store"  
@@ -20,6 +22,8 @@
       "https://mirrors.bfsu.edu.cn/nix-channels/store" 
       "https://nixos-cn.cachix.org"
       "https://nix-community.cachix.org"
+      "https://hydra.iohk.io" 
+      "https://iohk.cachix.org"
     ];
 
     package = pkgs.nixUnstable;
@@ -234,10 +238,11 @@
     [ "nixpkgs-overlays=/etc/nixos/overlays-compat" ];  
 
   environment.systemPackages = with pkgs; [
-     sudo parted finger_bsd pciutils libva-utils vdpauinfo file binutils-unwrapped bind bashInteractive.dev getconf fontconfig
+     sudo parted finger_bsd pciutils libva-utils vdpauinfo file binutils-unwrapped bind 
+     bashInteractive.dev getconf fontconfig
      xorg.xhost
      # steam-run
-     graphviz dos2unix grpc dpkg unzip zip tmux ntfs3g usbutils lsof unrar fd ripgrep glslang rtags nixfmt sqlite texlive.combined.scheme-medium shellcheck sbcl rnix-lsp bear gnuplot
+     graphviz dos2unix grpc dpkg unzip zip tmux ntfs3g usbutils lsof unrar fd ripgrep glslang rtags nixfmt sqlite texlive.combined.scheme-medium shellcheck sbcl rnix-lsp bear gnuplot socat
      wmctrl xdotool aria xorg.xprop xclip xorg.xwininfo
      # mu isync msmtp w3m appimage-run p7zip
 
@@ -266,11 +271,11 @@
      # gnomeExtensions.ddterm
      # gnome 桌面
 
-     xournalpp sublime4 zim mpv # krita sigil alacritty
+     xournalpp sublime4 mpv # krita sigil alacritty
      # zathura vim风格 epub pdf 阅读器
      # foliate epub阅读器
      # vlc blender  分别为视频和3d建模软件
-     tdesktop lyx texmacs firefox qtcreator rstudio onlyoffice-bin # tor-browser-bundle-bin
+     tdesktop lyx texmacs firefox qtcreator rstudio onlyoffice-bin netease-cloud-music-gtk # tor-browser-bundle-bin
      dbeaver zotero # bcompare
      goldendict qv2ray 
      jetbrains_x.idea-ultimate jetbrains_x.clion jetbrains_x.rider android-studio
@@ -287,8 +292,12 @@
      electron
      qt5.full libsForQt5.qt3d libsForQt5.kproperty libsForQt5.qt5.qtsensors libsForQt5.syntax-highlighting 
      libsForQt5.qt5.qtgamepad libsForQt5.qt5.qtserialbus libsForQt5.qt5.qtspeech
-     cmake gcc gcc11 llvm_x lld_x lldb_x clang_x libclang_x pkg-config gitFull mercurial nix-index patchelf jdk11 jdk go lua_x racket chez
+     cmake gcc gcc11 
+     llvmPackages_latest.llvm llvmPackages_latest.lld llvmPackages_latest.lldb 
+     llvmPackages_latest.clang llvmPackages_latest.libclang 
+     pkg-config gitFull mercurial darcs nix-index patchelf jdk11 jdk go lua_x racket chez sbcl lispPackages.quicklisp
      mono dotnet-sdk nodejs yarn perl flutter rustup autoconf julia-bin 
+     # haskellPackages.ghcup # 使用 curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh 安装
      cmake-language-server
      # (python3.withPackages(ps: with ps; [ pip urllib3 spyder ansible jupyter sip pyqt5 pyqtwebengine epc lxml pysocks pymupdf]))
      python-with-my-packages
