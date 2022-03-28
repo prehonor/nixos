@@ -178,7 +178,7 @@
 
   environment.gnome.excludePackages = with pkgs; [ gnome.cheese gnome-photos gnome.gnome-music  gnome.gedit 
     epiphany # 浏览器
-    evince # pdf阅读器
+    # evince # pdf阅读器
     gnome.gnome-characters # 表情符号等
     gnome.totem gnome-tour gnome.geary # 媒体播放器; 旅游app ; mail客户端
     gnome.tali gnome.iagno gnome.hitori gnome.atomix # 游戏
@@ -242,7 +242,7 @@
      bashInteractive.dev getconf fontconfig
      xorg.xhost
      # steam-run
-     graphviz dos2unix grpc dpkg unzip zip tmux ntfs3g usbutils lsof unrar fd ripgrep glslang rtags nixfmt sqlite texlive.combined.scheme-medium shellcheck sbcl rnix-lsp bear gnuplot socat
+     graphviz dos2unix grpc dpkg unzip zip tmux ntfs3g usbutils lsof unrar fd ripgrep glslang rtags nixfmt sqlite texlive.combined.scheme-medium shellcheck rnix-lsp bear gnuplot socat
      wmctrl xdotool aria xorg.xprop xclip xorg.xwininfo
      # mu isync msmtp w3m appimage-run p7zip
 
@@ -254,7 +254,7 @@
     # v2ray #github 手工维护 qv2ray
      ventoy-bin
 
-     # ark yakuake libsForQt5.gwenview okular # kde 桌面
+     # ark yakuake libsForQt5.gwenview  # kde 桌面
      guake liferea
      glade
      # gnome-builder 包含在 gnome.core-developer-tools.enable
@@ -280,7 +280,7 @@
      goldendict qv2ray 
      jetbrains_x.idea-ultimate jetbrains_x.clion jetbrains_x.rider android-studio
      # oni2  masterpdfeditor
-     vscode logseq
+     vscode
       
       ksnip peek
       opencv convmv
@@ -292,10 +292,10 @@
      electron
      qt5.full libsForQt5.qt3d libsForQt5.kproperty libsForQt5.qt5.qtsensors libsForQt5.syntax-highlighting 
      libsForQt5.qt5.qtgamepad libsForQt5.qt5.qtserialbus libsForQt5.qt5.qtspeech
-     cmake gcc gcc11 
+     cmake gcc gcc11 ccls
      llvmPackages_latest.llvm llvmPackages_latest.lld llvmPackages_latest.lldb 
      llvmPackages_latest.clang llvmPackages_latest.libclang 
-     pkg-config gitFull mercurial darcs nix-index patchelf jdk11 jdk go lua_x racket chez sbcl lispPackages.quicklisp
+     pkg-config gitFull mercurial darcs nix-index patchelf jdk11 jdk go lua_x racket chez lispPackages.quicklisp
      mono dotnet-sdk nodejs yarn perl flutter rustup autoconf julia-bin 
      # haskellPackages.ghcup # 使用 curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh 安装
      cmake-language-server
