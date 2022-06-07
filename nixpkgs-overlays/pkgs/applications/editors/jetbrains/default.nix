@@ -1,6 +1,6 @@
 { lib, stdenv, callPackage, fetchurl
-, jdk, cmake, zlib, python3
-, dotnet-sdk_5
+, jdk, cmake, gdb, zlib, python3
+, dotnet-sdk_6
 , maven
 , autoPatchelfHook
 , libdbusmenu
@@ -24,9 +24,9 @@ let
 
   # Sorted alphabetically
 
-  buildClion = { name, version, src, license, description, wmClass, ... }:
+  buildClion = { pname, version, src, license, description, wmClass, ... }:
     (mkJetBrainsProduct {
-      inherit name version src wmClass jdk;
+      inherit pname version src wmClass jdk;
       product = "CLion";
       meta = with lib; {
         homepage = "https://www.jetbrains.com/clion/";
@@ -49,22 +49,23 @@ let
       dontAutoPatchelf = true;
       postFixup = (attrs.postFixup or "") + optionalString (stdenv.isLinux) ''
         (
-          cd $out/clion-${version}
+          cd $out/clion
           # bundled cmake does not find libc
           rm -rf bin/cmake/linux
           ln -s ${cmake} bin/cmake/linux
-
+          # bundled gdb does not find libcrypto 10
+          rm -rf bin/gdb/linux
+          ln -s ${gdb} bin/gdb/linux
           autoPatchelf $PWD/bin
-
           wrapProgram $out/bin/clion \
             --set CL_JDK "${jdk}"
         )
       '';
     });
 
-  buildDataGrip = { name, version, src, license, description, wmClass, ... }:
+  buildDataGrip = { pname, version, src, license, description, wmClass, ... }:
     (mkJetBrainsProduct {
-      inherit name version src wmClass jdk;
+      inherit pname version src wmClass jdk;
       product = "DataGrip";
       meta = with lib; {
         homepage = "https://www.jetbrains.com/datagrip/";
@@ -78,9 +79,9 @@ let
       };
     });
 
-  buildGoland = { name, version, src, license, description, wmClass, ... }:
+  buildGoland = { pname, version, src, license, description, wmClass, ... }:
     (mkJetBrainsProduct {
-      inherit name version src wmClass jdk;
+      inherit pname version src wmClass jdk;
       product = "Goland";
       meta = with lib; {
         homepage = "https://www.jetbrains.com/go/";
@@ -97,18 +98,16 @@ let
       postFixup = (attrs.postFixup or "") + lib.optionalString stdenv.isLinux ''
         interp="$(cat $NIX_CC/nix-support/dynamic-linker)"
         patchelf --set-interpreter $interp $out/goland*/plugins/go/lib/dlv/linux/dlv
-
         chmod +x $out/goland*/plugins/go/lib/dlv/linux/dlv
-
         # fortify source breaks build since delve compiles with -O0
         wrapProgram $out/bin/goland \
           --prefix CGO_CPPFLAGS " " "-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0"
       '';
     });
 
-  buildIdea = { name, version, src, license, description, wmClass, product, ... }:
+  buildIdea = { pname, version, src, license, description, wmClass, product, ... }:
     (mkJetBrainsProduct {
-      inherit name version src wmClass jdk product;
+      inherit pname version src wmClass jdk product;
       productShort = "IDEA";
       extraLdPath = [ zlib ];
       extraWrapperArgs = [
@@ -124,16 +123,17 @@ let
           with JUnit, TestNG, popular SCMs, Ant & Maven. Also known
           as IntelliJ.
         '';
-        maintainers = with maintainers; [ edwtjo gytis-ivaskevicius steinybot ];
+        maintainers = with maintainers; [ edwtjo gytis-ivaskevicius steinybot AnatolyPopov ];
         platforms = ideaPlatforms;
       };
     });
 
-  buildMps = { name, version, src, license, description, wmClass, product, ... }:
+  buildMps = { pname, version, src, license, description, wmClass, product, ... }:
     (mkJetBrainsProduct rec {
-      inherit name version src wmClass jdk product;
+      inherit pname version src wmClass jdk product;
       productShort = "MPS";
       meta = with lib; {
+        broken = (stdenv.isLinux && stdenv.isAarch64);
         homepage = "https://www.jetbrains.com/mps/";
         inherit license description platforms;
         longDescription = ''
@@ -146,9 +146,9 @@ let
       };
     });
 
-  buildPhpStorm = { name, version, src, license, description, wmClass, ... }:
+  buildPhpStorm = { pname, version, src, license, description, wmClass, ... }:
     (mkJetBrainsProduct {
-      inherit name version src wmClass jdk;
+      inherit pname version src wmClass jdk;
       product = "PhpStorm";
       meta = with lib; {
         homepage = "https://www.jetbrains.com/phpstorm/";
@@ -162,11 +162,12 @@ let
       };
     });
 
-  buildPycharm = { name, version, src, license, description, wmClass, product, ... }:
+  buildPycharm = { pname, version, src, license, description, wmClass, product, ... }:
     (mkJetBrainsProduct {
-      inherit name version src wmClass jdk product;
+      inherit pname version src wmClass jdk product;
       productShort = "PyCharm";
       meta = with lib; {
+        broken = (stdenv.isLinux && stdenv.isAarch64);
         homepage = "https://www.jetbrains.com/pycharm/";
         inherit description license platforms;
         longDescription = ''
@@ -186,9 +187,9 @@ let
       };
     });
 
-  buildRider = { name, version, src, license, description, wmClass, ... }:
+  buildRider = { pname, version, src, license, description, wmClass, ... }:
     (mkJetBrainsProduct {
-      inherit name version src wmClass jdk;
+      inherit pname version src wmClass jdk;
       product = "Rider";
       meta = with lib; {
         homepage = "https://www.jetbrains.com/rider/";
@@ -207,13 +208,13 @@ let
       postPatch = lib.optionalString (!stdenv.isDarwin) (attrs.postPatch + ''
         rm -rf lib/ReSharperHost/linux-x64/dotnet
         mkdir -p lib/ReSharperHost/linux-x64/dotnet/
-        ln -s ${dotnet-sdk_5}/bin/dotnet lib/ReSharperHost/linux-x64/dotnet/dotnet
+        ln -s ${dotnet-sdk_6}/bin/dotnet lib/ReSharperHost/linux-x64/dotnet/dotnet
       '');
     });
 
-  buildRubyMine = { name, version, src, license, description, wmClass, ... }:
+  buildRubyMine = { pname, version, src, license, description, wmClass, ... }:
     (mkJetBrainsProduct {
-      inherit name version src wmClass jdk;
+      inherit pname version src wmClass jdk;
       product = "RubyMine";
       meta = with lib; {
         homepage = "https://www.jetbrains.com/ruby/";
@@ -223,9 +224,9 @@ let
       };
     });
 
-  buildWebStorm = { name, version, src, license, description, wmClass, ... }:
+  buildWebStorm = { pname, version, src, license, description, wmClass, ... }:
     (mkJetBrainsProduct {
-      inherit name version src wmClass jdk;
+      inherit pname version src wmClass jdk;
       product = "WebStorm";
       meta = with lib; {
         homepage = "https://www.jetbrains.com/webstorm/";
@@ -251,7 +252,7 @@ in
   # Sorted alphabetically
 
   clion = buildClion rec {
-    name = "clion-${version}";
+    pname = "clion";
     version = products.clion.version;
     description  = "C/C++ IDE. New. Intelligent. Cross-platform";
     license = lib.licenses.unfree;
@@ -260,11 +261,11 @@ in
       sha256 = products.clion.sha256;
     };
     wmClass = "jetbrains-clion";
-    update-channel = "CLion RELEASE"; # channel's id as in http://www.jetbrains.com/updates/updates.xml
+    update-channel = products.clion.update-channel;
   };
 
   datagrip = buildDataGrip rec {
-    name = "datagrip-${version}";
+    pname = "datagrip";
     version = products.datagrip.version;
     description = "Your Swiss Army Knife for Databases and SQL";
     license = lib.licenses.unfree;
@@ -273,11 +274,11 @@ in
       sha256 = products.datagrip.sha256;
     };
     wmClass = "jetbrains-datagrip";
-    update-channel = "DataGrip RELEASE";
+    update-channel = products.datagrip.update-channel;
   };
 
   goland = buildGoland rec {
-    name = "goland-${version}";
+    pname = "goland";
     version = products.goland.version;
     description = "Up and Coming Go IDE";
     license = lib.licenses.unfree;
@@ -286,11 +287,11 @@ in
       sha256 = products.goland.sha256;
     };
     wmClass = "jetbrains-goland";
-    update-channel = "GoLand RELEASE";
+    update-channel = products.goland.update-channel;
   };
 
   idea-community = buildIdea rec {
-    name = "idea-community-${version}";
+    pname = "idea-community";
     product = "IntelliJ IDEA CE";
     version = products.idea-community.version;
     description = "Integrated Development Environment (IDE) by Jetbrains, community edition";
@@ -300,11 +301,11 @@ in
       sha256 = products.idea-community.sha256;
     };
     wmClass = "jetbrains-idea-ce";
-    update-channel = "IntelliJ IDEA RELEASE";
+    update-channel = products.idea-community.update-channel;
   };
 
   idea-ultimate = buildIdea rec {
-    name = "idea-ultimate-${version}";
+    pname = "idea-ultimate";
     product = "IntelliJ IDEA";
     version = products.idea-ultimate.version;
     description = "Integrated Development Environment (IDE) by Jetbrains, requires paid license";
@@ -314,12 +315,12 @@ in
       sha256 = products.idea-ultimate.sha256;
     };
     wmClass = "jetbrains-idea";
-    update-channel = "IntelliJ IDEA RELEASE";
+    update-channel = products.idea-ultimate.update-channel;
   };
 
   mps = buildMps rec {
-    name = "mps-${version}";
-    product = "MPS ${products.mps.version-major-minor}";
+    pname = "mps";
+    product = "MPS ${products.mps.version}";
     version = products.mps.version;
     description = "Create your own domain-specific language";
     license = lib.licenses.asl20;
@@ -328,11 +329,11 @@ in
       sha256 = products.mps.sha256;
     };
     wmClass = "jetbrains-mps";
-    update-channel = "MPS RELEASE";
+    update-channel = products.mps.update-channel;
   };
 
   phpstorm = buildPhpStorm rec {
-    name = "phpstorm-${version}";
+    pname = "phpstorm";
     version = products.phpstorm.version;
     description = "Professional IDE for Web and PHP developers";
     license = lib.licenses.unfree;
@@ -341,11 +342,11 @@ in
       sha256 = products.phpstorm.sha256;
     };
     wmClass = "jetbrains-phpstorm";
-    update-channel = "PhpStorm RELEASE";
+    update-channel = products.phpstorm.update-channel;
   };
 
   pycharm-community = buildPycharm rec {
-    name = "pycharm-community-${version}";
+    pname = "pycharm-community";
     product = "PyCharm CE";
     version = products.pycharm-community.version;
     description = "PyCharm Community Edition";
@@ -355,11 +356,11 @@ in
       sha256 = products.pycharm-community.sha256;
     };
     wmClass = "jetbrains-pycharm-ce";
-    update-channel = "PyCharm RELEASE";
+    update-channel = products.pycharm-community.update-channel;
   };
 
   pycharm-professional = buildPycharm rec {
-    name = "pycharm-professional-${version}";
+    pname = "pycharm-professional";
     product = "PyCharm";
     version = products.pycharm-professional.version;
     description = "PyCharm Professional Edition";
@@ -369,11 +370,11 @@ in
       sha256 = products.pycharm-professional.sha256;
     };
     wmClass = "jetbrains-pycharm";
-    update-channel = "PyCharm RELEASE";
+    update-channel = products.pycharm-professional.update-channel;
   };
 
   rider = buildRider rec {
-    name = "rider-${version}";
+    pname = "rider";
     version = products.rider.version;
     description = "A cross-platform .NET IDE based on the IntelliJ platform and ReSharper";
     license = lib.licenses.unfree;
@@ -382,11 +383,11 @@ in
       sha256 = products.rider.sha256;
     };
     wmClass = "jetbrains-rider";
-    update-channel = "Rider RELEASE";
+    update-channel = products.rider.update-channel;
   };
 
   ruby-mine = buildRubyMine rec {
-    name = "ruby-mine-${version}";
+    pname = "ruby-mine";
     version = products.ruby-mine.version;
     description = "The Most Intelligent Ruby and Rails IDE";
     license = lib.licenses.unfree;
@@ -395,11 +396,11 @@ in
       sha256 = products.ruby-mine.sha256;
     };
     wmClass = "jetbrains-rubymine";
-    update-channel = "RubyMine RELEASE";
+    update-channel = products.ruby-mine.update-channel;
   };
 
   webstorm = buildWebStorm rec {
-    name = "webstorm-${version}";
+    pname = "webstorm";
     version = products.webstorm.version;
     description = "Professional IDE for Web and JavaScript development";
     license = lib.licenses.unfree;
@@ -408,7 +409,7 @@ in
       sha256 = products.webstorm.sha256;
     };
     wmClass = "jetbrains-webstorm";
-    update-channel = "WebStorm RELEASE";
+    update-channel = products.webstorm.update-channel;
   };
 
 }

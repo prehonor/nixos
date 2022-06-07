@@ -21,7 +21,23 @@ in rec {
 
     lua_x = super.lua5_4;
     nodejs_x = super.nodejs-14_x;
-    logseq = super.callPackage ./pkgs/applications/misc/logseq { };
+    # logseq = super.callPackage ./pkgs/applications/misc/logseq { };
+    /*
+    koreader_x = super.koreader.overrideAttrs (
+      oldAttrs: rec {
+
+        pname = "koreader";
+        version = "2022.03.1";
+
+        src = super.fetchurl {
+            url =
+                "https://github.com/koreader/koreader/releases/download/v${version}/koreader-${version}-amd64.deb";
+            sha256 = "sha256-ZoqITWPR60G4xY9InrtIY9rCWUk0PidGFZokHLWl5ps=";
+        };
+
+      }
+    );
+    */
     /*
     logseq = super.logseq.overrideAttrs (
       oldAttrs: rec {
@@ -51,6 +67,7 @@ in rec {
       }
     );
     */
+    /*
     python3 = super.python3.override {
         packageOverrides = final: prev: {
             python-lsp-server = final.callPackage ./pkgs/development/python-modules/python-lsp-server {};
@@ -59,7 +76,7 @@ in rec {
             spyder-kernels = final.callPackage ./pkgs/development/python-modules/spyder-kernels {};
             qstylizer = final.callPackage ./pkgs/development/python-modules/qstylizer {};
             autopep8 = final.callPackage ./pkgs/development/python-modules/autopep8 {};
-            # pbr = final.callPackage ./pkgs/development/python-modules/pbr {}; # 代价太大了
+            
             spyder = final.callPackage ./pkgs/development/python-modules/spyder {};
          
             pyqtchart = final.callPackage ./pkgs/development/python-modules/pyqtchart { 
@@ -95,25 +112,30 @@ in rec {
         };
     };
     fildem = super.callPackage ./pkgs/gnome/extensions/fildem/default.nix {};
-    python-with-my-packages = python3.withPackages (python3Packages: with python3Packages; [
+        */
+        # pbr = final.callPackage ./pkgs/development/python-modules/pbr {}; # 代价太大了
+    python-with-my-packages = super.python3.withPackages (python3Packages: with python3Packages; [
         pip urllib3 spyder ansible jupyter sip pyqtwebengine epc lxml pysocks pymupdf 
         pytaglib qrcode pyqt5  # pyqt5_with_qtmultimedia
     ]);
+
    # texmacs = super.texmacs.override { chineseFonts = true; };
    # python-lsp-server = super.python3.pkgs.callPackage ./pkgs/development/python-modules/python-lsp-server { };
 
 /*
   	boost_x = super.boost175.override { enablePython = true; python = super.pkgs.python3; };
-*/
+
     libmysqlclient_315 = super.libmysqlclient.override { version = "3.1.5"; };
+    */
 /*
   	libmysqlconnectorcpp = super.libmysqlconnectorcpp.override { boost = boost_x; };
     */
+    
     libredirect_x = super.callPackage ./pkgs/build-support/libredirect { };
-
+/*
     masterpdfeditor = super.libsForQt5.callPackage  ./pkgs/applications/misc/masterpdfeditor { };
-
-
+    unityhub_x = super.callPackage ./pkgs/development/tools/unityhub { };
+*/
 
   	jetbrains_x = (super.recurseIntoAttrs (super.callPackages ./pkgs/applications/editors/jetbrains {
     	vmopts = super.config.jetbrains.vmopts or null;
@@ -121,6 +143,7 @@ in rec {
 	  }) // {
 	   # jdk = super.callPackage ./pkgs/development/compilers/jetbrains-jdk {  };
 	  });
+
 
 /*
     jetbrains.pycharm-professional = super.jetbrains.pycharm-professional.overrideAttrs (

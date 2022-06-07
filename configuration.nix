@@ -26,10 +26,10 @@
       "https://iohk.cachix.org"
     ];
 
-    package = pkgs.nixUnstable;
     extraOptions = ''
       experimental-features = nix-command flakes
     '';
+
 
   };
 
@@ -82,7 +82,7 @@
 */
   # Configure network proxy if necessary
    
-  # networking.proxy.default = "socks5://127.0.0.1:1080/";
+ # networking.proxy.default = "socks5://127.0.0.1:1080/";
  # networking.proxy.noProxy = "127.0.0.1,localhost,mirrors.tuna.tsinghua.edu.cn,download.jetbrains.com,prehonor-generic.pkg.coding.net";
 
   # Select internationalisation properties.
@@ -176,7 +176,8 @@
   services.gnome.tracker.enable = false;
   services.gnome.core-developer-tools.enable = true;
 
-  environment.gnome.excludePackages = with pkgs; [ gnome.cheese gnome-photos gnome.gnome-music  gnome.gedit 
+  environment.gnome.excludePackages = with pkgs; [ 
+    gnome.cheese gnome-photos gnome.gnome-music gnome.gedit 
     epiphany # 浏览器
     # evince # pdf阅读器
     gnome.gnome-characters # 表情符号等
@@ -247,10 +248,10 @@
      # mu isync msmtp w3m appimage-run p7zip
 
      wget tsocks curl wireshark netcat tcpdump ltrace
-     mcrypt thc-hydra nmap-graphical nmap john crunch
+     mcrypt thc-hydra  nmap john crunch # nmap-graphical
      ghidra-bin nasm fasm wineWowPackages.stable  # charles cutter winetricks
      
-     unityhub 
+     unityhub
     # v2ray #github 手工维护 qv2ray
      ventoy-bin
 
@@ -260,6 +261,7 @@
      # gnome-builder 包含在 gnome.core-developer-tools.enable
      gnome.adwaita-icon-theme 
      gnome.gnome-tweaks
+     # gnome.gnome-books
      gnome.seahorse # Application for managing encryption keys and passwords in the GnomeKeyring
      gnomeExtensions.appindicator 
      gnomeExtensions.vitals 
@@ -271,14 +273,15 @@
      # gnomeExtensions.ddterm
      # gnome 桌面
 
-     xournalpp sublime4 mpv # krita sigil alacritty
+     mpv sublime4 # krita sigil alacritty xournalpp
+
      # zathura vim风格 epub pdf 阅读器
      # foliate epub阅读器
      # vlc blender  分别为视频和3d建模软件
-     tdesktop lyx texmacs firefox qtcreator rstudio onlyoffice-bin netease-cloud-music-gtk # tor-browser-bundle-bin
+     tdesktop texmacs firefox qtcreator onlyoffice-bin  #  tor-browser-bundle-bin rstudio
      dbeaver zotero # bcompare
      goldendict qv2ray 
-     jetbrains_x.idea-ultimate jetbrains_x.clion jetbrains_x.rider android-studio
+     jetbrains_x.idea-ultimate jetbrains_x.rider android-studio jetbrains_x.clion 
      # oni2  masterpdfeditor
      vscode
       
@@ -299,7 +302,7 @@
      mono dotnet-sdk nodejs yarn perl flutter rustup autoconf julia-bin 
      # haskellPackages.ghcup # 使用 curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh 安装
      cmake-language-server
-     # (python3.withPackages(ps: with ps; [ pip urllib3 spyder ansible jupyter sip pyqt5 pyqtwebengine epc lxml pysocks pymupdf]))
+     # (python3.withPackages(ps: with ps; [ pip urllib3 ansible spyder jupyter sip pyqt5 pyqtwebengine epc lxml pysocks pymupdf]))
      python-with-my-packages
      streamlink you-get youtube-dl
 
@@ -368,7 +371,7 @@
     networkmanager.enable = true;
  #   useDHCP = false;
  #   interfaces.enp3s0.useDHCP = true;
-    nameservers = [ "::1" ];
+     nameservers = [ "::1" ];
     resolvconf.useLocalResolver = true;
     # If using dhcpcd:
     dhcpcd.extraConfig = "nohook resolv.conf";
@@ -456,8 +459,7 @@
       # gnome 环境
       gdm = {
         enable = true;
-        # wayland = true;
-        # nvidiaWayland = true;
+        wayland = false;
       };
 
     };
