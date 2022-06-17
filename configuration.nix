@@ -15,6 +15,7 @@
       "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
       "hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ="
       "iohk.cachix.org-1:DpRUyj7h7V830dp/i6Nti+NEO2/nhblbov/8MW7Rqoo="
+      "nixpkgs-wayland.cachix.org-1:3lwxaILxMRkVhehr5StQprHdEo4IrE8sRho9R9HOLYA="
     ];
     binaryCaches = [
       "https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store"  
@@ -24,6 +25,7 @@
       "https://nix-community.cachix.org"
       "https://hydra.iohk.io" 
       "https://iohk.cachix.org"
+      "https://nixpkgs-wayland.cachix.org"
     ];
 
     extraOptions = ''
@@ -170,8 +172,6 @@
 
   services.gnome.gnome-keyring.enable = true; # gnome 环境配置
 
-  services.gnome.chrome-gnome-shell.enable = true; # gnome 环境配置
-
   services.gnome.tracker-miners.enable = false;
   services.gnome.tracker.enable = false;
   services.gnome.core-developer-tools.enable = true;
@@ -188,7 +188,7 @@
 
   services.emacs = {
     install = true;
-    package = pkgs.emacsGcc;
+    package = pkgs.emacsNativeComp;
   };
 
   # List packages installed in system profile. To search, run:
@@ -228,11 +228,13 @@
    # IDEA_JDK = PYCHARM_JDK;
    # WEBIDE_JDK = PYCHARM_JDK;
      WEBKIT_DISABLE_COMPOSITING_MODE = "1";
+     WLR_NO_HARDWARE_CURSORS = "1";
+
   };
 
 
   
-  nixpkgs.overlays = [ (import ./nixpkgs-overlays) ( import ./emacs-overlay )] ;
+  nixpkgs.overlays = [ (import ./nixpkgs-overlays) ( import ./emacs-overlay ) (import "${builtins.fetchTarball "https://github.com/nix-community/nixpkgs-wayland/archive/master.tar.gz"}/overlay.nix") ] ;
 
   nix.nixPath =
     options.nix.nixPath.default ++ 
@@ -255,9 +257,10 @@
     # v2ray #github 手工维护 qv2ray
      ventoy-bin
 
-     # ark yakuake libsForQt5.gwenview  # kde 桌面
+     # ark yakuake # kde 桌面
      guake liferea
      glade
+
      # gnome-builder 包含在 gnome.core-developer-tools.enable
      gnome.adwaita-icon-theme 
      gnome.gnome-tweaks
@@ -268,12 +271,12 @@
      gnomeExtensions.dash-to-dock 
      gnomeExtensions.gsconnect
      gnomeExtensions.mpris-indicator-button
+     gnomeExtensions.fildem-global-menu
      gnome.nautilus-python 
      # gnomeExtensions.frippery-applications-menu 
-     # gnomeExtensions.ddterm
      # gnome 桌面
 
-     mpv sublime4 # krita sigil alacritty xournalpp
+     mpv # sublime4 # krita sigil xournalpp
 
      # zathura vim风格 epub pdf 阅读器
      # foliate epub阅读器
@@ -293,12 +296,10 @@
      podman runc conmon slirp4netns fuse-overlayfs
 
      electron
-     qt5.full libsForQt5.qt3d libsForQt5.kproperty libsForQt5.qt5.qtsensors libsForQt5.syntax-highlighting 
-     libsForQt5.qt5.qtgamepad libsForQt5.qt5.qtserialbus libsForQt5.qt5.qtspeech
      cmake gcc gcc11 ccls
      llvmPackages_latest.llvm llvmPackages_latest.lld llvmPackages_latest.lldb 
      llvmPackages_latest.clang llvmPackages_latest.libclang 
-     pkg-config gitFull mercurial darcs nix-index patchelf jdk11 jdk go lua_x racket chez lispPackages.quicklisp
+     pkg-config gitFull mercurial darcs nix-index patchelf jdk11 jdk go lua_x racket chez lispPackages.quicklisp sbcl
      mono dotnet-sdk nodejs yarn perl flutter rustup autoconf julia-bin 
      # haskellPackages.ghcup # 使用 curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh 安装
      cmake-language-server
@@ -308,8 +309,29 @@
 
      # boost_x.dev
      libfakeXinerama libselinux libmysqlconnectorcpp libmysqlclient #libmysqlclient_315
+     
 
+    # waylandPkgs.waybar
+     wayfire 
+     # alacritty
+      kitty
+    # wofi wlogout ranger swaylock kanshi mako swaybg swayidle
+    # xfce.thunar xfce.thunar-archive-plugin 
+     # gnome.file-roller gnome.gvfs
+     # sway-contrib.grimshot
   ];
+
+/*
+  services.greetd = {
+    enable = true;
+    settings = {
+      default_session = {
+        command = "${pkgs.greetd.greetd}/bin/agreety --cmd wayfire";
+        user = "prehonor";
+      };
+    };
+  };
+*/
 
   services.udev.packages = with pkgs; [
     android-udev-rules
@@ -369,12 +391,13 @@
     timeServers =  [ "ntp.aliyun.com" "time1.cloud.tencent.com" "cn.pool.ntp.org" "asia.pool.ntp.org" "time.windows.com" ]; # options.networking.timeServers.default ++ [ "ntp.example.com" ];
     hostName = "prehonor";
     networkmanager.enable = true;
+    dhcpcd.enable = false;
  #   useDHCP = false;
  #   interfaces.enp3s0.useDHCP = true;
-     nameservers = [ "::1" ];
-    resolvconf.useLocalResolver = true;
+     nameservers = [ "::1" "127.0.0.1" ];
+    # resolvconf.useLocalResolver = true;
     # If using dhcpcd:
-    dhcpcd.extraConfig = "nohook resolv.conf";
+    # dhcpcd.extraConfig = "nohook resolv.conf";
     # If using NetworkManager:
     networkmanager.dns = "dnsmasq";
     firewall = { 
@@ -433,7 +456,7 @@
 
 
   # Enable CUPS to print documents.
-  services.printing.enable = true;
+  # services.printing.enable = true;
 
   # Enable sound.
   sound.enable = true;
@@ -441,8 +464,6 @@
 
   # Enable the X11 windowing system.
 
-  # boot.kernelPackages = pkgs.linuxPackages.nvidia_x11; # gnome 环境
-  # hardware.nvidia.package = config.boot.kernelPackages.nvidiaPackages.beta; # gnome 环境
 
   services.xserver = {
     enable = true;
@@ -452,24 +473,21 @@
     xkbModel = "pc105";
 
     videoDrivers = [ "nvidia" ]; # nouveau 
-
+/*
     displayManager = { 
-      # lightdm.enable = true;
-      
       # gnome 环境
+
       gdm = {
         enable = true;
         wayland = false;
       };
-
     };
 
     desktopManager = {
-      # plasma5.enable = true;
       gnome.enable = true; # gnome 环境
-      # xterm.enable = false; #  没效果   
+      xterm.enable = false; #  没效果   
     };
-
+*/
   };
   hardware.nvidia.modesetting.enable = true; # gnome 环境
 
@@ -478,7 +496,7 @@
   users.users.prehonor = {
      home = "/home/prehonor";
      isNormalUser = true;
-     extraGroups = [ "wheel" "networkmanager" "docker" "audio" "video" "power" "users" "pulseaudio" "mysql" "wireshark" "adbusers" ]; # Enable ‘sudo’ for the user.
+     extraGroups = [ "wheel" "networkmanager" "docker" "audio" "video" "power" "users" "pulseaudio" "mysql" "wireshark" ]; # Enable ‘sudo’ for the user.
      subUidRanges = [{ startUid = 100000; count = 65536; }];
      subGidRanges = [{ startGid = 100000; count = 65536; }];
   };
@@ -524,7 +542,8 @@
     };
   };
 }; */
-  environment.etc."containers/policy.json" = {
+environment.etc = {
+  "containers/policy.json" = {
     mode="0644";
     text=''
       {
@@ -542,15 +561,37 @@
           }
       }
     '';
-  };
+    };
 
-  environment.etc."containers/registries.conf" = {
-    mode="0644";
-    text=''
-      [registries.search]
-      registries = ['docker.io', 'quay.io']
+    "containers/registries.conf" = {
+      mode="0644";
+      text=''
+        [registries.search]
+        registries = ['docker.io', 'quay.io']
+      '';
+    };
+    /*
+    "NetworkManager/dnsmasq.d/foo".text =  ''
+      domain-needed
+      bogus-priv
+      strict-order
+      dnssec #为nixos新加的，不知道效果如何
+      trust-anchor=.,19036,8,2,49AAC11D7B6F6446702E54A1607371607A1A41855200FD2CE1CDDE32F24E8FB5
+      trust-anchor=.,20326,8,2,E06D44B80B8F1D39A95C0B0D7C65D08458E880409BBC683457104237C7F8EC8D
+      dnssec-check-unsigned #同上
+      no-resolv
+      no-poll
+      server=::1#5658
+      server=127.0.0.1#5658
+      interface=enp3s0
+      listen-address=::1,127.0.0.1
+      cache-size=966
+      log-queries
+      log-facility=/var/log/dnsmasq.log
+      # conf-dir=/etc/nixos/dnsmasq.d/,*.conf
     '';
-  }; 
+    */
+  };
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
   # on your system were taken. It‘s perfectly fine and recommended to leave
