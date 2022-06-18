@@ -157,8 +157,8 @@
       vimAlias = true;
     };
     wireshark.enable = true;
-    dconf.enable = true; # gnome 环境配置
-    # xwayland.enable = true; # gnome 环境配置
+    dconf.enable = true; # Running GNOME programs outside of GNOME
+    xwayland.enable = true;
     # steam.enable = true;
     evolution = {
       enable = true;
@@ -166,15 +166,15 @@
     };
   };
 
+/*
   services.gnome.evolution-data-server.enable = true; # gnome 环境配置
-
   services.gnome.gnome-online-accounts.enable = true; # gnome 环境配置
-
   services.gnome.gnome-keyring.enable = true; # gnome 环境配置
-
   services.gnome.tracker-miners.enable = false;
   services.gnome.tracker.enable = false;
+
   services.gnome.core-developer-tools.enable = true;
+
 
   environment.gnome.excludePackages = with pkgs; [ 
     gnome.cheese gnome-photos gnome.gnome-music gnome.gedit 
@@ -184,7 +184,8 @@
     gnome.totem gnome-tour gnome.geary # 媒体播放器; 旅游app ; mail客户端
     gnome.tali gnome.iagno gnome.hitori gnome.atomix # 游戏
     # gnome.gnome-terminal 
-  ];
+  ];  
+*/
 
   services.emacs = {
     install = true;
@@ -203,6 +204,7 @@
 
   hardware = {
     opengl = {
+      enable = true;
       driSupport32Bit = true;
       extraPackages = with pkgs; [ 
         intel-media-driver # LIBVA_DRIVER_NAME=iHD
@@ -221,16 +223,18 @@
   };
 
   environment.variables = rec {
-   # ahome = "/ah/prehonor";
-   # ghome = "/gh/prehonor";
-#    PYCHARM_JDK = "/gh/prehonor/gitproject/JetBrainsRuntime/build/linux-x86_64-normal-server-release/jdk";
-#    DATAGRIP_JDK = PYCHARM_JDK;
-   # IDEA_JDK = PYCHARM_JDK;
-   # WEBIDE_JDK = PYCHARM_JDK;
-     WEBKIT_DISABLE_COMPOSITING_MODE = "1";
-     WLR_NO_HARDWARE_CURSORS = "1";
-
+    # PYCHARM_JDK = "/gh/prehonor/gitproject/JetBrainsRuntime/build/linux-x86_64-normal-server-release/jdk";
+    # DATAGRIP_JDK = PYCHARM_JDK;
+    # IDEA_JDK = PYCHARM_JDK;
+    # WEBIDE_JDK = PYCHARM_JDK;
   };
+
+  environment.sessionVariables = {
+    WEBKIT_DISABLE_COMPOSITING_MODE = "1";
+    WLR_NO_HARDWARE_CURSORS = "1";
+    MOZ_ENABLE_WAYLAND = "1";
+  };
+
 
 
   
@@ -254,16 +258,19 @@
      ghidra-bin nasm fasm wineWowPackages.stable  # charles cutter winetricks
      
      unityhub
+
     # v2ray #github 手工维护 qv2ray
      ventoy-bin
 
      # ark yakuake # kde 桌面
-     guake liferea
-     glade
+     liferea glade gnome-builder
+     gnome.adwaita-icon-theme # Running GNOME programs outside of GNOME
 
+  /*
+     # gnome 桌面 start
      # gnome-builder 包含在 gnome.core-developer-tools.enable
-     gnome.adwaita-icon-theme 
-     gnome.gnome-tweaks
+     ksnip peek
+     guake gnome.gnome-tweaks
      # gnome.gnome-books
      gnome.seahorse # Application for managing encryption keys and passwords in the GnomeKeyring
      gnomeExtensions.appindicator 
@@ -274,29 +281,28 @@
      gnomeExtensions.fildem-global-menu
      gnome.nautilus-python 
      # gnomeExtensions.frippery-applications-menu 
-     # gnome 桌面
+     # gnome 桌面 end
+  */
 
-     mpv # sublime4 # krita sigil xournalpp
+     mpv sublime4 # krita sigil xournalpp
 
      # zathura vim风格 epub pdf 阅读器
      # foliate epub阅读器
      # vlc blender  分别为视频和3d建模软件
-     tdesktop texmacs firefox qtcreator onlyoffice-bin  #  tor-browser-bundle-bin rstudio
+     tdesktop texmacs firefox qtcreator onlyoffice-bin  # tor-browser-bundle-bin rstudio
      dbeaver zotero # bcompare
      goldendict qv2ray 
      jetbrains_x.idea-ultimate jetbrains_x.rider android-studio jetbrains_x.clion 
      # oni2  masterpdfeditor
-     vscode
-      
-      ksnip peek
-      opencv convmv
-      jpegoptim # Optimize JPEG files
-      # digikam gimp   inkscape   synfigstudio  natron  scribus 不好使，删   edraw
+     vscode 
+     opencv convmv
+     jpegoptim # Optimize JPEG files
+     # digikam gimp   inkscape   synfigstudio  natron  scribus 不好使，删   edraw
 
      podman runc conmon slirp4netns fuse-overlayfs
 
      electron
-     cmake gcc gcc11 ccls
+     cmake gcc ccls
      llvmPackages_latest.llvm llvmPackages_latest.lld llvmPackages_latest.lldb 
      llvmPackages_latest.clang llvmPackages_latest.libclang 
      pkg-config gitFull mercurial darcs nix-index patchelf jdk11 jdk go lua_x racket chez lispPackages.quicklisp sbcl
@@ -309,16 +315,13 @@
 
      # boost_x.dev
      libfakeXinerama libselinux libmysqlconnectorcpp libmysqlclient #libmysqlclient_315
-     
 
-    # waylandPkgs.waybar
-     wayfire 
-     # alacritty
-      kitty
-    # wofi wlogout ranger swaylock kanshi mako swaybg swayidle
-    # xfce.thunar xfce.thunar-archive-plugin 
+     waylandPkgs.waybar waylandPkgs.wofi waylandPkgs.wlogout waylandPkgs.swaylock waylandPkgs.kanshi waylandPkgs.swaybg waylandPkgs.grim waylandPkgs.mako waylandPkgs.wlsunset waylandPkgs.swayidle waylandPkgs.slurp 
+     waylandPkgs.wayfire-unstable 
+     kitty okular
+     xfce.thunar xfce.thunar-archive-plugin 
+     # ranger
      # gnome.file-roller gnome.gvfs
-     # sway-contrib.grimshot
   ];
 
 /*
@@ -335,9 +338,9 @@
 
   services.udev.packages = with pkgs; [
     android-udev-rules
-    gnome.gnome-settings-daemon # gnome 桌面
+    # gnome.gnome-settings-daemon # gnome 桌面
   ];
-  services.dbus.packages = with pkgs; [ gnome2.GConf ]; # gnome 桌面
+  services.dbus.packages = with pkgs; [ gnome2.GConf ]; # Running ancient gnome applications
   services.mysql = {
     enable = true;
     package = pkgs.mysql80;
@@ -473,23 +476,27 @@
     xkbModel = "pc105";
 
     videoDrivers = [ "nvidia" ]; # nouveau 
-/*
-    displayManager = { 
-      # gnome 环境
 
+    displayManager = {
+
+      startx.enable = true; 
+      # gnome 环境
+    /*
       gdm = {
         enable = true;
         wayland = false;
       };
+    */
+    
     };
 
     desktopManager = {
-      gnome.enable = true; # gnome 环境
+      # gnome.enable = true; # gnome 环境
       xterm.enable = false; #  没效果   
     };
-*/
+
   };
-  hardware.nvidia.modesetting.enable = true; # gnome 环境
+  hardware.nvidia.modesetting.enable = true; # wayland 环境
 
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
