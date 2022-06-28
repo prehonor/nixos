@@ -21,8 +21,8 @@ in rec {
 
     lua_x = super.lua5_4;
 
-    wayfireApplications = wayfireApplications-unwrapped.withPlugins (plugins: [ plugins.wf-shell ]);
-    inherit (wayfireApplications) wayfire wcm;
+    wayfireApplications = wayfireApplications-unwrapped.withPlugins (plugins: [ plugins.wf-shell plugins.wf-info ]); 
+    inherit (wayfireApplications) wayfire wcm ;
     wayfireApplications-unwrapped = super.recurseIntoAttrs (
         super.callPackage ./pkgs/applications/window-managers/wayfire/applications.nix { }
     ); # wlroots = super.wlroots_0_14;
