@@ -45,7 +45,7 @@
   #    "nvidia-drm.modeset=1"
   # ];
   # Define on which hard drive you want to install Grub.
- # boot.loader.grub.systemd-boot.enable = true;
+  # boot.loader.grub.systemd-boot.enable = true;
   boot.loader.grub.device = "nodev"; # or "nodev" for efi only
   fileSystems."/".options = [ "noatime" "nodiratime" "discard" ];
   fileSystems."/gh" =
@@ -97,10 +97,7 @@
       fcitx5.addons = with pkgs; [
         fcitx5-chinese-addons
       ];
-    /*      
-      enabled = "ibus";
-      ibus.engines = with pkgs.ibus-engines; [ libpinyin ];
-      */
+
     };
   };
 
@@ -160,10 +157,12 @@
     dconf.enable = true; # Running GNOME programs outside of GNOME
     xwayland.enable = true;
     # steam.enable = true;
+    /*
     evolution = {
       enable = true;
       plugins = [ pkgs.evolution-ews ];
     };
+    */
   };
 
 /*
@@ -238,7 +237,8 @@
 
 
   
-  nixpkgs.overlays = [ (import ./nixpkgs-overlays) ( import ./emacs-overlay ) (import "${builtins.fetchTarball "https://github.com/nix-community/nixpkgs-wayland/archive/master.tar.gz"}/overlay.nix") ] ;
+  nixpkgs.overlays = [ (import ./nixpkgs-overlays) ( import ./emacs-overlay ) ] ; 
+  # (import "${builtins.fetchTarball "https://github.com/nix-community/nixpkgs-wayland/archive/master.tar.gz"}/overlay.nix")
 
   nix.nixPath =
     options.nix.nixPath.default ++ 
@@ -248,22 +248,19 @@
      sudo parted finger_bsd pciutils libva-utils vdpauinfo file binutils-unwrapped bind 
      bashInteractive.dev getconf fontconfig
      xorg.xhost
-     # steam-run
+
      graphviz dos2unix grpc dpkg unzip zip tmux ntfs3g usbutils lsof unrar fd ripgrep glslang rtags nixfmt sqlite texlive.combined.scheme-medium shellcheck rnix-lsp bear gnuplot socat
      wmctrl xdotool aria xorg.xprop xclip xorg.xwininfo
-     # mu isync msmtp w3m appimage-run p7zip
 
      wget tsocks curl wireshark netcat tcpdump ltrace
-     mcrypt thc-hydra  nmap john crunch # nmap-graphical
-     ghidra-bin nasm fasm wineWowPackages.stable  # charles cutter winetricks
+     mcrypt thc-hydra  nmap john crunch
+     ghidra-bin nasm fasm wineWowPackages.stable  
      
-     unityhub
-
-    # v2ray #github 手工维护 qv2ray
+     unityhub 
      ventoy-bin
 
-     # ark yakuake # kde 桌面
-     liferea glade gnome-builder
+     liferea glade 
+     # gnome-builder
      gnome.adwaita-icon-theme # Running GNOME programs outside of GNOME
 
   /*
@@ -284,20 +281,29 @@
      # gnome 桌面 end
   */
 
-     mpv sublime4 # krita sigil xournalpp
+     mpv sublime4 p7zip
 
-     # zathura vim风格 epub pdf 阅读器
+     #  vim风格 epub pdf 阅读器
      # foliate epub阅读器
      # vlc blender  分别为视频和3d建模软件
+     # oni2  masterpdfeditor
+     # krita sigil xournalpp
+     # v2ray #github 手工维护 qv2ray
+     #   yakuake # kde 桌面
+     # mu isync msmtp w3m appimage-run  
+     # steam-run
+     # charles cutter winetricks
+     # digikam gimp inkscape synfigstudio natron scribus 不好使，删 edraw photoflare
+
      tdesktop texmacs firefox qtcreator onlyoffice-bin  # tor-browser-bundle-bin rstudio
-     dbeaver zotero # bcompare
+     dbeaver # bcompare zotero
      goldendict qv2ray 
      jetbrains_x.idea-ultimate jetbrains_x.rider android-studio jetbrains_x.clion 
-     # oni2  masterpdfeditor
+
      vscode 
      opencv convmv
      jpegoptim # Optimize JPEG files
-     # digikam gimp   inkscape   synfigstudio  natron  scribus 不好使，删   edraw
+     
 
      podman runc conmon slirp4netns fuse-overlayfs
 
@@ -307,34 +313,42 @@
      llvmPackages_latest.clang llvmPackages_latest.libclang 
      pkg-config gitFull mercurial darcs nix-index patchelf jdk11 jdk go lua_x racket chez lispPackages.quicklisp sbcl
      mono dotnet-sdk nodejs yarn perl flutter rustup autoconf julia-bin 
+
+
      # haskellPackages.ghcup # 使用 curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh 安装
-     cmake-language-server
      # (python3.withPackages(ps: with ps; [ pip urllib3 ansible spyder jupyter sip pyqt5 pyqtwebengine epc lxml pysocks pymupdf]))
+     # boost_x.dev
+     # libmysqlclient_315
+
+     cmake-language-server
+
      python-with-my-packages
      streamlink you-get youtube-dl
 
-     # boost_x.dev
-     libfakeXinerama libselinux libmysqlconnectorcpp libmysqlclient #libmysqlclient_315
+     
+     libfakeXinerama libselinux libmysqlconnectorcpp libmysqlclient 
 
-     waylandPkgs.waybar waylandPkgs.wofi waylandPkgs.wlogout waylandPkgs.swaylock waylandPkgs.kanshi waylandPkgs.swaybg waylandPkgs.grim waylandPkgs.mako waylandPkgs.wlsunset waylandPkgs.swayidle waylandPkgs.slurp 
-     waylandPkgs.wayfire-unstable 
-     kitty okular
-     xfce.thunar xfce.thunar-archive-plugin 
-     # ranger
-     # gnome.file-roller gnome.gvfs
+     wofi wlogout swaylock kanshi grim mako wlsunset swayidle slurp xdg-desktop-portal-wlr 
+     wayfire wcm
+     kitty zathura ranger swappy 
+     drawing 
+     pcmanfm spaceFM
+     nemiver cutter_x
+     # xfce.thunar xfce.thunar-archive-plugin 
+     #  waylandPkgs.waybar waylandPkgs.swaybg wl-clipboard
   ];
 
-/*
   services.greetd = {
     enable = true;
+    vt = 7;
     settings = {
       default_session = {
-        command = "${pkgs.greetd.greetd}/bin/agreety --cmd wayfire";
+        command = "${pkgs.greetd.tuigreet}/bin/tuigreet -t --remember --cmd ${pkgs.wayfire}/bin/wayfire"; # --config /etc/greetd/wayfire.ini
         user = "prehonor";
       };
     };
   };
-*/
+
 
   services.udev.packages = with pkgs; [
     android-udev-rules
@@ -364,10 +378,14 @@
   };
    
 
-  # virtualisation.anbox.enable = true;
-  # virtualisation.waydroid.enable = true;
-  virtualisation.docker.enable = false;
-  virtualisation.virtualbox.host.enable = true;
+  virtualisation = {
+      docker.enable = false;
+      virtualbox.host.enable = true;
+      # waydroid.enable = true;
+      # lxd.enable = true;
+      # anbox.enable = true;
+  };
+
   users.extraGroups.vboxusers.members = [ "user-with-access-to-virtualbox" ];
  
   security.sudo = {
@@ -577,6 +595,12 @@ environment.etc = {
         registries = ['docker.io', 'quay.io']
       '';
     };
+ /* "greetd/environments".text = ''
+      wayfire
+      bash
+      startxfce4
+  '';
+ */ 
     /*
     "NetworkManager/dnsmasq.d/foo".text =  ''
       domain-needed
@@ -605,7 +629,7 @@ environment.etc = {
   # this value at the release version of the first install of this system.
   # Before changing this value read the documentation for this option
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
-  system.stateVersion = "21.11";
+  system.stateVersion = "22.05";
 
 }
 

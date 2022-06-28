@@ -20,7 +20,24 @@ in rec {
     clang_x = super.llvmPackages_latest.clang;
 
     lua_x = super.lua5_4;
-    nodejs_x = super.nodejs-14_x;
+
+    wayfireApplications = wayfireApplications-unwrapped.withPlugins (plugins: [ plugins.wf-shell ]);
+    inherit (wayfireApplications) wayfire wcm;
+    wayfireApplications-unwrapped = super.recurseIntoAttrs (
+        super.callPackage ./pkgs/applications/window-managers/wayfire/applications.nix { }
+    ); # wlroots = super.wlroots_0_14;
+    
+    wayfirePlugins = super.recurseIntoAttrs (
+        super.callPackage ./pkgs/applications/window-managers/wayfire/plugins.nix {
+        inherit (wayfireApplications-unwrapped) wayfire;
+    });
+    wf-config = super.callPackage ./pkgs/applications/window-managers/wayfire/wf-config.nix { };
+
+
+    rizin_x = super.callPackage ./pkgs/development/tools/analysis/rizin { };
+
+    cutter_x = super.libsForQt515.callPackage ./pkgs/development/tools/analysis/rizin/cutter.nix {  rizin = rizin_x; };
+
     # logseq = super.callPackage ./pkgs/applications/misc/logseq { };
     /*
     koreader_x = super.koreader.overrideAttrs (
@@ -121,6 +138,7 @@ in rec {
 
    # texmacs = super.texmacs.override { chineseFonts = true; };
    # python-lsp-server = super.python3.pkgs.callPackage ./pkgs/development/python-modules/python-lsp-server { };
+   gdbgui_x = super.python3.pkgs.callPackage ./pkgs/development/tools/misc/gdbgui { };
 
 /*
   	boost_x = super.boost175.override { enablePython = true; python = super.pkgs.python3; };

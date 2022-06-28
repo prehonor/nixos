@@ -6,7 +6,7 @@ in
   {
     sublime4 = common {
       buildVersion = "4113";
-      x64sha256 = "13679mnmigy1sgj355zs4si6gnx42rgjl4rn5d6gqgj5qq7zj3lh";
+      x64sha256 = "0fb4jazf10fnmi1p2km77ckf3kqjil49j9qfgzfs13asivvgclr6";
       aarch64sha256 = "0hg6g3cichma1x82963m7xwazmpdvv5zmz8rpwxs337zq7j3dmb3";
     } {};
 

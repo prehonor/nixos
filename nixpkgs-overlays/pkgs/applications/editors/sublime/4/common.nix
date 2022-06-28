@@ -12,7 +12,7 @@ let
   binaries = [ "sublime_text" "plugin_host-3.3" "plugin_host-3.8" "crash_reporter" ];
   primaryBinary = "sublime_text";
   primaryBinaryAliases = [ "subl" "sublime" "sublime4" ];
-  downloadUrl = "https://download.sublimetext.com/sublime_text_build_${buildVersion}_${arch}.tar.xz";
+  downloadUrl = "https://prehonor-generic.pkg.coding.net/yigeren/pkgs/sublime_text_build_${buildVersion}_${arch}.tar.xz";
   versionUrl = "https://download.sublimetext.com/latest/${if dev then "dev" else "stable"}";
   versionFile = builtins.toString ./packages.nix;
   archSha256 = {
@@ -30,13 +30,13 @@ in let
   binaryPackage = stdenv.mkDerivation {
     pname = "${pname}-bin";
     version = buildVersion;
-/*
+
     src = fetchurl {
       url = downloadUrl;
       sha256 = archSha256;
     };
-*/
-    src = /home/prehonor/Downloads/sublime_text_build_4113_x64.tar.xz;
+
+   # src = /home/prehonor/Downloads/sublime_text_build_4113_x64.tar.xz;
     dontStrip = true;
     dontPatchELF = true;
     buildInputs = [ glib gtk3 ]; # for GSETTINGS_SCHEMAS_PATH
