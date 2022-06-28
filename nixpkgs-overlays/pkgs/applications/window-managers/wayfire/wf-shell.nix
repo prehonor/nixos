@@ -19,6 +19,9 @@ stdenv.mkDerivation rec {
   ];
 
   mesonFlags = [ "--sysconfdir" "/etc" ];
+  
+  PKG_CONFIG_WAYFIRE_LIBDIR = "lib";
+  PKG_CONFIG_WAYFIRE_METADATADIR = "share/wayfire/metadata";
 
   meta = with lib; {
     homepage = "https://github.com/WayfireWM/wf-shell";

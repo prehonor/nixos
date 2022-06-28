@@ -14,8 +14,10 @@ stdenv.mkDerivation rec {
   buildInputs = [
     pango cairo wayfire wf-config wlroots wayland wayland-protocols libxkbcommon
   ];
+  
   PKG_CONFIG_WAYFIRE_LIBDIR = "lib";
   PKG_CONFIG_WAYFIRE_METADATADIR = "share/wayfire/metadata";
+
   meta = with lib; {
     homepage = "https://github.com/soreau/wf-info";
     description = "A simple wayfire plugin and program to get information from wayfire";

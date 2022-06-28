@@ -3,9 +3,14 @@
 let
   inherit (lib) escapeShellArg makeBinPath;
 
-  xmlPath = plugin: "${plugin}/share/wayfire/metadata/wf-shell";
 
-  makePluginPath = lib.makeLibraryPath;
+  xmlPath = plugin: "${plugin}/share/wayfire/metadata";
+  libPath = plugin: "${plugin}/lib/wayfire";
+  # pluginLibs = lib.makeSearchPath "lib/wayfire" plugins;
+  # pluginXmls = lib.makeSearchPath "share/wayfire/metadata" plugins;
+  # xmlPath = plugin: "${plugin}/share/wayfire/metadata/wf-shell";
+  # makePluginPath = lib.makeLibraryPath;
+  makePluginPath = lib.concatMapStringsSep ":" libPath;
   makePluginXMLPath = lib.concatMapStringsSep ":" xmlPath;
 in
 
@@ -31,7 +36,7 @@ runCommand "${application.name}-wrapped" {
   do
       makeWrapper "$bin" $out/bin/''${bin##*/} \
           --suffix PATH : ${escapeShellArg (makeBinPath plugins)} \
-          --suffix WAYFIRE_PLUGIN_PATH : ${escapeShellArg (makePluginPath plugins)} \
+          --suffix WAYFIRE_PLUGIN_PATH : ${escapeShellArg (makePluginPath plugins) } \
           --suffix WAYFIRE_PLUGIN_XML_PATH : ${escapeShellArg (makePluginXMLPath plugins)}
   done
   find ${application} -mindepth 1 -maxdepth 1 -not -name bin \
