@@ -219,7 +219,7 @@ in rec {
     
 
 
-  	# bcompare = super.libsForQt5.callPackage ./pkgs/applications/version-management/bcompare {};
+  	bcompare = super.libsForQt5.callPackage ./pkgs/applications/version-management/bcompare {};
 
 
   	# mymakeWrapper = super.makeSetupHook { deps = [ super.dieHook ]; substitutions = { shell = super.pkgs.runtimeShell; }; }

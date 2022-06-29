@@ -1,51 +1,79 @@
-{ autoPatchelfHook, bzip2, cairo, coreutils, fetchurl, gdk-pixbuf, pango, gtk2, kcoreaddons, ki18n, kio, kservice, lib, qt4, qtbase, stdenv, runtimeShell }:
+{ lib, autoPatchelfHook, bzip2, cairo, coreutils, fetchurl, gdk-pixbuf, glibc, pango, gtk2, kcoreaddons, ki18n, kio, kservice
+, stdenv, runtimeShell, unzip
+}:
 
-stdenv.mkDerivation rec {
+let
   pname = "bcompare";
-  version = "4.3.7.25118";
+  version = "4.4.2.26348";
 
-  src = fetchurl {
-    url = "https://www.scootersoftware.com/${pname}-${version}_amd64.deb";
-    sha256 = "165d6d81vy29pr62y4rcvl4abqqhfwdzcsx77p0dqlzgqswj88v8";
+  throwSystem = throw "Unsupported system: ${stdenv.hostPlatform.system}";
+
+  srcs = {
+    x86_64-linux = fetchurl {
+      url = "https://www.scootersoftware.com/${pname}-${version}_amd64.deb";
+      sha256 = "sha256-GotORErgPs7IPXATbBfIisDCNwp8csl7pDSwV77FylA=";
+    };
+
+    x86_64-darwin = fetchurl {
+      url = "https://www.scootersoftware.com/BCompareOSX-${version}.zip";
+      sha256 = "sha256-XqmtW2EGyFmOzCooXczP3mtMN5UVQCCx7DJnVDlzAko=";
+    };
+
+    aarch64-darwin = srcs.x86_64-darwin;
   };
 
-  unpackPhase = ''
-    ar x $src
-    tar xfz data.tar.gz
-  '';
+  src = srcs.${stdenv.hostPlatform.system} or throwSystem;
 
-  installPhase = ''
-    mkdir -p $out/bin $out/lib $out/share
-    cp -R usr/share $out/
-    cp -R usr/lib $out/
-    cp -R usr/bin $out/
-    # Remove library that refuses to be autoPatchelf'ed
-    rm $out/lib/beyondcompare/ext/bcompare_ext_kde.amd64.so
-    substituteInPlace $out/bin/bcompare \
-      --replace "/usr/lib/beyondcompare" "$out/lib/beyondcompare" \
-      --replace "/bin/bash" "${runtimeShell}"
-    # Create symlink bzip2 library
-    ln -s ${bzip2.out}/lib/libbz2.so.1 $out/lib/beyondcompare/libbz2.so.1.0
-    sed -i "s/keexjEP3t4Mue23hrnuPtY4TdcsqNiJL-5174TsUdLmJSIXKfG2NGPwBL6vnRPddT7tH29qpkneX63DO9ECSPE9rzY1zhThHERg8lHM9IBFT+rVuiY823aQJuqzxCKIE1bcDqM4wgW01FH6oCBP1G4ub01xmb4BGSUG6ZrjxWHJyNLyIlGvOhoY2HAYzEtzYGwxFZn2JZ66o4RONkXjX0DF9EzsdUef3UAS+JQ+fCYReLawdjEe6tXCv88GKaaPKWxCeaUL9PejICQgRQOLGOZtZQkLgAelrOtehxz5ANOOqCaJgy2mJLQVLM5SJ9Dli909c5ybvEhVmIC0dc9dWH+/N9KmiLVlKMU7RJqnE+WXEEPI1SgglmfmLc1yVH7dqBb9ehOoKG9UE+HAE1YvH1XX2XVGeEqYUY-Tsk7YBTz0WpSpoYyPgx6Iki5KLtQ5G-aKP9eysnkuOAkrvHU8bLbGtZteGwJarev03PhfCioJL4OSqsmQGEvDbHFEbNl1qJtdwEriR+VNZts9vNNLk7UGfeNwIiqpxjk4Mn09nmSd8FhM4ifvcaIbNCRoMPGl6KU12iseSe+w+1kFsLhX+OhQM8WXcWV10cGqBzQE9OqOLUcg9n0krrR3KrohstS9smTwEx9olyLYppvC0p5i7dAx2deWvM1ZxKNs0BvcXGukR+/g" $out/lib/beyondcompare/BCompare
-  '';
+  linux = stdenv.mkDerivation {
+    inherit pname version src meta;
+    unpackPhase = ''
+      ar x $src
+      tar xfz data.tar.gz
+    '';
 
-  nativeBuildInputs = [ autoPatchelfHook ];
+    installPhase = ''
+      mkdir -p $out/{bin,lib,share}
+      cp -R usr/{bin,lib,share} $out/
+      # Remove library that refuses to be autoPatchelf'ed
+      rm $out/lib/beyondcompare/ext/bcompare_ext_kde.amd64.so
+      substituteInPlace $out/bin/${pname} \
+        --replace "/usr/lib/beyondcompare" "$out/lib/beyondcompare" \
+        --replace "ldd" "${glibc.bin}/bin/ldd" \
+        --replace "/bin/bash" "${runtimeShell}"
+      # Create symlink bzip2 library
+      ln -s ${bzip2.out}/lib/libbz2.so.1 $out/lib/beyondcompare/libbz2.so.1.0
+      sed -i "s/keexjEP3t4Mue23hrnuPtY4TdcsqNiJL-5174TsUdLmJSIXKfG2NGPwBL6vnRPddT7tH29qpkneX63DO9ECSPE9rzY1zhThHERg8lHM9IBFT+rVuiY823aQJuqzxCKIE1bcDqM4wgW01FH6oCBP1G4ub01xmb4BGSUG6ZrjxWHJyNLyIlGvOhoY2HAYzEtzYGwxFZn2JZ66o4RONkXjX0DF9EzsdUef3UAS+JQ+fCYReLawdjEe6tXCv88GKaaPKWxCeaUL9PejICQgRQOLGOZtZQkLgAelrOtehxz5ANOOqCaJgy2mJLQVLM5SJ9Dli909c5ybvEhVmIC0dc9dWH+/N9KmiLVlKMU7RJqnE+WXEEPI1SgglmfmLc1yVH7dqBb9ehOoKG9UE+HAE1YvH1XX2XVGeEqYUY-Tsk7YBTz0WpSpoYyPgx6Iki5KLtQ5G-aKP9eysnkuOAkrvHU8bLbGtZteGwJarev03PhfCioJL4OSqsmQGEvDbHFEbNl1qJtdwEriR+VNZts9vNNLk7UGfeNwIiqpxjk4Mn09nmSd8FhM4ifvcaIbNCRoMPGl6KU12iseSe+w+1kFsLhX+OhQM8WXcWV10cGqBzQE9OqOLUcg9n0krrR3KrohstS9smTwEx9olyLYppvC0p5i7dAx2deWvM1ZxKNs0BvcXGukR+/g" $out/lib/beyondcompare/BCompare
+    '';
 
-  buildInputs = [
-    stdenv.cc.cc.lib
-    gtk2
-    pango
-    cairo
-    kio
-    kservice
-    ki18n
-    kcoreaddons
-    gdk-pixbuf
-    bzip2
-  ];
+    nativeBuildInputs = [ autoPatchelfHook ];
 
-  dontBuild = true;
-  dontConfigure = true;
+    buildInputs = [
+      stdenv.cc.cc.lib
+      gtk2
+      pango
+      cairo
+      kio
+      kservice
+      ki18n
+      kcoreaddons
+      gdk-pixbuf
+      bzip2
+    ];
+
+    dontBuild = true;
+    dontConfigure = true;
+    dontWrapQtApps = true;
+  };
+
+  darwin = stdenv.mkDerivation {
+    inherit pname version src meta;
+    nativeBuildInputs = [ unzip ];
+
+    installPhase = ''
+      mkdir -p $out/Applications/BCompare.app
+      cp -R . $out/Applications/BCompare.app
+    '';
+  };
 
   meta = with lib; {
     description = "GUI application that allows to quickly and easily compare files and folders";
@@ -56,8 +84,10 @@ stdenv.mkDerivation rec {
     '';
     homepage = "https://www.scootersoftware.com";
     license = licenses.unfree;
-    maintainers = [ maintainers.ktor ];
-    platforms = [ "x86_64-linux" ];
+    maintainers = with maintainers; [ ktor arkivm ];
+    platforms = builtins.attrNames srcs;
   };
-
-}
+in
+if stdenv.isDarwin
+then darwin
+else linux
