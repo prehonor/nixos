@@ -21,18 +21,18 @@ in rec {
 
     lua_x = super.lua5_4;
 
-    wayfireApplications = wayfireApplications-unwrapped.withPlugins (plugins: [ plugins.wf-shell plugins.wf-info ]); 
+    wayfireApplications = wayfireApplications-unwrapped.withPlugins (plugins: [ plugins.wf-shell plugins.wf-info plugins.wayfire-plugins-extra ]); 
     inherit (wayfireApplications) wayfire wcm ;
     wayfireApplications-unwrapped = super.recurseIntoAttrs (
         super.callPackage ./pkgs/applications/window-managers/wayfire/applications.nix { }
-    ); # wlroots = super.wlroots_0_14;
+    );
     
     wayfirePlugins = super.recurseIntoAttrs (
         super.callPackage ./pkgs/applications/window-managers/wayfire/plugins.nix {
         inherit (wayfireApplications-unwrapped) wayfire;
     });
     wf-config = super.callPackage ./pkgs/applications/window-managers/wayfire/wf-config.nix { };
-
+    mpvpaper = super.callPackage ./pkgs/applications/graphics/mpvpaper { };
 
     rizin_x = super.callPackage ./pkgs/development/tools/analysis/rizin { };
 
