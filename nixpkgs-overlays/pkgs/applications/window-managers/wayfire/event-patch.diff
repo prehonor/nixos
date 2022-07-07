@@ -1,0 +1,29 @@
+diff --git a/event-patch.diff b/event-patch.diff
+new file mode 100644
+index 0000000..e69de29
+diff --git a/src/force-fullscreen.cpp b/src/force-fullscreen.cpp
+index a5d197f..4c5d0b3 100644
+--- a/src/force-fullscreen.cpp
++++ b/src/force-fullscreen.cpp
+@@ -534,7 +534,7 @@ class wayfire_force_fullscreen : public wf::plugin_interface_t
+     wf::signal_connection_t on_motion_event = [=] (wf::signal_data_t *data)
+     {
+         auto ev = static_cast<
+-            wf::input_event_signal<wlr_event_pointer_motion>*>(data);
++            wf::input_event_signal<wlr_pointer_motion_event>*>(data);
+ 
+         if (wf::get_core().get_active_output() != output)
+         {
+diff --git a/src/window-zoom.cpp b/src/window-zoom.cpp
+index 244061e..ad0efd6 100644
+--- a/src/window-zoom.cpp
++++ b/src/window-zoom.cpp
+@@ -195,7 +195,7 @@ class wayfire_winzoom : public wf::plugin_interface_t
+         return update_winzoom(view, wf::point_t{0, -1});
+     };
+ 
+-    wf::axis_callback axis_cb = [=] (wlr_event_pointer_axis *ev)
++    wf::axis_callback axis_cb = [=] (wlr_pointer_axis_event *ev)
+     {
+         auto view = wf::get_core().get_cursor_focus_view();
+         if (ev->orientation == WLR_AXIS_ORIENTATION_VERTICAL)

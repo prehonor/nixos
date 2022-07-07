@@ -1,0 +1,1131 @@
+diff --git a/meson.build b/meson.build
+index 7ffb482f..66888561 100644
+--- a/meson.build
++++ b/meson.build
+@@ -31,7 +31,7 @@ pixman         = dependency('pixman-1')
+ threads        = dependency('threads')
+ xkbcommon      = dependency('xkbcommon')
+ libdl          = meson.get_compiler('cpp').find_library('dl')
+-wlroots        = dependency('wlroots', version: ['>=0.15.0', '<0.16.0'], required: get_option('use_system_wlroots'))
++wlroots        = dependency('wlroots', version: ['>=0.16.0', '<0.17.0'], required: get_option('use_system_wlroots'))
+ wfconfig       = dependency('wf-config', version: ['>=0.8.0', '<0.9.0'], required: get_option('use_system_wfconfig'))
+ 
+ use_system_wlroots = not get_option('use_system_wlroots').disabled() and wlroots.found()
+@@ -150,6 +150,7 @@ endif
+ 
+ if have_xwayland
+   xcb = dependency('xcb')
++  xcbutilwm = dependency('xcb-icccm')
+   conf_data.set('WF_HAS_XWAYLAND', 1)
+ else
+   xcb = declare_dependency() # dummy dep
+diff --git a/plugins/cube/cube.cpp b/plugins/cube/cube.cpp
+index 411c1556..6fe53b98 100644
+--- a/plugins/cube/cube.cpp
++++ b/plugins/cube/cube.cpp
+@@ -139,7 +139,7 @@ class wayfire_cube : public wf::plugin_interface_t
+         };
+ 
+         grab_interface->callbacks.pointer.axis = [=] (
+-            wlr_event_pointer_axis *ev)
++            wlr_pointer_axis_event *ev)
+         {
+             if (ev->orientation == WLR_AXIS_ORIENTATION_VERTICAL)
+             {
+@@ -573,7 +573,7 @@ class wayfire_cube : public wf::plugin_interface_t
+     wf::signal_connection_t on_motion_event = [=] (wf::signal_data_t *data)
+     {
+         auto ev = static_cast<
+-            wf::input_event_signal<wlr_event_pointer_motion>*>(data);
++            wf::input_event_signal<wlr_pointer_motion_event>*>(data);
+ 
+         pointer_moved(ev->event);
+ 
+@@ -583,7 +583,7 @@ class wayfire_cube : public wf::plugin_interface_t
+         ev->event->unaccel_dy = 0;
+     };
+ 
+-    void pointer_moved(wlr_event_pointer_motion *ev)
++    void pointer_moved(wlr_pointer_motion_event *ev)
+     {
+         if (animation.in_exit)
+         {
+diff --git a/plugins/ipc/stipc.cpp b/plugins/ipc/stipc.cpp
+index 8026c2f9..9293bbc5 100644
+--- a/plugins/ipc/stipc.cpp
++++ b/plugins/ipc/stipc.cpp
+@@ -108,37 +108,40 @@ class headless_input_backend_t
+ 
+     void do_key(uint32_t key, wl_keyboard_key_state state)
+     {
+-        wlr_event_keyboard_key ev;
++        wlr_keyboard_key_event ev;
+         ev.keycode = key;
+         ev.state   = state;
+         ev.update_state = true;
+         ev.time_msec    = get_current_time();
+-        wlr_keyboard_notify_key(keyboard->keyboard, &ev);
++        wlr_keyboard_notify_key(wlr_keyboard_from_input_device(keyboard), &ev);
+     }
+ 
+     void do_button(uint32_t button, wlr_button_state state)
+     {
+-        wlr_event_pointer_button ev;
+-        ev.device    = pointer;
++        wlr_pointer_button_event ev;
++        ev.pointer    = wlr_pointer_from_input_device(pointer);
+         ev.button    = button;
+         ev.state     = state;
+         ev.time_msec = get_current_time();
+-        wl_signal_emit(&pointer->pointer->events.button, &ev);
+-        wl_signal_emit(&pointer->pointer->events.frame, NULL);
++
++        wl_signal_emit(&ev.pointer->events.button, &ev);
++        wl_signal_emit(&ev.pointer->events.frame, NULL);
+     }
+ 
+     void do_motion(double x, double y)
+     {
+         auto layout = wf::get_core().output_layout->get_handle();
+-        auto box    = wlr_output_layout_get_box(layout, NULL);
++        wlr_box box;
++        wlr_output_layout_get_box(layout, wlr_headless_add_output(this->backend,250,250), &box);
+ 
+-        wlr_event_pointer_motion_absolute ev;
+-        ev.device    = pointer;
++        wlr_pointer_motion_absolute_event ev;
++        ev.pointer    = wlr_pointer_from_input_device(pointer);;
+         ev.time_msec = get_current_time();
+-        ev.x = 1.0 * (x - box->x) / box->width;
+-        ev.y = 1.0 * (y - box->y) / box->height;
+-        wl_signal_emit(&pointer->pointer->events.motion_absolute, &ev);
+-        wl_signal_emit(&pointer->pointer->events.frame, NULL);
++        ev.x = 1.0 * (x - box.x) / box.width;
++        ev.y = 1.0 * (y - box.y) / box.height;
++
++        wl_signal_emit(&ev.pointer->events.motion_absolute, &ev);
++        wl_signal_emit(&ev.pointer->events.frame, NULL);
+     }
+ 
+     headless_input_backend_t(const headless_input_backend_t&) = delete;
+diff --git a/plugins/scale/scale-title-filter.cpp b/plugins/scale/scale-title-filter.cpp
+index ca25c33f..97894927 100644
+--- a/plugins/scale/scale-title-filter.cpp
++++ b/plugins/scale/scale-title-filter.cpp
+@@ -210,7 +210,7 @@ class scale_title_filter : public wf::singleton_plugin_t<scale_title_filter_text
+     wf::signal_connection_t scale_key = [this] (wf::signal_data_t *data)
+     {
+         auto k =
+-            static_cast<wf::input_event_signal<wlr_event_keyboard_key>*>(data);
++            static_cast<wf::input_event_signal<wlr_keyboard_key_event>*>(data);
+         if (k->event->state == WL_KEYBOARD_KEY_STATE_RELEASED)
+         {
+             keys.erase(k->event->keycode);
+diff --git a/plugins/scale/scale.cpp b/plugins/scale/scale.cpp
+index d2d5f6ae..b50847ea 100644
+--- a/plugins/scale/scale.cpp
++++ b/plugins/scale/scale.cpp
+@@ -333,7 +333,7 @@ class wayfire_scale : public wf::plugin_interface_t
+     wf::signal_connection_t on_button_event = [=] (wf::signal_data_t *data)
+     {
+         auto ev = static_cast<
+-            wf::input_event_signal<wlr_event_pointer_button>*>(data);
++            wf::input_event_signal<wlr_pointer_button_event>*>(data);
+ 
+         process_input(ev->event->button, ev->event->state,
+             wf::get_core().get_cursor_position());
+@@ -342,7 +342,7 @@ class wayfire_scale : public wf::plugin_interface_t
+     wf::signal_connection_t on_touch_down_event = [=] (wf::signal_data_t *data)
+     {
+         auto ev = static_cast<
+-            wf::input_event_signal<wlr_event_touch_down>*>(data);
++            wf::input_event_signal<wlr_touch_down_event>*>(data);
+         if (ev->event->touch_id == 0)
+         {
+             process_input(BTN_LEFT, WLR_BUTTON_PRESSED,
+@@ -353,7 +353,7 @@ class wayfire_scale : public wf::plugin_interface_t
+     wf::signal_connection_t on_touch_up_event = [=] (wf::signal_data_t *data)
+     {
+         auto ev = static_cast<
+-            wf::input_event_signal<wlr_event_touch_up>*>(data);
++            wf::input_event_signal<wlr_touch_up_event>*>(data);
+         if (ev->event->touch_id == 0)
+         {
+             process_input(BTN_LEFT, WLR_BUTTON_RELEASED,
+diff --git a/plugins/single_plugins/alpha.cpp b/plugins/single_plugins/alpha.cpp
+index 19c43343..50342518 100644
+--- a/plugins/single_plugins/alpha.cpp
++++ b/plugins/single_plugins/alpha.cpp
+@@ -78,7 +78,7 @@ class wayfire_alpha : public wf::plugin_interface_t
+         }
+     }
+ 
+-    wf::axis_callback axis_cb = [=] (wlr_event_pointer_axis *ev)
++    wf::axis_callback axis_cb = [=] (wlr_pointer_axis_event *ev)
+     {
+         if (!output->activate_plugin(grab_interface))
+         {
+diff --git a/plugins/single_plugins/command.cpp b/plugins/single_plugins/command.cpp
+index 1ba9d74a..97a275c6 100644
+--- a/plugins/single_plugins/command.cpp
++++ b/plugins/single_plugins/command.cpp
+@@ -152,7 +152,7 @@ class wayfire_command : public wf::plugin_interface_t
+     wf::signal_connection_t on_button_event = [=] (wf::signal_data_t *data)
+     {
+         auto ev = static_cast<
+-            wf::input_event_signal<wlr_event_pointer_button>*>(data);
++            wf::input_event_signal<wlr_pointer_button_event>*>(data);
+         if ((ev->event->button == repeat.pressed_button) &&
+             (ev->event->state == WLR_BUTTON_RELEASED))
+         {
+@@ -163,7 +163,7 @@ class wayfire_command : public wf::plugin_interface_t
+     wf::signal_connection_t on_key_event = [=] (wf::signal_data_t *data)
+     {
+         auto ev = static_cast<
+-            wf::input_event_signal<wlr_event_keyboard_key>*>(data);
++            wf::input_event_signal<wlr_keyboard_key_event>*>(data);
+         if ((ev->event->keycode == repeat.pressed_key) &&
+             (ev->event->state == WLR_KEY_RELEASED))
+         {
+diff --git a/plugins/single_plugins/vswipe.cpp b/plugins/single_plugins/vswipe.cpp
+index f5f9f4b1..a107b388 100644
+--- a/plugins/single_plugins/vswipe.cpp
++++ b/plugins/single_plugins/vswipe.cpp
+@@ -154,7 +154,7 @@ class vswipe : public wf::plugin_interface_t
+         }
+ 
+         auto ev = static_cast<
+-            event<wlr_event_pointer_swipe_begin>*>(data)->event;
++            event<wlr_pointer_swipe_begin_event>*>(data)->event;
+         if (static_cast<int>(ev->fingers) != fingers)
+         {
+             return;
+@@ -257,7 +257,7 @@ class vswipe : public wf::plugin_interface_t
+         }
+ 
+         auto ev = static_cast<
+-            event<wlr_event_pointer_swipe_update>*>(data)->event;
++            event<wlr_pointer_swipe_update_event>*>(data)->event;
+ 
+         state.delta_sum.x += ev->dx / speed_factor;
+         state.delta_sum.y += ev->dy / speed_factor;
+diff --git a/plugins/single_plugins/zoom.cpp b/plugins/single_plugins/zoom.cpp
+index 796aa158..fd6b004e 100644
+--- a/plugins/single_plugins/zoom.cpp
++++ b/plugins/single_plugins/zoom.cpp
+@@ -49,7 +49,7 @@ class wayfire_zoom_screen : public wf::plugin_interface_t
+         }
+     }
+ 
+-    wf::axis_callback axis = [=] (wlr_event_pointer_axis *ev)
++    wf::axis_callback axis = [=] (wlr_pointer_axis_event *ev)
+     {
+         if (!output->can_activate_plugin(grab_interface))
+         {
+diff --git a/src/api/wayfire/bindings.hpp b/src/api/wayfire/bindings.hpp
+index a6845f86..3f396e34 100644
+--- a/src/api/wayfire/bindings.hpp
++++ b/src/api/wayfire/bindings.hpp
+@@ -38,7 +38,7 @@ using button_callback = std::function<bool (const wf::buttonbinding_t&)>;
+  * case it will not be sent to clients (but may still be received by other
+  * plugins).
+  */
+-using axis_callback = std::function<bool (wlr_event_pointer_axis*)>;
++using axis_callback = std::function<bool (wlr_pointer_axis_event*)>;
+ 
+ /**
+  * Describes the possible event sources that can activate an activator binding.
+diff --git a/src/api/wayfire/nonstd/wlroots-full.hpp b/src/api/wayfire/nonstd/wlroots-full.hpp
+index 96ea12a5..b72ab514 100644
+--- a/src/api/wayfire/nonstd/wlroots-full.hpp
++++ b/src/api/wayfire/nonstd/wlroots-full.hpp
+@@ -23,6 +23,7 @@ extern "C"
+ // Rendering
+ #define static
+ #include <wlr/types/wlr_compositor.h>
++#include <wlr/types/wlr_subcompositor.h>
+ #include <wlr/render/wlr_renderer.h>
+ #include <wlr/render/allocator.h>
+ #include <wlr/render/gles2.h>
+@@ -43,7 +44,6 @@ extern "C"
+     #include <wlr/types/wlr_xdg_shell.h>
+     #include <wlr/types/wlr_xdg_decoration_v1.h>
+ #endif
+-#include <wlr/types/wlr_surface.h>
+ 
+ #include <wlr/types/wlr_foreign_toplevel_management_v1.h>
+ #include <wlr/types/wlr_server_decoration.h>
+diff --git a/src/api/wayfire/nonstd/wlroots.hpp b/src/api/wayfire/nonstd/wlroots.hpp
+index 30e73674..b29607d3 100644
+--- a/src/api/wayfire/nonstd/wlroots.hpp
++++ b/src/api/wayfire/nonstd/wlroots.hpp
+@@ -38,8 +38,8 @@ extern "C"
+     struct wlr_xdg_foreign_v2;
+     struct wlr_xdg_foreign_registry;
+ 
+-    struct wlr_event_pointer_axis;
+-    struct wlr_event_pointer_motion;
++    struct wlr_pointer_axis_event;
++    struct wlr_pointer_motion_event;
+     struct wlr_output_layout;
+     struct wlr_surface;
+     struct wlr_texture;
+diff --git a/src/api/wayfire/plugin.hpp b/src/api/wayfire/plugin.hpp
+index 1d61cc5d..7a065457 100644
+--- a/src/api/wayfire/plugin.hpp
++++ b/src/api/wayfire/plugin.hpp
+@@ -76,10 +76,10 @@ struct plugin_grab_interface_t
+     {
+         struct
+         {
+-            std::function<void(wlr_event_pointer_axis*)> axis;
++            std::function<void(wlr_pointer_axis_event*)> axis;
+             std::function<void(uint32_t, uint32_t)> button; // button, state
+             std::function<void(int32_t, int32_t)> motion; // x, y
+-            std::function<void(wlr_event_pointer_motion*)> relative_motion;
++            std::function<void(wlr_pointer_motion_event*)> relative_motion;
+         } pointer;
+ 
+         struct
+diff --git a/src/core/core.cpp b/src/core/core.cpp
+index caf70932..c850357c 100644
+--- a/src/core/core.cpp
++++ b/src/core/core.cpp
+@@ -251,7 +251,7 @@ void wf::compositor_core_impl_t::init()
+     vkbd_created.set_callback([&] (void *data)
+     {
+         auto kbd = (wlr_virtual_keyboard_v1*)data;
+-        input->handle_new_input(&kbd->input_device);
++        input->handle_new_input(&kbd->keyboard.base);
+     });
+     vkbd_created.connect(&protocols.vkbd_manager->events.new_virtual_keyboard);
+ 
+@@ -260,7 +260,7 @@ void wf::compositor_core_impl_t::init()
+     {
+         auto event = (wlr_virtual_pointer_v1_new_pointer_event*)data;
+         auto ptr   = event->new_pointer;
+-        input->handle_new_input(&ptr->input_device);
++        input->handle_new_input(&ptr->pointer.base);
+     });
+     vptr_created.connect(&protocols.vptr_manager->events.new_virtual_pointer);
+ 
+diff --git a/src/core/opengl.cpp b/src/core/opengl.cpp
+index dcf25fba..ad144e5b 100644
+--- a/src/core/opengl.cpp
++++ b/src/core/opengl.cpp
+@@ -7,7 +7,6 @@
+ #include <wayfire/nonstd/wlroots-full.hpp>
+ 
+ #include <glm/gtc/matrix_transform.hpp>
+-
+ #include "shaders.tpp"
+ 
+ const char *gl_error_string(const GLenum err)
+@@ -250,9 +249,13 @@ void render_rectangle(wf::geometry_t geometry, wf::color_t color,
+ 
+ void render_begin()
+ {
+-    if (!wlr_egl_is_current(wf::get_core_impl().egl))
+-    {
+-        wlr_egl_make_current(wf::get_core_impl().egl);
++//    if (!wlr_egl_is_current(wf::get_core_impl().egl))
++//    {
++//        wlr_egl_make_current(wf::get_core_impl().egl);
++//    }
++    if (eglGetCurrentContext() != wlr_egl_get_context(wf::get_core_impl().egl)){
++        eglMakeCurrent(wlr_egl_get_display(wf::get_core_impl().egl), EGL_NO_SURFACE, EGL_NO_SURFACE,
++                       wlr_egl_get_context(wf::get_core_impl().egl));
+     }
+ 
+     GL_CALL(glEnable(GL_BLEND));
+diff --git a/src/core/output-layout.cpp b/src/core/output-layout.cpp
+index 732bda82..1efcb714 100644
+--- a/src/core/output-layout.cpp
++++ b/src/core/output-layout.cpp
+@@ -1423,8 +1423,9 @@ class output_layout_t::impl
+                 wlr_output_layout_add_auto(output_layout, handle);
+ 
+                 /* Get the correct position */
+-                auto box = wlr_output_layout_get_box(output_layout, handle);
+-                assert(box);
++                wlr_box box;
++                wlr_output_layout_get_box(output_layout, handle, &box);
++                assert(!wlr_box_empty(&box));
+                 lo->apply_state(state);
+             }
+         }
+@@ -1473,11 +1474,12 @@ class output_layout_t::impl
+             auto head = wlr_output_configuration_head_v1_create(
+                 wlr_configuration, output.first);
+ 
+-            auto box = wlr_output_layout_get_box(output_layout, output.first);
+-            if (box)
++            wlr_box box;
++            wlr_output_layout_get_box(output_layout, output.first, &box);
++            if (!wlr_box_empty(&box))
+             {
+-                head->state.x = box->x;
+-                head->state.y = box->y;
++                head->state.x = box.x;
++                head->state.y = box.y;
+             }
+         }
+ 
+diff --git a/src/core/seat/bindings-repository.cpp b/src/core/seat/bindings-repository.cpp
+index 4058e9de..9ff346e7 100644
+--- a/src/core/seat/bindings-repository.cpp
++++ b/src/core/seat/bindings-repository.cpp
+@@ -55,7 +55,7 @@ bool wf::bindings_repository_t::handle_key(const wf::keybinding_t& pressed,
+ }
+ 
+ bool wf::bindings_repository_t::handle_axis(uint32_t modifiers,
+-    wlr_event_pointer_axis *ev)
++    wlr_pointer_axis_event *ev)
+ {
+     std::vector<wf::axis_callback*> callbacks;
+ 
+diff --git a/src/core/seat/bindings-repository.hpp b/src/core/seat/bindings-repository.hpp
+index fc57a2ab..4a5597e8 100644
+--- a/src/core/seat/bindings-repository.hpp
++++ b/src/core/seat/bindings-repository.hpp
+@@ -30,7 +30,7 @@ class bindings_repository_t
+     bool handle_key(const wf::keybinding_t& pressed, uint32_t mod_binding_key);
+ 
+     /** Handle an axis event. */
+-    bool handle_axis(uint32_t modifiers, wlr_event_pointer_axis *ev);
++    bool handle_axis(uint32_t modifiers, wlr_pointer_axis_event *ev);
+ 
+     /**
+      * Handle a buttonbinding pressed by the user.
+diff --git a/src/core/seat/cursor.cpp b/src/core/seat/cursor.cpp
+index 9ef011ca..c73634fb 100644
+--- a/src/core/seat/cursor.cpp
++++ b/src/core/seat/cursor.cpp
+@@ -59,7 +59,7 @@ void wf::cursor_t::setup_listeners()
+ #define setup_passthrough_callback(evname) \
+     on_ ## evname.set_callback([&] (void *data) { \
+         set_touchscreen_mode(false); \
+-        auto ev   = static_cast<wlr_event_pointer_ ## evname*>(data); \
++        auto ev   = static_cast<wlr_pointer_##evname## _event*>(data); \
+         auto mode = emit_device_event_signal("pointer_" #evname, ev); \
+         seat->lpointer->handle_pointer_ ## evname(ev, mode); \
+         wlr_idle_notify_activity(core.protocols.idle, core.get_current_seat()); \
+@@ -88,11 +88,11 @@ void wf::cursor_t::setup_listeners()
+ #define setup_tablet_callback(evname) \
+     on_tablet_ ## evname.set_callback([&] (void *data) { \
+         set_touchscreen_mode(false); \
+-        auto ev = static_cast<wlr_event_tablet_tool_ ## evname*>(data); \
++        auto ev = static_cast<wlr_tablet_tool_##evname## _event*>(data); \
+         auto handling_mode = emit_device_event_signal("tablet_" #evname, ev); \
+-        if (ev->device->tablet->data) { \
++        if (ev->tablet->data) { \
+             auto tablet = \
+-                static_cast<wf::tablet_t*>(ev->device->tablet->data); \
++                static_cast<wf::tablet_t*>(ev->tablet->data); \
+             tablet->handle_ ## evname(ev, handling_mode); \
+         } \
+         wlr_idle_notify_activity(wf::get_core().protocols.idle, seat->seat); \
+diff --git a/src/core/seat/input-manager.cpp b/src/core/seat/input-manager.cpp
+index 6480a1c3..dce01959 100644
+--- a/src/core/seat/input-manager.cpp
++++ b/src/core/seat/input-manager.cpp
+@@ -44,7 +44,7 @@ static std::unique_ptr<wf::input_device_impl_t> create_wf_device_for_device(
+ void wf::input_manager_t::handle_new_input(wlr_input_device *dev)
+ {
+     LOGI("handle new input: ", dev->name,
+-        ", default mapping: ", dev->output_name);
++        ", default mapping: ", wlr_pointer_from_input_device(dev)->output_name);
+     input_devices.push_back(create_wf_device_for_device(dev));
+ 
+     wf::input_device_signal data;
+@@ -73,7 +73,7 @@ void wf::input_manager_t::refresh_device_mappings()
+         auto mapped_output = section->get_option("output")->get_value_str();
+         if (mapped_output.empty())
+         {
+-            mapped_output = nonull(dev->output_name);
++            mapped_output = nonull(wlr_pointer_from_input_device(dev)->output_name);
+         }
+ 
+         auto wo = wf::get_core().output_layout->find_output(mapped_output);
+diff --git a/src/core/seat/keyboard.cpp b/src/core/seat/keyboard.cpp
+index 0de03074..66305f69 100644
+--- a/src/core/seat/keyboard.cpp
++++ b/src/core/seat/keyboard.cpp
+@@ -23,7 +23,7 @@ void wf::keyboard_t::setup_listeners()
+ 
+     on_key.set_callback([&] (void *data)
+     {
+-        auto ev   = static_cast<wlr_event_keyboard_key*>(data);
++        auto ev   = static_cast<wlr_keyboard_key_event*>(data);
+         auto mode = emit_device_event_signal("keyboard_key", ev);
+ 
+         auto& seat = wf::get_core_impl().seat;
+@@ -45,7 +45,7 @@ void wf::keyboard_t::setup_listeners()
+         auto kbd  = static_cast<wlr_keyboard*>(data);
+         auto seat = wf::get_core().get_current_seat();
+ 
+-        wlr_seat_set_keyboard(seat, this->device);
++        wlr_seat_set_keyboard(seat, wlr_keyboard_from_input_device(this->device));
+         wlr_seat_keyboard_send_modifiers(seat, &kbd->modifiers);
+         wlr_idle_notify_activity(wf::get_core().protocols.idle, seat);
+     });
+@@ -55,7 +55,7 @@ void wf::keyboard_t::setup_listeners()
+ }
+ 
+ wf::keyboard_t::keyboard_t(wlr_input_device *dev) :
+-    handle(dev->keyboard), device(dev)
++    handle(wlr_keyboard_from_input_device(dev)), device(dev)
+ {
+     model.load_option("input/xkb_model");
+     variant.load_option("input/xkb_variant");
+@@ -78,7 +78,7 @@ wf::keyboard_t::keyboard_t(wlr_input_device *dev) :
+ 
+     setup_listeners();
+     reload_input_options();
+-    wlr_seat_set_keyboard(wf::get_core().get_current_seat(), dev);
++    wlr_seat_set_keyboard(wf::get_core().get_current_seat(), wlr_keyboard_from_input_device(dev));
+ }
+ 
+ uint32_t wf::keyboard_t::get_modifiers()
+diff --git a/src/core/seat/pointer.cpp b/src/core/seat/pointer.cpp
+index d87d55d0..b79281b3 100644
+--- a/src/core/seat/pointer.cpp
++++ b/src/core/seat/pointer.cpp
+@@ -329,7 +329,7 @@ void wf::pointer_t::grab_surface(wf::surface_interface_t *surface)
+ }
+ 
+ /* ----------------------- Input event processing --------------------------- */
+-void wf::pointer_t::handle_pointer_button(wlr_event_pointer_button *ev,
++void wf::pointer_t::handle_pointer_button(wlr_pointer_button_event *ev,
+     input_event_processing_mode_t mode)
+ {
+     seat->break_mod_bindings();
+@@ -379,7 +379,7 @@ void wf::pointer_t::check_implicit_grab()
+     }
+ }
+ 
+-void wf::pointer_t::send_button(wlr_event_pointer_button *ev, bool has_binding)
++void wf::pointer_t::send_button(wlr_pointer_button_event *ev, bool has_binding)
+ {
+     if (input->active_grab)
+     {
+@@ -446,7 +446,7 @@ void wf::pointer_t::send_motion(uint32_t time_msec, wf::pointf_t local)
+     }
+ }
+ 
+-void wf::pointer_t::handle_pointer_motion(wlr_event_pointer_motion *ev,
++void wf::pointer_t::handle_pointer_motion(wlr_pointer_motion_event *ev,
+     input_event_processing_mode_t mode)
+ {
+     if (input->input_grabbed() &&
+@@ -483,16 +483,17 @@ void wf::pointer_t::handle_pointer_motion(wlr_event_pointer_motion *ev,
+     }
+ 
+     /* XXX: maybe warp directly? */
+-    wlr_cursor_move(seat->cursor->cursor, ev->device, dx, dy);
++
++    wlr_cursor_move(seat->cursor->cursor, &ev->pointer->base, dx, dy);
+     update_cursor_position(ev->time_msec);
+ }
+ 
+ void wf::pointer_t::handle_pointer_motion_absolute(
+-    wlr_event_pointer_motion_absolute *ev, input_event_processing_mode_t mode)
++    wlr_pointer_motion_absolute_event *ev, input_event_processing_mode_t mode)
+ {
+     // next coordinates
+     double cx, cy;
+-    wlr_cursor_absolute_to_layout_coords(seat->cursor->cursor, ev->device,
++    wlr_cursor_absolute_to_layout_coords(seat->cursor->cursor, &ev->pointer->base,
+         ev->x, ev->y, &cx, &cy);
+ 
+     // send relative motion
+@@ -517,7 +518,7 @@ void wf::pointer_t::handle_pointer_motion_absolute(
+     update_cursor_position(ev->time_msec);
+ }
+ 
+-void wf::pointer_t::handle_pointer_axis(wlr_event_pointer_axis *ev,
++void wf::pointer_t::handle_pointer_axis(wlr_pointer_axis_event *ev,
+     input_event_processing_mode_t mode)
+ {
+     bool handled_in_binding = input->get_active_bindings().handle_axis(
+@@ -557,7 +558,7 @@ void wf::pointer_t::handle_pointer_axis(wlr_event_pointer_axis *ev,
+         mult * ev->delta, mult * ev->delta_discrete, ev->source);
+ }
+ 
+-void wf::pointer_t::handle_pointer_swipe_begin(wlr_event_pointer_swipe_begin *ev,
++void wf::pointer_t::handle_pointer_swipe_begin(wlr_pointer_swipe_begin_event *ev,
+     input_event_processing_mode_t mode)
+ {
+     wlr_pointer_gestures_v1_send_swipe_begin(
+@@ -566,14 +567,14 @@ void wf::pointer_t::handle_pointer_swipe_begin(wlr_event_pointer_swipe_begin *ev
+ }
+ 
+ void wf::pointer_t::handle_pointer_swipe_update(
+-    wlr_event_pointer_swipe_update *ev, input_event_processing_mode_t mode)
++    wlr_pointer_swipe_update_event *ev, input_event_processing_mode_t mode)
+ {
+     wlr_pointer_gestures_v1_send_swipe_update(
+         wf::get_core().protocols.pointer_gestures, seat->seat,
+         ev->time_msec, ev->dx, ev->dy);
+ }
+ 
+-void wf::pointer_t::handle_pointer_swipe_end(wlr_event_pointer_swipe_end *ev,
++void wf::pointer_t::handle_pointer_swipe_end(wlr_pointer_swipe_end_event *ev,
+     input_event_processing_mode_t mode)
+ {
+     wlr_pointer_gestures_v1_send_swipe_end(
+@@ -581,7 +582,7 @@ void wf::pointer_t::handle_pointer_swipe_end(wlr_event_pointer_swipe_end *ev,
+         ev->time_msec, ev->cancelled);
+ }
+ 
+-void wf::pointer_t::handle_pointer_pinch_begin(wlr_event_pointer_pinch_begin *ev,
++void wf::pointer_t::handle_pointer_pinch_begin(wlr_pointer_pinch_begin_event *ev,
+     input_event_processing_mode_t mode)
+ {
+     wlr_pointer_gestures_v1_send_pinch_begin(
+@@ -590,14 +591,14 @@ void wf::pointer_t::handle_pointer_pinch_begin(wlr_event_pointer_pinch_begin *ev
+ }
+ 
+ void wf::pointer_t::handle_pointer_pinch_update(
+-    wlr_event_pointer_pinch_update *ev, input_event_processing_mode_t mode)
++    wlr_pointer_pinch_update_event *ev, input_event_processing_mode_t mode)
+ {
+     wlr_pointer_gestures_v1_send_pinch_update(
+         wf::get_core().protocols.pointer_gestures, seat->seat,
+         ev->time_msec, ev->dx, ev->dy, ev->scale, ev->rotation);
+ }
+ 
+-void wf::pointer_t::handle_pointer_pinch_end(wlr_event_pointer_pinch_end *ev,
++void wf::pointer_t::handle_pointer_pinch_end(wlr_pointer_pinch_end_event *ev,
+     input_event_processing_mode_t mode)
+ {
+     wlr_pointer_gestures_v1_send_pinch_end(
+@@ -605,7 +606,7 @@ void wf::pointer_t::handle_pointer_pinch_end(wlr_event_pointer_pinch_end *ev,
+         ev->time_msec, ev->cancelled);
+ }
+ 
+-void wf::pointer_t::handle_pointer_hold_begin(wlr_event_pointer_hold_begin *ev,
++void wf::pointer_t::handle_pointer_hold_begin(wlr_pointer_hold_begin_event *ev,
+     input_event_processing_mode_t mode)
+ {
+     wlr_pointer_gestures_v1_send_hold_begin(
+@@ -613,7 +614,7 @@ void wf::pointer_t::handle_pointer_hold_begin(wlr_event_pointer_hold_begin *ev,
+         ev->time_msec, ev->fingers);
+ }
+ 
+-void wf::pointer_t::handle_pointer_hold_end(wlr_event_pointer_hold_end *ev,
++void wf::pointer_t::handle_pointer_hold_end(wlr_pointer_hold_end_event *ev,
+     input_event_processing_mode_t mode)
+ {
+     wlr_pointer_gestures_v1_send_hold_end(
+diff --git a/src/core/seat/pointer.hpp b/src/core/seat/pointer.hpp
+index 8b042b0d..f323b71a 100644
+--- a/src/core/seat/pointer.hpp
++++ b/src/core/seat/pointer.hpp
+@@ -65,31 +65,31 @@ class pointer_t
+     wlr_pointer_constraint_v1 *get_active_pointer_constraint();
+ 
+     /** Handle events coming from the input devices */
+-    void handle_pointer_axis(wlr_event_pointer_axis *ev,
++    void handle_pointer_axis(wlr_pointer_axis_event *ev,
+         input_event_processing_mode_t mode);
+-    void handle_pointer_motion(wlr_event_pointer_motion *ev,
++    void handle_pointer_motion(wlr_pointer_motion_event *ev,
+         input_event_processing_mode_t mode);
+-    void handle_pointer_motion_absolute(wlr_event_pointer_motion_absolute *ev,
++    void handle_pointer_motion_absolute(wlr_pointer_motion_absolute_event *ev,
+         input_event_processing_mode_t mode);
+-    void handle_pointer_button(wlr_event_pointer_button *ev,
++    void handle_pointer_button(wlr_pointer_button_event *ev,
+         input_event_processing_mode_t mode);
+ 
+     /** Handle touchpad gestures detected by libinput */
+-    void handle_pointer_swipe_begin(wlr_event_pointer_swipe_begin *ev,
++    void handle_pointer_swipe_begin(wlr_pointer_swipe_begin_event *ev,
+         input_event_processing_mode_t mode);
+-    void handle_pointer_swipe_update(wlr_event_pointer_swipe_update *ev,
++    void handle_pointer_swipe_update(wlr_pointer_swipe_update_event *ev,
+         input_event_processing_mode_t mode);
+-    void handle_pointer_swipe_end(wlr_event_pointer_swipe_end *ev,
++    void handle_pointer_swipe_end(wlr_pointer_swipe_end_event *ev,
+         input_event_processing_mode_t mode);
+-    void handle_pointer_pinch_begin(wlr_event_pointer_pinch_begin *ev,
++    void handle_pointer_pinch_begin(wlr_pointer_pinch_begin_event *ev,
+         input_event_processing_mode_t mode);
+-    void handle_pointer_pinch_update(wlr_event_pointer_pinch_update *ev,
++    void handle_pointer_pinch_update(wlr_pointer_pinch_update_event *ev,
+         input_event_processing_mode_t mode);
+-    void handle_pointer_pinch_end(wlr_event_pointer_pinch_end *ev,
++    void handle_pointer_pinch_end(wlr_pointer_pinch_end_event *ev,
+         input_event_processing_mode_t mode);
+-    void handle_pointer_hold_begin(wlr_event_pointer_hold_begin *ev,
++    void handle_pointer_hold_begin(wlr_pointer_hold_begin_event *ev,
+         input_event_processing_mode_t mode);
+-    void handle_pointer_hold_end(wlr_event_pointer_hold_end *ev,
++    void handle_pointer_hold_end(wlr_pointer_hold_end_event *ev,
+         input_event_processing_mode_t mode);
+     void handle_pointer_frame();
+ 
+@@ -155,7 +155,7 @@ class pointer_t
+ 
+     /** Send a button event to the currently active receiver, i.e to the
+      * active input grab(if any), or to the focused surface */
+-    void send_button(wlr_event_pointer_button *ev, bool has_binding);
++    void send_button(wlr_pointer_button_event *ev, bool has_binding);
+ 
+     /**
+      * Send a motion event to the currently active receiver, i.e to the
+diff --git a/src/core/seat/seat.cpp b/src/core/seat/seat.cpp
+index 869e7c86..ea84e10f 100644
+--- a/src/core/seat/seat.cpp
++++ b/src/core/seat/seat.cpp
+@@ -278,7 +278,7 @@ void wf::seat_t::update_drag_icon()
+ void wf::seat_t::set_keyboard(wf::keyboard_t *keyboard)
+ {
+     this->current_keyboard = keyboard;
+-    wlr_seat_set_keyboard(seat, keyboard ? keyboard->device : NULL);
++    wlr_seat_set_keyboard(seat, keyboard ? wlr_keyboard_from_input_device(keyboard->device) : NULL);
+ }
+ 
+ void wf::seat_t::break_mod_bindings()
+diff --git a/src/core/seat/switch.cpp b/src/core/seat/switch.cpp
+index fc7dbe12..b3bd4d17 100644
+--- a/src/core/seat/switch.cpp
++++ b/src/core/seat/switch.cpp
+@@ -1,4 +1,5 @@
+ #include "switch.hpp"
++#include <wayfire/nonstd/wlroots-full.hpp>
+ #include <wayfire/signal-definitions.hpp>
+ #include <wayfire/core.hpp>
+ 
+@@ -7,12 +8,13 @@ wf::switch_device_t::switch_device_t(wlr_input_device *dev) :
+ {
+     on_switch.set_callback([&] (void *data)
+     {
+-        this->handle_switched((wlr_event_switch_toggle*)data);
++        this->handle_switched((wlr_switch_toggle_event*)data);
+     });
+-    on_switch.connect(&dev->switch_device->events.toggle);
++
++    on_switch.connect(&wlr_switch_from_input_device(dev)->events.toggle);
+ }
+ 
+-void wf::switch_device_t::handle_switched(wlr_event_switch_toggle *ev)
++void wf::switch_device_t::handle_switched(wlr_switch_toggle_event *ev)
+ {
+     wf::switch_signal data;
+     data.device = nonstd::make_observer(this);
+diff --git a/src/core/seat/switch.hpp b/src/core/seat/switch.hpp
+index e214f2ef..16f25253 100644
+--- a/src/core/seat/switch.hpp
++++ b/src/core/seat/switch.hpp
+@@ -8,7 +8,7 @@ namespace wf
+ struct switch_device_t : public input_device_impl_t
+ {
+     wf::wl_listener_wrapper on_switch;
+-    void handle_switched(wlr_event_switch_toggle *ev);
++    void handle_switched(wlr_switch_toggle_event *ev);
+ 
+     switch_device_t(wlr_input_device *dev);
+     virtual ~switch_device_t() = default;
+diff --git a/src/core/seat/tablet.cpp b/src/core/seat/tablet.cpp
+index a1e1688f..b63885c5 100644
+--- a/src/core/seat/tablet.cpp
++++ b/src/core/seat/tablet.cpp
+@@ -162,7 +162,7 @@ void wf::tablet_tool_t::set_focus(wf::surface_interface_t *surface)
+     }
+ }
+ 
+-void wf::tablet_tool_t::passthrough_axis(wlr_event_tablet_tool_axis *ev)
++void wf::tablet_tool_t::passthrough_axis(wlr_tablet_tool_axis_event *ev)
+ {
+     if (ev->updated_axes & WLR_TABLET_TOOL_AXIS_PRESSURE)
+     {
+@@ -207,7 +207,7 @@ void wf::tablet_tool_t::passthrough_axis(wlr_event_tablet_tool_axis *ev)
+     }
+ }
+ 
+-void wf::tablet_tool_t::handle_tip(wlr_event_tablet_tool_tip *ev)
++void wf::tablet_tool_t::handle_tip(wlr_tablet_tool_tip_event *ev)
+ {
+     /* Nothing to do without a proximity surface */
+     if (!this->proximity_surface)
+@@ -236,14 +236,14 @@ void wf::tablet_tool_t::handle_tip(wlr_event_tablet_tool_tip *ev)
+     }
+ }
+ 
+-void wf::tablet_tool_t::handle_button(wlr_event_tablet_tool_button *ev)
++void wf::tablet_tool_t::handle_button(wlr_tablet_tool_button_event *ev)
+ {
+     wlr_tablet_v2_tablet_tool_notify_button(tool_v2,
+         (zwp_tablet_pad_v2_button_state)ev->button,
+         (zwp_tablet_pad_v2_button_state)ev->state);
+ }
+ 
+-void wf::tablet_tool_t::handle_proximity(wlr_event_tablet_tool_proximity *ev)
++void wf::tablet_tool_t::handle_proximity(wlr_tablet_tool_proximity_event *ev)
+ {
+     if (ev->state == WLR_TABLET_TOOL_PROXIMITY_OUT)
+     {
+@@ -260,7 +260,7 @@ void wf::tablet_tool_t::handle_proximity(wlr_event_tablet_tool_proximity *ev)
+ wf::tablet_t::tablet_t(wlr_cursor *cursor, wlr_input_device *dev) :
+     input_device_impl_t(dev)
+ {
+-    this->handle = dev->tablet;
++    this->handle = wlr_tablet_from_input_device(dev);
+     this->handle->data = this;
+     this->cursor = cursor;
+ 
+@@ -284,7 +284,7 @@ wf::tablet_tool_t*wf::tablet_t::ensure_tool(wlr_tablet_tool *tool)
+     return (wf::tablet_tool_t*)tool->data;
+ }
+ 
+-void wf::tablet_t::handle_tip(wlr_event_tablet_tool_tip *ev,
++void wf::tablet_t::handle_tip(wlr_tablet_tool_tip_event *ev,
+     input_event_processing_mode_t mode)
+ {
+     auto& input = wf::get_core_impl().input;
+@@ -323,7 +323,7 @@ void wf::tablet_t::handle_tip(wlr_event_tablet_tool_tip *ev,
+     }
+ }
+ 
+-void wf::tablet_t::handle_axis(wlr_event_tablet_tool_axis *ev,
++void wf::tablet_t::handle_axis(wlr_tablet_tool_axis_event *ev,
+     input_event_processing_mode_t mode)
+ {
+     auto& input = wf::get_core_impl().input;
+@@ -332,13 +332,13 @@ void wf::tablet_t::handle_axis(wlr_event_tablet_tool_axis *ev,
+     switch (ev->tool->type)
+     {
+       case WLR_TABLET_TOOL_TYPE_MOUSE:
+-        wlr_cursor_move(cursor, ev->device, ev->dx, ev->dy);
++        wlr_cursor_move(cursor, &ev->tablet->base, ev->dx, ev->dy);
+         break;
+ 
+       default:
+         double x = (ev->updated_axes & WLR_TABLET_TOOL_AXIS_X) ? ev->x : NAN;
+         double y = (ev->updated_axes & WLR_TABLET_TOOL_AXIS_Y) ? ev->y : NAN;
+-        wlr_cursor_warp_absolute(cursor, ev->device, x, y);
++        wlr_cursor_warp_absolute(cursor, &ev->tablet->base, x, y);
+     }
+ 
+     if (input->input_grabbed())
+@@ -359,14 +359,14 @@ void wf::tablet_t::handle_axis(wlr_event_tablet_tool_axis *ev,
+     tool->passthrough_axis(ev);
+ }
+ 
+-void wf::tablet_t::handle_button(wlr_event_tablet_tool_button *ev,
++void wf::tablet_t::handle_button(wlr_tablet_tool_button_event *ev,
+     input_event_processing_mode_t mode)
+ {
+     /* Pass to the tool */
+     ensure_tool(ev->tool)->handle_button(ev);
+ }
+ 
+-void wf::tablet_t::handle_proximity(wlr_event_tablet_tool_proximity *ev,
++void wf::tablet_t::handle_proximity(wlr_tablet_tool_proximity_event *ev,
+     input_event_processing_mode_t mode)
+ {
+     ensure_tool(ev->tool)->handle_proximity(ev);
+@@ -421,7 +421,7 @@ wf::tablet_pad_t::tablet_pad_t(wlr_input_device *pad) :
+ 
+     on_button.set_callback([=] (void *data)
+     {
+-        auto ev = static_cast<wlr_event_tablet_pad_button*>(data);
++        auto ev = static_cast<wlr_tablet_pad_button_event*>(data);
+         wlr_tablet_v2_tablet_pad_notify_mode(pad_v2,
+             ev->group, ev->mode, ev->time_msec);
+         wlr_tablet_v2_tablet_pad_notify_button(pad_v2,
+@@ -431,22 +431,23 @@ wf::tablet_pad_t::tablet_pad_t(wlr_input_device *pad) :
+ 
+     on_strip.set_callback([=] (void *data)
+     {
+-        auto ev = static_cast<wlr_event_tablet_pad_strip*>(data);
++        auto ev = static_cast<wlr_tablet_pad_strip_event*>(data); // wlr_tablet_pad_ring_event
+         wlr_tablet_v2_tablet_pad_notify_strip(pad_v2, ev->strip, ev->position,
+             ev->source == WLR_TABLET_PAD_STRIP_SOURCE_FINGER, ev->time_msec);
+     });
+ 
+     on_ring.set_callback([=] (void *data)
+     {
+-        auto ev = static_cast<wlr_event_tablet_pad_ring*>(data);
++        auto ev = static_cast<wlr_tablet_pad_ring_event*>(data);
+         wlr_tablet_v2_tablet_pad_notify_ring(pad_v2, ev->ring, ev->position,
+             ev->source == WLR_TABLET_PAD_RING_SOURCE_FINGER, ev->time_msec);
+     });
+ 
+-    on_attach.connect(&pad->tablet_pad->events.attach_tablet);
+-    on_button.connect(&pad->tablet_pad->events.button);
+-    on_strip.connect(&pad->tablet_pad->events.strip);
+-    on_ring.connect(&pad->tablet_pad->events.ring);
++    auto wlr_tablet_pad = wlr_tablet_pad_from_input_device(pad);
++    on_attach.connect(&wlr_tablet_pad->events.attach_tablet);
++    on_button.connect(&wlr_tablet_pad->events.button);
++    on_strip.connect(&wlr_tablet_pad->events.strip);
++    on_ring.connect(&wlr_tablet_pad->events.ring);
+ }
+ 
+ void wf::tablet_pad_t::update_focus()
+diff --git a/src/core/seat/tablet.hpp b/src/core/seat/tablet.hpp
+index 647e7168..67cd2532 100644
+--- a/src/core/seat/tablet.hpp
++++ b/src/core/seat/tablet.hpp
+@@ -31,18 +31,18 @@ struct tablet_tool_t
+      * Send the axis updates directly.
+      * Only the position is handled separately.
+      */
+-    void passthrough_axis(wlr_event_tablet_tool_axis *ev);
++    void passthrough_axis(wlr_tablet_tool_axis_event *ev);
+ 
+     /**
+      * Called whenever a tip occurs for this tool
+      */
+-    void handle_tip(wlr_event_tablet_tool_tip *ev);
++    void handle_tip(wlr_tablet_tool_tip_event *ev);
+ 
+     /** Handle a button event */
+-    void handle_button(wlr_event_tablet_tool_button *ev);
++    void handle_button(wlr_tablet_tool_button_event *ev);
+ 
+     /** Set proximity state */
+-    void handle_proximity(wlr_event_tablet_tool_proximity *ev);
++    void handle_proximity(wlr_tablet_tool_proximity_event *ev);
+ 
+   private:
+     wf::wl_listener_wrapper on_destroy, on_set_cursor;
+@@ -75,16 +75,16 @@ struct tablet_t : public input_device_impl_t
+     virtual ~tablet_t();
+ 
+     /** Handle a tool tip event */
+-    void handle_tip(wlr_event_tablet_tool_tip *ev,
++    void handle_tip(wlr_tablet_tool_tip_event *ev,
+         input_event_processing_mode_t mode);
+     /** Handle an axis event */
+-    void handle_axis(wlr_event_tablet_tool_axis *ev,
++    void handle_axis(wlr_tablet_tool_axis_event *ev,
+         input_event_processing_mode_t mode);
+     /** Handle a button event */
+-    void handle_button(wlr_event_tablet_tool_button *ev,
++    void handle_button(wlr_tablet_tool_button_event *ev,
+         input_event_processing_mode_t mode);
+     /** Handle a proximity event */
+-    void handle_proximity(wlr_event_tablet_tool_proximity *ev,
++    void handle_proximity(wlr_tablet_tool_proximity_event *ev,
+         input_event_processing_mode_t mode);
+ 
+     wlr_tablet_v2_tablet *tablet_v2;
+diff --git a/src/core/seat/touch.cpp b/src/core/seat/touch.cpp
+index 3d9a5279..ea35d217 100644
+--- a/src/core/seat/touch.cpp
++++ b/src/core/seat/touch.cpp
+@@ -21,11 +21,11 @@ wf::touch_interface_t::touch_interface_t(wlr_cursor *cursor, wlr_seat *seat,
+     // connect handlers
+     on_down.set_callback([=] (void *data)
+     {
+-        auto ev   = static_cast<wlr_event_touch_down*>(data);
++        auto ev   = static_cast<wlr_touch_down_event*>(data);
+         auto mode = emit_device_event_signal("touch_down", ev);
+ 
+         double lx, ly;
+-        wlr_cursor_absolute_to_layout_coords(cursor, ev->device,
++        wlr_cursor_absolute_to_layout_coords(cursor, &ev->touch->base,
+             ev->x, ev->y, &lx, &ly);
+ 
+         wf::pointf_t point;
+@@ -38,7 +38,7 @@ wf::touch_interface_t::touch_interface_t(wlr_cursor *cursor, wlr_seat *seat,
+ 
+     on_up.set_callback([=] (void *data)
+     {
+-        auto ev   = static_cast<wlr_event_touch_up*>(data);
++        auto ev   = static_cast<wlr_touch_up_event*>(data);
+         auto mode = emit_device_event_signal("touch_up", ev);
+         handle_touch_up(ev->touch_id, ev->time_msec, mode);
+         wlr_idle_notify_activity(wf::get_core().protocols.idle,
+@@ -48,12 +48,12 @@ wf::touch_interface_t::touch_interface_t(wlr_cursor *cursor, wlr_seat *seat,
+ 
+     on_motion.set_callback([=] (void *data)
+     {
+-        auto ev   = static_cast<wlr_event_touch_motion*>(data);
++        auto ev   = static_cast<wlr_touch_motion_event*>(data);
+         auto mode = emit_device_event_signal("touch_motion", ev);
+ 
+         double lx, ly;
+         wlr_cursor_absolute_to_layout_coords(
+-            wf::get_core_impl().seat->cursor->cursor, ev->device,
++            wf::get_core_impl().seat->cursor->cursor, &ev->touch->base,
+             ev->x, ev->y, &lx, &ly);
+ 
+         wf::pointf_t point;
+diff --git a/src/core/wm.cpp b/src/core/wm.cpp
+index bbc66f72..86a3d9af 100644
+--- a/src/core/wm.cpp
++++ b/src/core/wm.cpp
+@@ -86,7 +86,7 @@ void wayfire_focus::init()
+     on_button.set_callback([=] (wf::signal_data_t *data)
+     {
+         auto ev = static_cast<
+-            wf::input_event_signal<wlr_event_pointer_button>*>(data);
++            wf::input_event_signal<wlr_pointer_button_event>*>(data);
+ 
+         if (ev->event->state != WLR_BUTTON_PRESSED)
+         {
+diff --git a/src/meson.build b/src/meson.build
+index d5a3335c..76af1ab8 100644
+--- a/src/meson.build
++++ b/src/meson.build
+@@ -48,7 +48,7 @@ wayfire_sources = ['geometry.cpp',
+ 
+ wayfire_dependencies = [wayland_server, wlroots, xkbcommon, libinput,
+                        pixman, drm, egl, glesv2, glm, wf_protos, libdl,
+-                       wfconfig, libinotify, backtrace, wfutils, xcb, wftouch]
++                       wfconfig, libinotify, backtrace, wfutils, xcb, xcbutilwm, wftouch]
+ 
+ if conf_data.get('BUILD_WITH_IMAGEIO')
+     wayfire_dependencies += [jpeg, png]
+diff --git a/src/output/output.cpp b/src/output/output.cpp
+index 3c8fa934..f8eaf2a3 100644
+--- a/src/output/output.cpp
++++ b/src/output/output.cpp
+@@ -163,11 +163,12 @@ wf::geometry_t wf::output_t::get_relative_geometry() const
+ 
+ wf::geometry_t wf::output_t::get_layout_geometry() const
+ {
+-    auto box = wlr_output_layout_get_box(
+-        wf::get_core().output_layout->get_handle(), handle);
+-    if (box)
++    wlr_box box;
++    wlr_output_layout_get_box(
++        wf::get_core().output_layout->get_handle(), handle, &box);
++    if (!wlr_box_empty(&box))
+     {
+-        return *box;
++        return box;
+     } else
+     {
+         LOGE("Get layout geometry for an invalid output!");
+diff --git a/src/view/xdg-shell.cpp b/src/view/xdg-shell.cpp
+index 67deb3ec..3bc5c0f2 100644
+--- a/src/view/xdg-shell.cpp
++++ b/src/view/xdg-shell.cpp
+@@ -100,8 +100,8 @@ void wayfire_xdg_popup::update_position()
+     }
+ 
+     wf::pointf_t popup_offset = {
+-        1.0 * popup->geometry.x + popup_parent->get_window_offset().x,
+-        1.0 * popup->geometry.y + popup_parent->get_window_offset().y,
++        1.0 * popup->current.geometry.x + popup_parent->get_window_offset().x,  // popup->current or popup->pending TODO
++        1.0 * popup->current.geometry.y + popup_parent->get_window_offset().y,
+     };
+ 
+     auto parent_geometry = popup_parent->get_output_geometry();
+@@ -165,7 +165,7 @@ void wayfire_xdg_popup::close()
+     {
+         if (is_mapped())
+         {
+-            wlr_xdg_popup_destroy(popup->base);
++            wlr_xdg_popup_destroy(popup);
+         }
+     });
+ }
+@@ -241,7 +241,7 @@ void wayfire_xdg_view::initialize()
+     on_set_parent.set_callback([&] (void*)
+     {
+         auto parent = xdg_toplevel->parent ?
+-            wf::wf_view_from_void(xdg_toplevel->parent->data)->self() : nullptr;
++            wf::wf_view_from_void(xdg_toplevel->parent->base->data)->self() : nullptr;
+         set_toplevel_parent(parent);
+     });
+     on_ping_timeout.set_callback([&] (void*)
+@@ -263,9 +263,8 @@ void wayfire_xdg_view::initialize()
+     });
+     on_request_fullscreen.set_callback([&] (void *data)
+     {
+-        auto ev = static_cast<wlr_xdg_toplevel_set_fullscreen_event*>(data);
+-        auto wo = wf::get_core().output_layout->find_output(ev->output);
+-        fullscreen_request(wo, ev->fullscreen);
++        auto wo = wf::get_core().output_layout->find_output(xdg_toplevel->requested.fullscreen_output);
++        fullscreen_request(wo, xdg_toplevel->requested.fullscreen);
+     });
+ 
+     on_map.connect(&xdg_toplevel->base->events.map);
+@@ -381,14 +380,14 @@ void wayfire_xdg_view::set_activated(bool act)
+     }
+ 
+     last_configure_serial =
+-        wlr_xdg_toplevel_set_activated(xdg_toplevel->base, act);
++        wlr_xdg_toplevel_set_activated(xdg_toplevel, act);
+     wf::wlr_view_t::set_activated(act);
+ }
+ 
+ void wayfire_xdg_view::set_tiled(uint32_t edges)
+ {
+-    wlr_xdg_toplevel_set_tiled(xdg_toplevel->base, edges);
+-    last_configure_serial = wlr_xdg_toplevel_set_maximized(xdg_toplevel->base,
++    wlr_xdg_toplevel_set_tiled(xdg_toplevel, edges);
++    last_configure_serial = wlr_xdg_toplevel_set_maximized(xdg_toplevel,
+         (edges == wf::TILED_EDGES_ALL));
+     wlr_view_t::set_tiled(edges);
+ }
+@@ -397,7 +396,7 @@ void wayfire_xdg_view::set_fullscreen(bool full)
+ {
+     wf::wlr_view_t::set_fullscreen(full);
+     last_configure_serial =
+-        wlr_xdg_toplevel_set_fullscreen(xdg_toplevel->base, full);
++        wlr_xdg_toplevel_set_fullscreen(xdg_toplevel, full);
+ }
+ 
+ void wayfire_xdg_view::resize(int w, int h)
+@@ -413,21 +412,21 @@ void wayfire_xdg_view::resize(int w, int h)
+     {
+         this->last_size_request = {w, h};
+         last_configure_serial   =
+-            wlr_xdg_toplevel_set_size(xdg_toplevel->base, w, h);
++            wlr_xdg_toplevel_set_size(xdg_toplevel, w, h);
+     }
+ }
+ 
+ void wayfire_xdg_view::request_native_size()
+ {
+     last_configure_serial =
+-        wlr_xdg_toplevel_set_size(xdg_toplevel->base, 0, 0);
++        wlr_xdg_toplevel_set_size(xdg_toplevel, 0, 0);
+ }
+ 
+ void wayfire_xdg_view::close()
+ {
+     if (xdg_toplevel)
+     {
+-        wlr_xdg_toplevel_send_close(xdg_toplevel->base);
++        wlr_xdg_toplevel_send_close(xdg_toplevel);
+         wf::wlr_view_t::close();
+     }
+ }
+@@ -466,7 +465,7 @@ static wlr_xdg_shell *xdg_handle = nullptr;
+ void wf::init_xdg_shell()
+ {
+     static wf::wl_listener_wrapper on_xdg_created;
+-    xdg_handle = wlr_xdg_shell_create(wf::get_core().display);
++    xdg_handle = wlr_xdg_shell_create(wf::get_core().display,wl_display_get_version(wf::get_core().display)); // guess TODO
+ 
+     if (xdg_handle)
+     {
+diff --git a/src/view/xwayland.cpp b/src/view/xwayland.cpp
+index e8319c52..c5098c12 100644
+--- a/src/view/xwayland.cpp
++++ b/src/view/xwayland.cpp
+@@ -596,7 +596,7 @@ class wayfire_xwayland_view : public wayfire_xwayland_view_base
+         {
+             wf::view_hints_changed_signal data;
+             data.view = this;
+-            if (xw->hints_urgency)
++            if (xw->hints && xcb_icccm_wm_hints_get_urgency(xw->hints))  // TODO
+             {
+                 data.demands_attention = true;
+             }
+@@ -1163,6 +1163,5 @@ wayfire_view wf::get_xwayland_drag_icon()
+     }
+ 
+ #endif
+-
+     return nullptr;
+ }

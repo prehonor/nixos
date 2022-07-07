@@ -1,0 +1,143 @@
+diff --git a/backend/headless/input_device.c b/backend/headless/input_device.c
+new file mode 100644
+index 0000000..4df01af
+--- /dev/null
++++ b/backend/headless/input_device.c
+@@ -0,0 +1,108 @@
++#include <assert.h>
++#include <stdlib.h>
++#include <wlr/interfaces/wlr_input_device.h>
++#include <wlr/interfaces/wlr_keyboard.h>
++#include <wlr/interfaces/wlr_pointer.h>
++#include <wlr/interfaces/wlr_tablet_pad.h>
++#include <wlr/interfaces/wlr_tablet_tool.h>
++#include <wlr/interfaces/wlr_touch.h>
++#include <wlr/interfaces/wlr_switch.h>
++#include <wlr/util/log.h>
++#include "backend/headless.h"
++#include "util/signal.h"
++
++static void input_device_destroy(struct wlr_input_device *wlr_dev) {
++	struct wlr_headless_input_device *dev =
++		wl_container_of(wlr_dev, dev, wlr_input_device);
++	wl_list_remove(&dev->link);
++	free(dev);
++}
++
++static const struct wlr_input_device_impl input_device_impl = {
++	.destroy = input_device_destroy,
++};
++
++bool wlr_input_device_is_headless(struct wlr_input_device *wlr_dev) {
++	return wlr_dev->impl == &input_device_impl;
++}
++
++struct wlr_input_device *wlr_headless_add_input_device(
++		struct wlr_backend *wlr_backend, enum wlr_input_device_type type) {
++	struct wlr_headless_backend *backend =
++		headless_backend_from_backend(wlr_backend);
++
++	struct wlr_headless_input_device *device =
++		calloc(1, sizeof(struct wlr_headless_input_device));
++	if (device == NULL) {
++		return NULL;
++	}
++	device->backend = backend;
++
++	int vendor = 0;
++	int product = 0;
++	const char *name = "headless";
++	struct wlr_input_device *wlr_device = &device->wlr_input_device;
++	wlr_input_device_init(wlr_device, type, &input_device_impl, name, vendor,
++		product);
++
++	switch (type) {
++	case WLR_INPUT_DEVICE_KEYBOARD:
++		wlr_device->keyboard = calloc(1, sizeof(struct wlr_keyboard));
++		if (wlr_device->keyboard == NULL) {
++			wlr_log(WLR_ERROR, "Unable to allocate wlr_keyboard");
++			goto error;
++		}
++		wlr_keyboard_init(wlr_device->keyboard, NULL);
++		break;
++	case WLR_INPUT_DEVICE_POINTER:
++		wlr_device->pointer = calloc(1, sizeof(struct wlr_pointer));
++		if (wlr_device->pointer == NULL) {
++			wlr_log(WLR_ERROR, "Unable to allocate wlr_pointer");
++			goto error;
++		}
++		wlr_pointer_init(wlr_device->pointer, NULL);
++		break;
++	case WLR_INPUT_DEVICE_TOUCH:
++		wlr_device->touch = calloc(1, sizeof(struct wlr_touch));
++		if (wlr_device->touch == NULL) {
++			wlr_log(WLR_ERROR, "Unable to allocate wlr_touch");
++			goto error;
++		}
++		wlr_touch_init(wlr_device->touch, NULL);
++		break;
++	case WLR_INPUT_DEVICE_TABLET_TOOL:
++		wlr_device->tablet = calloc(1, sizeof(struct wlr_tablet));
++		if (wlr_device->tablet == NULL) {
++			wlr_log(WLR_ERROR, "Unable to allocate wlr_tablet");
++			goto error;
++		}
++		wlr_tablet_init(wlr_device->tablet, NULL);
++		break;
++	case WLR_INPUT_DEVICE_TABLET_PAD:
++		wlr_device->tablet_pad = calloc(1, sizeof(struct wlr_tablet_pad));
++		if (wlr_device->tablet_pad == NULL) {
++			wlr_log(WLR_ERROR, "Unable to allocate wlr_tablet_pad");
++			goto error;
++		}
++		wlr_tablet_pad_init(wlr_device->tablet_pad, NULL);
++		break;
++	case WLR_INPUT_DEVICE_SWITCH:
++		wlr_device->switch_device = calloc(1, sizeof(struct wlr_switch));
++		if (wlr_device->switch_device == NULL) {
++			wlr_log(WLR_ERROR, "Unable to allocate wlr_switch");
++			goto error;
++		}
++		wlr_switch_init(wlr_device->switch_device, NULL);
++	}
++
++	wl_list_insert(&backend->input_devices, &device->link);
++
++	if (backend->started) {
++		wlr_signal_emit_safe(&backend->backend.events.new_input, wlr_device);
++	}
++
++	return wlr_device;
++error:
++	free(device);
++	return NULL;
++}
+diff --git a/include/wlr/backend/headless.h b/include/wlr/backend/headless.h
+index 2516f3a..aeb4b0d 100644
+--- a/include/wlr/backend/headless.h
++++ b/include/wlr/backend/headless.h
+@@ -10,6 +10,7 @@
+ #define WLR_BACKEND_HEADLESS_H
+ 
+ #include <wlr/backend.h>
++#include <wlr/types/wlr_input_device.h>
+ #include <wlr/types/wlr_output.h>
+ 
+ /**
+@@ -24,8 +25,15 @@ struct wlr_backend *wlr_headless_backend_create(struct wl_display *display);
+  */
+ struct wlr_output *wlr_headless_add_output(struct wlr_backend *backend,
+ 	unsigned int width, unsigned int height);
+-
++/**
++ * Creates a new input device. The caller is responsible for manually raising
++ * any event signals on the new input device if it wants to simulate input
++ * events.
++ */
++struct wlr_input_device *wlr_headless_add_input_device(
++    struct wlr_backend *backend, enum wlr_input_device_type type);
+ bool wlr_backend_is_headless(struct wlr_backend *backend);
+ bool wlr_output_is_headless(struct wlr_output *output);
++bool wlr_input_device_is_headless(struct wlr_input_device *device);
+ 
+ #endif

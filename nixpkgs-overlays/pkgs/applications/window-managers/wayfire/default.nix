@@ -1,12 +1,14 @@
-{ lib, stdenv, fetchurl, cmake, meson, ninja, pkg-config
+{ lib, stdenv, fetchFromGitHub, cmake, meson, ninja, pkg-config
 , wayland, wayland-protocols, wf-config, wlroots, mesa
 , cairo, pango, vulkan-headers, vulkan-loader, xorg, xwayland
-, doctest, libdrm, libexecinfo, libinput, libjpeg, libxkbcommon, glslang, xcbutilerrors, seatd
-# , glm, libevdev, freetype, pixman, libcap
-# , libuuid, xcbutilwm, libxml2, libpng
+, doctest, libdrm, libexecinfo, libinput, libjpeg, libxkbcommon, glslang, xcbutilerrors, xcbutilwm, seatd
+, libevdev, nlohmann_json
+# , glm, freetype, pixman, libcap
+# , libuuid, libxml2, libpng
 }:
 
 stdenv.mkDerivation rec {
+/*
   pname = "wayfire";
   version = "0.7.3";
 
@@ -14,15 +16,32 @@ stdenv.mkDerivation rec {
     url = "https://github.com/WayfireWM/wayfire/releases/download/v${version}/wayfire-${version}.tar.xz";
     sha256 = "0pybay1lznf1md91wdh3np5q56pk5p84y2c4ckg3135q3ldxblcr";
   };
-
+*/
+  # url = "https://github.com/WayfireWM/${name}.git";
+  pname = "wayfire";
+  version = "0.8.0";
+  src = fetchFromGitHub {
+    owner = "WayfireWM";
+    repo = "${pname}";
+    rev = "b8211e3b4939fe92901eb78039ba8ab725041912";
+    sha256 = "sha256-7ab1pyzN2inVR6shYwxWyof+h7A1Bf6pjTDjTAI9X4U="; # 0000000000000000000000000000000000000000000000000000
+    fetchSubmodules = true;
+  };
+/*  patches = [
+    # https://github.com/WayfireWM/wayfire/commit/2daec9bc30920c995700252b4915bbc2839aa1a3#diff-fff9797dc434bcdbb9cb1f1cb46f3a4f6de611034a0eaefe53dd0882b1095778
+    # https://github.com/WayfireWM/wayfire/commit/883dacf8fe1eec5463269755879dfc71b481e7c9
+    # https://github.com/WayfireWM/wayfire/commit/2daec9bc30920c995700252b4915bbc2839aa1a3
+    ./upgrade-wlroots.diff
+  ];
+ */
   nativeBuildInputs = [ cmake meson ninja pkg-config wayland ];
   buildInputs = [
     cairo doctest libdrm libexecinfo libinput libjpeg libxkbcommon wayland
     wayland-protocols wf-config wlroots mesa pango
     vulkan-headers vulkan-loader xwayland xorg.xcbutilrenderutil 
-    glslang xcbutilerrors seatd
-    # libuuid  xcbutilwm libxml2 libpng
-    # glm libevdev freetype pixman libcap
+    glslang xcbutilerrors seatd xcbutilwm
+    # libuuid libxml2 libpng
+    libevdev nlohmann_json # glm  freetype pixman libcap 
   ];
 
   # CMake is just used for finding doctest.
