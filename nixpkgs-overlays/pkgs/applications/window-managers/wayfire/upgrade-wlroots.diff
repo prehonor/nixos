@@ -310,7 +310,7 @@ index caf70932..c850357c 100644
      vptr_created.connect(&protocols.vptr_manager->events.new_virtual_pointer);
  
 diff --git a/src/core/opengl.cpp b/src/core/opengl.cpp
-index dcf25fba..ad144e5b 100644
+index dcf25fba..3cf58a3d 100644
 --- a/src/core/opengl.cpp
 +++ b/src/core/opengl.cpp
 @@ -7,7 +7,6 @@
@@ -321,20 +321,17 @@ index dcf25fba..ad144e5b 100644
  #include "shaders.tpp"
  
  const char *gl_error_string(const GLenum err)
-@@ -250,9 +249,13 @@ void render_rectangle(wf::geometry_t geometry, wf::color_t color,
+@@ -250,9 +249,11 @@ void render_rectangle(wf::geometry_t geometry, wf::color_t color,
  
  void render_begin()
  {
 -    if (!wlr_egl_is_current(wf::get_core_impl().egl))
--    {
++    auto egl = wf::get_core_impl().egl;
++    auto context = wlr_egl_get_context(egl);
++    if (eglGetCurrentContext() != context)
+     {
 -        wlr_egl_make_current(wf::get_core_impl().egl);
-+//    if (!wlr_egl_is_current(wf::get_core_impl().egl))
-+//    {
-+//        wlr_egl_make_current(wf::get_core_impl().egl);
-+//    }
-+    if (eglGetCurrentContext() != wlr_egl_get_context(wf::get_core_impl().egl)){
-+        eglMakeCurrent(wlr_egl_get_display(wf::get_core_impl().egl), EGL_NO_SURFACE, EGL_NO_SURFACE,
-+                       wlr_egl_get_context(wf::get_core_impl().egl));
++        eglMakeCurrent(wlr_egl_get_display(egl), EGL_NO_SURFACE, EGL_NO_SURFACE, context);
      }
  
      GL_CALL(glEnable(GL_BLEND));
@@ -426,24 +423,30 @@ index 9ef011ca..c73634fb 100644
          } \
          wlr_idle_notify_activity(wf::get_core().protocols.idle, seat->seat); \
 diff --git a/src/core/seat/input-manager.cpp b/src/core/seat/input-manager.cpp
-index 6480a1c3..dce01959 100644
+index 6480a1c3..e5efe65c 100644
 --- a/src/core/seat/input-manager.cpp
 +++ b/src/core/seat/input-manager.cpp
-@@ -44,7 +44,7 @@ static std::unique_ptr<wf::input_device_impl_t> create_wf_device_for_device(
+@@ -43,8 +43,9 @@ static std::unique_ptr<wf::input_device_impl_t> create_wf_device_for_device(
+ 
  void wf::input_manager_t::handle_new_input(wlr_input_device *dev)
  {
-     LOGI("handle new input: ", dev->name,
+-    LOGI("handle new input: ", dev->name,
 -        ", default mapping: ", dev->output_name);
-+        ", default mapping: ", wlr_pointer_from_input_device(dev)->output_name);
++//    LOGI("handle new input: ", dev->name,
++//        ", default mapping: ", wlr_pointer_from_input_device(dev)->output_name);
++    LOGI("handle new input: ", dev->name);
      input_devices.push_back(create_wf_device_for_device(dev));
  
      wf::input_device_signal data;
-@@ -73,7 +73,7 @@ void wf::input_manager_t::refresh_device_mappings()
+@@ -73,7 +74,10 @@ void wf::input_manager_t::refresh_device_mappings()
          auto mapped_output = section->get_option("output")->get_value_str();
          if (mapped_output.empty())
          {
 -            mapped_output = nonull(dev->output_name);
-+            mapped_output = nonull(wlr_pointer_from_input_device(dev)->output_name);
++//            mapped_output = nonull(wlr_pointer_from_input_device(dev)->output_name);
++            LOGD("Mapping input ", dev->name, " to output null because not configured.");
++            wlr_cursor_map_input_to_output(cursor, dev, nullptr);
++            continue;
          }
  
          auto wo = wf::get_core().output_layout->find_output(mapped_output);
@@ -1004,21 +1007,36 @@ index 3c8fa934..f8eaf2a3 100644
      {
          LOGE("Get layout geometry for an invalid output!");
 diff --git a/src/view/xdg-shell.cpp b/src/view/xdg-shell.cpp
-index 67deb3ec..3bc5c0f2 100644
+index 67deb3ec..492c0c82 100644
 --- a/src/view/xdg-shell.cpp
 +++ b/src/view/xdg-shell.cpp
-@@ -100,8 +100,8 @@ void wayfire_xdg_popup::update_position()
+@@ -39,11 +39,14 @@ void wayfire_xdg_popup::initialize()
+         wf::emit_ping_timeout_signal(self());
+     });
+ 
++    on_repostion.set_callback([&] (void*) { unconstrain(); });
++
+     on_map.connect(&popup->base->events.map);
+     on_unmap.connect(&popup->base->events.unmap);
+     on_destroy.connect(&popup->base->events.destroy);
+     on_new_popup.connect(&popup->base->events.new_popup);
+     on_ping_timeout.connect(&popup->base->events.ping_timeout);
++    on_repostion.connect(&popup->events.reposition);
+ 
+     popup->base->data = this;
+     parent_geometry_changed.set_callback([=] (wf::signal_data_t*)
+@@ -100,8 +103,8 @@ void wayfire_xdg_popup::update_position()
      }
  
      wf::pointf_t popup_offset = {
 -        1.0 * popup->geometry.x + popup_parent->get_window_offset().x,
 -        1.0 * popup->geometry.y + popup_parent->get_window_offset().y,
-+        1.0 * popup->current.geometry.x + popup_parent->get_window_offset().x,  // popup->current or popup->pending TODO
++        1.0 * popup->current.geometry.x + popup_parent->get_window_offset().x,
 +        1.0 * popup->current.geometry.y + popup_parent->get_window_offset().y,
      };
  
      auto parent_geometry = popup_parent->get_output_geometry();
-@@ -165,7 +165,7 @@ void wayfire_xdg_popup::close()
+@@ -165,7 +168,7 @@ void wayfire_xdg_popup::close()
      {
          if (is_mapped())
          {
@@ -1027,7 +1045,7 @@ index 67deb3ec..3bc5c0f2 100644
          }
      });
  }
-@@ -241,7 +241,7 @@ void wayfire_xdg_view::initialize()
+@@ -241,7 +244,7 @@ void wayfire_xdg_view::initialize()
      on_set_parent.set_callback([&] (void*)
      {
          auto parent = xdg_toplevel->parent ?
@@ -1036,7 +1054,7 @@ index 67deb3ec..3bc5c0f2 100644
          set_toplevel_parent(parent);
      });
      on_ping_timeout.set_callback([&] (void*)
-@@ -263,9 +263,8 @@ void wayfire_xdg_view::initialize()
+@@ -263,9 +266,8 @@ void wayfire_xdg_view::initialize()
      });
      on_request_fullscreen.set_callback([&] (void *data)
      {
@@ -1048,7 +1066,7 @@ index 67deb3ec..3bc5c0f2 100644
      });
  
      on_map.connect(&xdg_toplevel->base->events.map);
-@@ -381,14 +380,14 @@ void wayfire_xdg_view::set_activated(bool act)
+@@ -381,14 +383,14 @@ void wayfire_xdg_view::set_activated(bool act)
      }
  
      last_configure_serial =
@@ -1066,7 +1084,7 @@ index 67deb3ec..3bc5c0f2 100644
          (edges == wf::TILED_EDGES_ALL));
      wlr_view_t::set_tiled(edges);
  }
-@@ -397,7 +396,7 @@ void wayfire_xdg_view::set_fullscreen(bool full)
+@@ -397,7 +399,7 @@ void wayfire_xdg_view::set_fullscreen(bool full)
  {
      wf::wlr_view_t::set_fullscreen(full);
      last_configure_serial =
@@ -1075,7 +1093,7 @@ index 67deb3ec..3bc5c0f2 100644
  }
  
  void wayfire_xdg_view::resize(int w, int h)
-@@ -413,21 +412,21 @@ void wayfire_xdg_view::resize(int w, int h)
+@@ -413,21 +415,21 @@ void wayfire_xdg_view::resize(int w, int h)
      {
          this->last_size_request = {w, h};
          last_configure_serial   =
@@ -1100,17 +1118,31 @@ index 67deb3ec..3bc5c0f2 100644
          wf::wlr_view_t::close();
      }
  }
-@@ -466,7 +465,7 @@ static wlr_xdg_shell *xdg_handle = nullptr;
+@@ -466,7 +468,8 @@ static wlr_xdg_shell *xdg_handle = nullptr;
  void wf::init_xdg_shell()
  {
      static wf::wl_listener_wrapper on_xdg_created;
 -    xdg_handle = wlr_xdg_shell_create(wf::get_core().display);
-+    xdg_handle = wlr_xdg_shell_create(wf::get_core().display,wl_display_get_version(wf::get_core().display)); // guess TODO
++//    xdg_handle = wlr_xdg_shell_create(wf::get_core().display,wl_display_get_version(wf::get_core().display)); // guess TODO
++    xdg_handle = wlr_xdg_shell_create(wf::get_core().display, 3);
  
      if (xdg_handle)
      {
+diff --git a/src/view/xdg-shell.hpp b/src/view/xdg-shell.hpp
+index 65659675..6da67ee6 100644
+--- a/src/view/xdg-shell.hpp
++++ b/src/view/xdg-shell.hpp
+@@ -10,7 +10,7 @@ class wayfire_xdg_popup : public wf::wlr_view_t
+ {
+   protected:
+     wf::wl_listener_wrapper on_destroy, on_new_popup,
+-        on_map, on_unmap, on_ping_timeout;
++        on_map, on_unmap, on_ping_timeout, on_repostion;
+     wf::signal_connection_t parent_geometry_changed,
+         parent_title_changed, parent_app_id_changed;
+ 
 diff --git a/src/view/xwayland.cpp b/src/view/xwayland.cpp
-index e8319c52..c5098c12 100644
+index e8319c52..e50888be 100644
 --- a/src/view/xwayland.cpp
 +++ b/src/view/xwayland.cpp
 @@ -596,7 +596,7 @@ class wayfire_xwayland_view : public wayfire_xwayland_view_base
@@ -1118,7 +1150,7 @@ index e8319c52..c5098c12 100644
              wf::view_hints_changed_signal data;
              data.view = this;
 -            if (xw->hints_urgency)
-+            if (xw->hints && xcb_icccm_wm_hints_get_urgency(xw->hints))  // TODO
++            if (xcb_icccm_wm_hints_get_urgency(xw->hints))
              {
                  data.demands_attention = true;
              }

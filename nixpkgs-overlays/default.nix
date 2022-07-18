@@ -21,11 +21,11 @@ in rec {
 
     lua_x = super.lua5_4;
 
-   /* wlr-protocols = super.callPackage ./pkgs/development/libraries/wlroots/protocols.nix { };
-    wlroots = super.callPackage ./pkgs/development/libraries/wlroots {
+    wlr-protocols_x = super.callPackage ./pkgs/development/libraries/wlroots/protocols.nix { };
+    wlroots_x = super.callPackage ./pkgs/development/libraries/wlroots {
         inherit (super.xorg) xcbutilrenderutil;
     };
-*/
+
     wayfireApplications = wayfireApplications-unwrapped.withPlugins (plugins: [ plugins.wf-shell plugins.wf-info plugins.wayfire-plugins-extra ]); 
     inherit (wayfireApplications) wayfire wcm ;
     wayfireApplications-unwrapped = super.recurseIntoAttrs (

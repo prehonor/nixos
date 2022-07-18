@@ -23,17 +23,17 @@ stdenv.mkDerivation rec {
   src = fetchFromGitHub {
     owner = "WayfireWM";
     repo = "${pname}";
-    rev = "b8211e3b4939fe92901eb78039ba8ab725041912";
-    sha256 = "sha256-7ab1pyzN2inVR6shYwxWyof+h7A1Bf6pjTDjTAI9X4U="; # 0000000000000000000000000000000000000000000000000000
+    rev = "75cc857e621ed9598b7a6fdd860cf5b690b348ff";
+    sha256 = "sha256-yg78fyKAh3l26LglICf3/BPzOQa6uAbIbuiBsGGGgys="; # 0000000000000000000000000000000000000000000000000000
     fetchSubmodules = true;
   };
-/*  patches = [
+  /* patches = [
     # https://github.com/WayfireWM/wayfire/commit/2daec9bc30920c995700252b4915bbc2839aa1a3#diff-fff9797dc434bcdbb9cb1f1cb46f3a4f6de611034a0eaefe53dd0882b1095778
     # https://github.com/WayfireWM/wayfire/commit/883dacf8fe1eec5463269755879dfc71b481e7c9
     # https://github.com/WayfireWM/wayfire/commit/2daec9bc30920c995700252b4915bbc2839aa1a3
     ./upgrade-wlroots.diff
   ];
- */
+*/
   nativeBuildInputs = [ cmake meson ninja pkg-config wayland ];
   buildInputs = [
     cairo doctest libdrm libexecinfo libinput libjpeg libxkbcommon wayland

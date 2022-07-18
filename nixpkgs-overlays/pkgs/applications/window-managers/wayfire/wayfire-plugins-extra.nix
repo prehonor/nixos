@@ -49,7 +49,7 @@ stdenv.mkDerivation rec {
     rev = "9c862ebfdcf4f06faaa94b3fa1116d260f3c6658";
     sha256 = "1zayh9wflj7pi4g5mss6srgvrj7pn1wkscam1xi9wbwwgi9mxwp1";
   };
-/*  patches = [
+  /* patches = [
     ./event-patch.diff
   ];
 */
