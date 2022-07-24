@@ -43,6 +43,36 @@ in rec {
 
     cutter_x = super.libsForQt515.callPackage ./pkgs/development/tools/analysis/rizin/cutter.nix {  rizin = rizin_x; };
 
+    python3 = super.python3.override {
+        packageOverrides = final: prev: {
+            pyzmq = prev.pyzmq.overridePythonAttrs (oldAttrs: 
+                rec {
+                    version = "23.2.0";
+                    pname = oldAttrs.pname;
+                    src = prev.fetchPypi {
+                        inherit pname version;
+                        sha256 = "sha256-pR8SqHGarZ3PtV1FYCLxa5CryN3n08qTzjEgtA4/oWk=";
+                    };
+                }
+            );
+            qtpy = prev.qtpy.overridePythonAttrs (oldAttrs: 
+                rec {
+                    version = "2.1.0";
+                    pname = oldAttrs.pname;
+                    src = prev.fetchPypi {
+                        inherit pname version;
+                        sha256 = "sha256-yozUIXF1GGNEKZ7kwPfnrc82LHCFK6NbJVpTQHcCXAY=";
+                    };
+                }
+            );
+            whatthepatch = final.callPackage ./pkgs/development/python-modules/whatthepatch {};
+            python-lsp-server = final.callPackage ./pkgs/development/python-modules/python-lsp-server {};
+            jupyter-client = final.callPackage ./pkgs/development/python-modules/jupyter-client {};
+            spyder-kernels = final.callPackage ./pkgs/development/python-modules/spyder-kernels {};
+            spyder = final.callPackage ./pkgs/development/python-modules/spyder {};
+        };
+    };
+
     # logseq = super.callPackage ./pkgs/applications/misc/logseq { };
     /*
     koreader_x = super.koreader.overrideAttrs (
@@ -92,15 +122,12 @@ in rec {
     /*
     python3 = super.python3.override {
         packageOverrides = final: prev: {
-            python-lsp-server = final.callPackage ./pkgs/development/python-modules/python-lsp-server {};
+            
             qdarkstyle = final.callPackage ./pkgs/development/python-modules/qdarkstyle {};
             qtconsole = final.callPackage ./pkgs/development/python-modules/qtconsole {};
-            spyder-kernels = final.callPackage ./pkgs/development/python-modules/spyder-kernels {};
+            
             qstylizer = final.callPackage ./pkgs/development/python-modules/qstylizer {};
             autopep8 = final.callPackage ./pkgs/development/python-modules/autopep8 {};
-            
-            spyder = final.callPackage ./pkgs/development/python-modules/spyder {};
-         
             pyqtchart = final.callPackage ./pkgs/development/python-modules/pyqtchart { 
                 inherit (super.libsForQt5.qt5) qtbase qmake qtcharts; # inherit (super.libsForQt5) ;        
             };
@@ -119,16 +146,7 @@ in rec {
                     };
                 }
             );
-            jupyter-client = prev.jupyter-client.overridePythonAttrs (oldAttrs: 
-                rec {
-                    version = "7.1.0";
-                    pname = oldAttrs.pname;
-                    src = prev.fetchPypi {
-                        inherit pname version;
-                        sha256 = "a5f995a73cffb314ed262713ae6dfce53c6b8216cea9f332071b8ff44a6e1654";
-                    };
-                }
-            );
+
 
             eric6 = final.callPackage ./pkgs/development/python-modules/eric-ide {};
         };
@@ -174,33 +192,8 @@ in rec {
         src = /home/prehonor/Downloads/pycharm-professional-2021.2.2.tar.gz;
       }
     );
-    
-    super.jetbrains.webstorm = super.jetbrains.webstorm.overrideAttrs (
-      oldAttrs: rec {
-        src = /home/prehonor/Downloads/WebStorm-2021.2.2.tar.gz;
-      }
-    );
-
-    super.jetbrains.clion = super.jetbrains.clion.overrideAttrs (
-      oldAttrs: rec {
-        src = /home/prehonor/Downloads/CLion-2021.3.tar.gz;
-      }
-    );
-    
-    super.jetbrains.idea-ultimate = super.jetbrains.idea-ultimate.overrideAttrs (
-      oldAttrs: rec {
-        src = /home/prehonor/Downloads/ideaIU-2021.3.tar.gz;
-      }
-    );
 
 */
-    # 已使用julia-stable 该设置暂时无效
-/*
-	  julia = super.callPackage ./pkgs/development/compilers/julia/1.5.nix {
-    	inherit (super.darwin.apple_sdk.frameworks) CoreServices ApplicationServices;
-  	  };
-*/
-
     inherit (super.recurseIntoAttrs (super.callPackage ./pkgs/applications/editors/sublime/4/packages.nix { }))
     sublime4
     sublime4-dev;
@@ -215,13 +208,6 @@ in rec {
     # edraw = libsForQt5_my.callPackage ./pkgs/applications/misc/edraw {};
 
     # foliate = super.callPackage ./pkgs/applications/office/foliate { }; 21.05 已经加入
-
-
-
-
-
-  	# onlyoffice = super.callPackage ./pkgs/applications/office/onlyoffice-bin {};
-    
 
 
   	bcompare = super.libsForQt5.callPackage ./pkgs/applications/version-management/bcompare {};

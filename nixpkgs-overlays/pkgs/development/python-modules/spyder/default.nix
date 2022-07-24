@@ -1,122 +1,101 @@
-{ lib, buildPythonPackage, fetchPypi, isPy27, makeDesktopItem, 
-  atomicwrites,
-  chardet,
-  cloudpickle,
-  cookiecutter, # 新添加
-  diff-match-patch,
-  intervaltree,
-  ipython, # 新添加
-  jedi,
-  jellyfish, # 新添加
-  jsonschema, # 新添加
-  keyring,
-  nbconvert,
-  numpydoc,
-  parso, # 新添加
-  pexpect, # 新添加
-  pickleshare, # 新添加
-  psutil,
-  pygments,
-  pylint,
-  python-lsp-black, # 新添加 且依赖  python-lsp-server # Black plugin for the Python LSP Server
-  pyls-spyder,
-  pyqt5, # 新添加
-  pyqtwebengine,
-  python-lsp-server, # 版本过低 需要覆盖
-  pyxdg,
-  pyzmq,
-  qdarkstyle,        # 版本过低 需要覆盖 3.0.2
-  qstylizer,         # 新添加 nixos 没有
-  qtawesome,
-  qtconsole,        # 版本过低 需要覆盖 >=5.2.1
-  qtpy,
-  Rtree,      # 新添加
-  setuptools,  # 新添加
-  sphinx,  # 新添加
-  spyder-kernels,    # 版本过低 需要覆盖 >=2.2.0,<2.3.0 
-  # 下面的包 spyder 源码不需要
-  tinycss2,  # 新添加
-  inflection,  # 新添加
-  textdistance,
-  three-merge,
-  watchdog,  # Python API and shell utilities to monitor file system events
-  pycodestyle,  
-  rope, 
-  numpy,
-  scipy,
-  matplotlib,
-  mccabe,
-  pyopengl,  # PyOpenGL, the Python OpenGL bindings
-  flake8,    # Flake8 is a wrapper around pyflakes, pycodestyle and mccabe
+{ lib
+, buildPythonPackage
+, fetchPypi
+, pythonOlder
+, makeDesktopItem
+, atomicwrites
+, chardet
+, cloudpickle
+, cookiecutter
+, diff-match-patch
+, flake8
+, intervaltree
+, jedi
+, jellyfish
+, keyring
+, matplotlib
+, mccabe
+, nbconvert
+, numpy
+, numpydoc
+, psutil
+, pygments
+, pylint
+, pyls-spyder
+, pyopengl
+, pyqtwebengine
+, python-lsp-black
+, python-lsp-server
+, pyxdg
+, pyzmq
+, pycodestyle
+, qdarkstyle
+, qstylizer
+, qtawesome
+, qtconsole
+, qtpy
+, rope
+, Rtree
+, scipy
+, spyder-kernels
+, textdistance
+, three-merge
+, watchdog
+, pytestCheckHook
 }:
 
 buildPythonPackage rec {
   pname = "spyder";
-  version = "5.2.2";
+  version = "5.3.2";
 
-  disabled = isPy27;
+  disabled = pythonOlder "3.7";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "dc322291096c73b3ed6a08bc75d47989afaedb8757781769a519089ffc69ddb8";
+    sha256 = "sha256-KJkamNMXr4Mi9Y6B7aKExoiqWKoExCFlELChCrQL6mQ=";
   };
 
-
-#  src = /gh/prehonor/gitproject/spyder;
   nativeBuildInputs = [ pyqtwebengine.wrapQtAppsHook ];
 
-  propagatedBuildInputs = [ 
+  propagatedBuildInputs = [
     atomicwrites
     chardet
     cloudpickle
-    cookiecutter # 新添加
+    cookiecutter
     diff-match-patch
+    flake8
     intervaltree
-    ipython # 新添加
     jedi
-    jellyfish # 新添加
-    jsonschema # 新添加
+    jellyfish
     keyring
+    matplotlib
+    mccabe
     nbconvert
+    numpy
     numpydoc
-    parso # 新添加
-    pexpect # 新添加
-    pickleshare # 新添加
     psutil
     pygments
     pylint
-    python-lsp-black # 新添加 且依赖  python-lsp-server # Black plugin for the Python LSP Server
     pyls-spyder
-    pyqt5 # 新添加
+    pyopengl
     pyqtwebengine
-    python-lsp-server # 版本过低 需要覆盖
+    python-lsp-black
+    python-lsp-server
     pyxdg
     pyzmq
-    qdarkstyle        # 版本过低 需要覆盖 3.0.2
-    qstylizer         # 新添加 nixos 没有
+    pycodestyle
+    qdarkstyle
+    qstylizer
     qtawesome
-    qtconsole         # 版本过低 需要覆盖 >=5.2.1
+    qtconsole
     qtpy
-    Rtree       # 新添加
-    setuptools  # 新添加
-    sphinx  # 新添加
-    spyder-kernels    # 版本过低 需要覆盖 >=2.2.0,<2.3.0 
-    # 下面的包 spyder 源码不需要
-    tinycss2  # 新添加
-    inflection  # 新添加
+    rope
+    Rtree
+    scipy
+    spyder-kernels
     textdistance
     three-merge
-    watchdog  # Python API and shell utilities to monitor file system events
-    pycodestyle  
-    rope 
-    numpy 
-    scipy 
-    matplotlib  
-    mccabe 
-    pyopengl  # PyOpenGL, the Python OpenGL bindings
-    flake8      # Flake8 is a wrapper around pyflakes, pycodestyle and mccabe
-    # python-language-server  
-    # pyls-black  # Black plugin for the Python Language Server
+    watchdog
   ];
 
   # There is no test for spyder
@@ -129,19 +108,15 @@ buildPythonPackage rec {
     comment = "Scientific Python Development Environment";
     desktopName = "Spyder";
     genericName = "Python IDE";
-    categories = "Development;IDE;";
+    categories = [ "Development" "IDE" ];
   };
 
   postPatch = ''
     # remove dependency on pyqtwebengine
     # this is still part of the pyqt 5.11 version we have in nixpkgs
-    # sed -i /pyqtwebengine/d setup.py
-    # The major version bump in watchdog is due to changes in supported
-    # platforms, not API break.
-    # https://github.com/gorakhargosh/watchdog/issues/761#issuecomment-777001518
+    sed -i /pyqtwebengine/d setup.py
     substituteInPlace setup.py \
-      --replace "pyqt5<5.13" "pyqt5" \
-      --replace "pyqtwebengine<5.13" "pyqtwebengine" 
+      --replace "ipython>=7.31.1,<8.0.0" "ipython"
   '';
 
   postInstall = ''
