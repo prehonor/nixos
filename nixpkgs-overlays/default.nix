@@ -72,7 +72,10 @@ in rec {
             spyder = final.callPackage ./pkgs/development/python-modules/spyder {};
         };
     };
-
+    # spyder = with python3.pkgs; toPythonApplication super.spyder;
+    python-with-my-packages = python3.withPackages (python3Packages: with python3Packages; [
+        spyder
+    ]);
     # logseq = super.callPackage ./pkgs/applications/misc/logseq { };
     /*
     koreader_x = super.koreader.overrideAttrs (
@@ -154,16 +157,18 @@ in rec {
     fildem = super.callPackage ./pkgs/gnome/extensions/fildem/default.nix {};
         */
         # pbr = final.callPackage ./pkgs/development/python-modules/pbr {}; # 代价太大了
-    python-with-my-packages = super.python3.withPackages (python3Packages: with python3Packages; [
-        pip urllib3 spyder ansible jupyter sip pyqtwebengine epc lxml pysocks pymupdf 
-        pytaglib qrcode pyqt5  # pyqt5_with_qtmultimedia
-    ]);
+
 
    # texmacs = super.texmacs.override { chineseFonts = true; };
    # python-lsp-server = super.python3.pkgs.callPackage ./pkgs/development/python-modules/python-lsp-server { };
    gdbgui_x = super.python3.pkgs.callPackage ./pkgs/development/tools/misc/gdbgui { };
 
+
 /*
+    python-with-my-packages = super.python3.withPackages (python3Packages: with python3Packages; [
+        pip urllib3 ansible jupyter sip pyqtwebengine epc lxml pysocks pymupdf 
+        pytaglib qrcode pyqt5  # pyqt5_with_qtmultimedia
+    ]);
   	boost_x = super.boost175.override { enablePython = true; python = super.pkgs.python3; };
 
     libmysqlclient_315 = super.libmysqlclient.override { version = "3.1.5"; };

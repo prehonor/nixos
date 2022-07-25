@@ -42,6 +42,7 @@
 , three-merge
 , watchdog
 , pytestCheckHook
+, python3
 }:
 
 buildPythonPackage rec {
@@ -115,6 +116,7 @@ buildPythonPackage rec {
     # remove dependency on pyqtwebengine
     # this is still part of the pyqt 5.11 version we have in nixpkgs
     sed -i /pyqtwebengine/d setup.py
+    sed -i '13,18d' spyder/app/start.py
     substituteInPlace setup.py \
       --replace "ipython>=7.31.1,<8.0.0" "ipython"
   '';
@@ -122,7 +124,7 @@ buildPythonPackage rec {
   postInstall = ''
     # add Python libs to env so Spyder subprocesses
     # created to run compute kernels don't fail with ImportErrors
-    wrapProgram $out/bin/spyder --prefix PYTHONPATH : "$PYTHONPATH"
+    wrapProgram $out/bin/spyder --prefix PYTHONPATH : "$PYTHONPATH:$out/lib/${python3.libPrefix}/site-packages" # :$(toPythonPath ${python3.pkgs.spyder-kernels}) 
     # Create desktop item
     mkdir -p $out/share/icons
     cp spyder/images/spyder.svg $out/share/icons
