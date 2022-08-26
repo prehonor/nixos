@@ -18,6 +18,7 @@ in rec {
     lld_x = super.llvmPackages_latest.lld;
     lldb_x = super.llvmPackages_latest.lldb;
     clang_x = super.llvmPackages_latest.clang;
+    c2ffi = super.callPackage ./pkgs/development/tools/misc/c2ffi { llvmPackages = super.llvmPackages_13; };
 
     lua_x = super.lua5_4;
 
@@ -42,6 +43,7 @@ in rec {
     rizin_x = super.callPackage ./pkgs/development/tools/analysis/rizin { };
 
     cutter_x = super.libsForQt515.callPackage ./pkgs/development/tools/analysis/rizin/cutter.nix {  rizin = rizin_x; };
+    sbcl = super.callPackage ./pkgs/development/compilers/sbcl/2.2.7.nix {};
 
     python3 = super.python3.override {
         packageOverrides = final: prev: {

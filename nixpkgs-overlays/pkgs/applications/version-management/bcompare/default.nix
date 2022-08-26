@@ -10,7 +10,7 @@ let
 
   srcs = {
     x86_64-linux = fetchurl {
-      url = "https://www.scootersoftware.com/${pname}-${version}_amd64.deb";
+      url = "https://prehonor-generic.pkg.coding.net/yigeren/pkgs/${pname}-${version}_amd64.deb";
       sha256 = "sha256-GotORErgPs7IPXATbBfIisDCNwp8csl7pDSwV77FylA=";
     };
 

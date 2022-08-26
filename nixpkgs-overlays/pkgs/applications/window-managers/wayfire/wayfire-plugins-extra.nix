@@ -51,8 +51,8 @@ stdenv.mkDerivation rec {
   };
   /* patches = [
     ./event-patch.diff
-  ];
-*/
+  ]; */
+
   dontUseCmakeConfigure = true;
 
   nativeBuildInputs = [

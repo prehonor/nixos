@@ -1,24 +1,5 @@
-diff --git a/.gitignore b/.gitignore
-index 9e0f7ab0..042e05eb 100644
---- a/.gitignore
-+++ b/.gitignore
-@@ -62,4 +62,13 @@
- 
- build/**
- 
-+# jetbrains .idea
-+.idea
-+*.iml
-+out
-+gen
-+
-+# patchfiles
-+*.diff
-+
- # End of https://www.toptal.com/developers/gitignore/api/c++,meson,ninja,linux
-\ No newline at end of file
 diff --git a/meson.build b/meson.build
-index 7ffb482f..66888561 100644
+index 7ffb482f..7052a324 100644
 --- a/meson.build
 +++ b/meson.build
 @@ -31,7 +31,7 @@ pixman         = dependency('pixman-1')
@@ -30,26 +11,18 @@ index 7ffb482f..66888561 100644
  wfconfig       = dependency('wf-config', version: ['>=0.8.0', '<0.9.0'], required: get_option('use_system_wfconfig'))
  
  use_system_wlroots = not get_option('use_system_wlroots').disabled() and wlroots.found()
-@@ -150,6 +150,7 @@ endif
+@@ -150,9 +150,11 @@ endif
  
  if have_xwayland
    xcb = dependency('xcb')
-+  xcbutilwm = dependency('xcb-icccm')
++  xcb_icccm = dependency('xcb-icccm')
    conf_data.set('WF_HAS_XWAYLAND', 1)
  else
    xcb = declare_dependency() # dummy dep
-diff --git a/meson_options.txt b/meson_options.txt
-index a9005f80..9a7c2099 100644
---- a/meson_options.txt
-+++ b/meson_options.txt
-@@ -3,6 +3,6 @@ option('use_system_wfconfig', type: 'feature', value: 'auto', description: 'Use
- option('use_system_wlroots', type: 'feature', value: 'auto', description: 'Use the system-wide installation of wlroots')
- option('xwayland', type: 'feature', value: 'auto', description: 'Build with xwayland support. Requires wlroots also built with xwayland support')
- option('default_config_backend', type: 'string', value: 'default', description: 'Default configuration backend to use')
--option('print_trace', type: 'boolean', value: true, description: 'Print stack trace in debug logs (disables coredump)')
-+option('print_trace', type: 'boolean', value: false, description: 'Print stack trace in debug logs (disables coredump)')
- option('tests', type: 'feature', value: 'auto', description: 'Enable unit tests')
- option('debug_ipc', type: 'boolean', value: 'true', description: 'Enable debugging IPC')
++  xcb_icccm = declare_dependency() # dummy dep
+   conf_data.set('WF_HAS_XWAYLAND', 0)
+ endif
+ 
 diff --git a/metadata/resize.xml b/metadata/resize.xml
 index 25c00ab3..beeef7a7 100644
 --- a/metadata/resize.xml
@@ -97,10 +70,10 @@ index 411c1556..6fe53b98 100644
          if (animation.in_exit)
          {
 diff --git a/plugins/ipc/stipc.cpp b/plugins/ipc/stipc.cpp
-index 8026c2f9..d0f0733b 100644
+index 8026c2f9..0901a416 100644
 --- a/plugins/ipc/stipc.cpp
 +++ b/plugins/ipc/stipc.cpp
-@@ -108,37 +108,40 @@ class headless_input_backend_t
+@@ -108,7 +108,7 @@ class headless_input_backend_t
  
      void do_key(uint32_t key, wl_keyboard_key_state state)
      {
@@ -109,51 +82,28 @@ index 8026c2f9..d0f0733b 100644
          ev.keycode = key;
          ev.state   = state;
          ev.update_state = true;
-         ev.time_msec    = get_current_time();
--        wlr_keyboard_notify_key(keyboard->keyboard, &ev);
-+        wlr_keyboard_notify_key(wlr_keyboard_from_input_device(keyboard), &ev);
-     }
+@@ -118,7 +118,7 @@ class headless_input_backend_t
  
      void do_button(uint32_t button, wlr_button_state state)
      {
 -        wlr_event_pointer_button ev;
--        ev.device    = pointer;
 +        wlr_pointer_button_event ev;
-+        ev.pointer    = wlr_pointer_from_input_device(pointer);
+         ev.device    = pointer;
          ev.button    = button;
          ev.state     = state;
-         ev.time_msec = get_current_time();
--        wl_signal_emit(&pointer->pointer->events.button, &ev);
--        wl_signal_emit(&pointer->pointer->events.frame, NULL);
-+
-+        wl_signal_emit(&ev.pointer->events.button, &ev);
-+        wl_signal_emit(&ev.pointer->events.frame, NULL);
-     }
- 
+@@ -130,9 +130,10 @@ class headless_input_backend_t
      void do_motion(double x, double y)
      {
          auto layout = wf::get_core().output_layout->get_handle();
 -        auto box    = wlr_output_layout_get_box(layout, NULL);
 +        struct wlr_box box;
-+        wlr_output_layout_get_box(layout, wlr_headless_add_output(this->backend,250,250), &box);
++        wlr_output_layout_get_box(layout, NULL, &box);
  
 -        wlr_event_pointer_motion_absolute ev;
--        ev.device    = pointer;
 +        wlr_pointer_motion_absolute_event ev;
-+        ev.pointer    = wlr_pointer_from_input_device(pointer);;
+         ev.device    = pointer;
          ev.time_msec = get_current_time();
--        ev.x = 1.0 * (x - box->x) / box->width;
--        ev.y = 1.0 * (y - box->y) / box->height;
--        wl_signal_emit(&pointer->pointer->events.motion_absolute, &ev);
--        wl_signal_emit(&pointer->pointer->events.frame, NULL);
-+        ev.x = 1.0 * (x - box.x) / box.width;
-+        ev.y = 1.0 * (y - box.y) / box.height;
-+
-+        wl_signal_emit(&ev.pointer->events.motion_absolute, &ev);
-+        wl_signal_emit(&ev.pointer->events.frame, NULL);
-     }
- 
-     headless_input_backend_t(const headless_input_backend_t&) = delete;
+         ev.x = 1.0 * (x - box->x) / box->width;
 diff --git a/plugins/scale/scale-title-filter.cpp b/plugins/scale/scale-title-filter.cpp
 index ca25c33f..97894927 100644
 --- a/plugins/scale/scale-title-filter.cpp
@@ -234,7 +184,7 @@ index 1ba9d74a..97a275c6 100644
              (ev->event->state == WLR_KEY_RELEASED))
          {
 diff --git a/plugins/single_plugins/preserve-output.cpp b/plugins/single_plugins/preserve-output.cpp
-index 32abe82d..eb6916f6 100644
+index 32abe82d..4b7fd72d 100644
 --- a/plugins/single_plugins/preserve-output.cpp
 +++ b/plugins/single_plugins/preserve-output.cpp
 @@ -38,8 +38,10 @@ std::string make_output_identifier(wf::output_t *output)
@@ -250,8 +200,45 @@ index 32abe82d..eb6916f6 100644
      return identifier;
  }
  
+@@ -269,36 +271,8 @@ class wayfire_preserve_output : public wf::plugin_interface_t
+             // Remove all last output info from views
+             view_erase_data(view);
+         }
+-
+-        // Start listening for view resize events AFTER this callback has finished
+-        output->connect_signal("view-geometry-changed", &view_moved);
+     }
+ 
+-    wf::signal_connection_t view_moved = [=] (wf::signal_data_t *data)
+-    {
+-        // Triggered whenever a view on this output's geometry changed
+-        auto signal_data = (wf::view_geometry_changed_signal*)data;
+-        auto view = signal_data->view;
+-
+-        // Ignore event if geometry didn't actually change
+-        if (signal_data->old_geometry == view->get_wm_geometry())
+-        {
+-            return;
+-        }
+-
+-        if (view_has_data(view))
+-        {
+-            // Remove a view's last output info if it is deliberately moved
+-            // by user
+-            if (!outputs_being_removed)
+-            {
+-                LOGD("View moved, deleting last output info for: ",
+-                    view->get_title());
+-                view_erase_data(view);
+-            }
+-        }
+-    };
+-
+     wf::wl_idle_call idle_restore_views;
+ 
+   public:
 diff --git a/plugins/single_plugins/resize.cpp b/plugins/single_plugins/resize.cpp
-index a6d2f6c6..ce7db520 100644
+index a6d2f6c6..4a8b6a7b 100644
 --- a/plugins/single_plugins/resize.cpp
 +++ b/plugins/single_plugins/resize.cpp
 @@ -13,15 +13,18 @@ class wayfire_resize : public wf::plugin_interface_t
@@ -336,7 +323,7 @@ index a6d2f6c6..ce7db520 100644
 +        double ratio;
 +        if (keep_ratio)
 +        {
-+            ratio = (double)width / height;
++          ratio = (double)width / height;
 +        }
  
          if (edges & WLR_EDGE_LEFT)
@@ -349,11 +336,11 @@ index a6d2f6c6..ce7db520 100644
 -        width  = std::max(width, 1);
 +        if (keep_ratio)
 +        {
-+            height = std::min(std::max(height, 1), (int)(width / ratio));
-+            width  = std::min(std::max(width, 1), (int)(height * ratio));
++          height = std::min(std::max(height, 1), (int)(width / ratio));
++          width  = std::min(std::max(width, 1), (int)(height * ratio));
 +        } else {
-+            height = std::max(height, 1);
-+            width  = std::max(width, 1);
++          height = std::max(height, 1);
++          width  = std::max(width, 1);
 +        }
          view->resize(width, height);
      }
@@ -428,36 +415,24 @@ index 7bda0289..fc466db2 100644
  
      std::string to_string() const
 diff --git a/src/api/wayfire/nonstd/wlroots-full.hpp b/src/api/wayfire/nonstd/wlroots-full.hpp
-index 96ea12a5..9f171828 100644
+index 96ea12a5..be178919 100644
 --- a/src/api/wayfire/nonstd/wlroots-full.hpp
 +++ b/src/api/wayfire/nonstd/wlroots-full.hpp
-@@ -23,6 +23,7 @@ extern "C"
- // Rendering
- #define static
- #include <wlr/types/wlr_compositor.h>
-+#include <wlr/types/wlr_subcompositor.h>
- #include <wlr/render/wlr_renderer.h>
- #include <wlr/render/allocator.h>
- #include <wlr/render/gles2.h>
-@@ -43,7 +44,6 @@ extern "C"
+@@ -43,7 +43,8 @@ extern "C"
      #include <wlr/types/wlr_xdg_shell.h>
      #include <wlr/types/wlr_xdg_decoration_v1.h>
  #endif
 -#include <wlr/types/wlr_surface.h>
++#include <wlr/types/wlr_compositor.h>
++#include <wlr/types/wlr_subcompositor.h>
  
  #include <wlr/types/wlr_foreign_toplevel_management_v1.h>
  #include <wlr/types/wlr_server_decoration.h>
-@@ -131,4 +131,5 @@ extern "C"
- #include <wlr/types/wlr_relative_pointer_v1.h>
- #include <wlr/types/wlr_text_input_v3.h>
- #include <wlr/types/wlr_primary_selection_v1.h>
-+// #include <wlr/types/wlr_fractional_scale_v1.h>
- }
 diff --git a/src/api/wayfire/nonstd/wlroots.hpp b/src/api/wayfire/nonstd/wlroots.hpp
-index 30e73674..df75b701 100644
+index 30e73674..2b64c942 100644
 --- a/src/api/wayfire/nonstd/wlroots.hpp
 +++ b/src/api/wayfire/nonstd/wlroots.hpp
-@@ -38,8 +38,8 @@ extern "C"
+@@ -38,18 +38,21 @@ extern "C"
      struct wlr_xdg_foreign_v2;
      struct wlr_xdg_foreign_registry;
  
@@ -468,7 +443,12 @@ index 30e73674..df75b701 100644
      struct wlr_output_layout;
      struct wlr_surface;
      struct wlr_texture;
-@@ -50,6 +50,7 @@ extern "C"
+     struct wlr_viewporter;
++    struct wlr_keyboard_shortcuts_inhibit_manager_v1;
++    struct wlr_keyboard_shortcuts_inhibitor_v1;
+ 
+ #include <wlr/types/wlr_input_device.h>
+ #include <wlr/types/wlr_pointer.h>
  #include <wlr/types/wlr_keyboard.h>
  #include <wlr/types/wlr_touch.h>
  #include <wlr/types/wlr_output.h>
@@ -494,17 +474,18 @@ index 1d61cc5d..7a065457 100644
  
          struct
 diff --git a/src/api/wayfire/view.hpp b/src/api/wayfire/view.hpp
-index f30f82cf..1ead3026 100644
+index f30f82cf..2c2b69e1 100644
 --- a/src/api/wayfire/view.hpp
 +++ b/src/api/wayfire/view.hpp
-@@ -468,6 +468,7 @@ class view_interface_t : public surface_interface_t
-      * Updated automatically by core.
+@@ -469,6 +469,8 @@ class view_interface_t : public surface_interface_t
       */
      uint64_t last_focus_timestamp = 0;
-+    struct wlr_keyboard_shortcuts_inhibitor_v1* keyboard_inhibit = nullptr;
  
++    struct wlr_keyboard_shortcuts_inhibitor_v1* keyboard_inhibit = nullptr;
++
    protected:
      view_interface_t();
+ 
 diff --git a/src/core/core-impl.hpp b/src/core/core-impl.hpp
 index ff9bb4f8..4cc29a9b 100644
 --- a/src/core/core-impl.hpp
@@ -518,7 +499,7 @@ index ff9bb4f8..4cc29a9b 100644
      wf::output_t *active_output = nullptr;
      std::vector<std::unique_ptr<wf::view_interface_t>> views;
 diff --git a/src/core/core.cpp b/src/core/core.cpp
-index caf70932..11be3033 100644
+index caf70932..f7d58749 100644
 --- a/src/core/core.cpp
 +++ b/src/core/core.cpp
 @@ -171,6 +171,25 @@ struct wlr_idle_inhibitor_t : public wf::idle_inhibitor_t
@@ -531,15 +512,15 @@ index caf70932..11be3033 100644
 +    wlr_keyboard_inhibitor(wlr_keyboard_shortcuts_inhibitor_v1 *inhibitor)
 +    {
 +        on_destroy.set_callback([=] (void*)
-+                                {
-+                                    auto view = (wf::view_interface_t*)(inhibitor->data);
-+                                    if (view)
-+                                    {
-+                                        view->keyboard_inhibit = nullptr;
-+                                        on_destroy.disconnect();
-+                                    }
-+                                    delete this;
-+                                });
++        {
++            auto view = (wf::view_interface_t*)(inhibitor->data);
++            if (view)
++            {
++                view->keyboard_inhibit = nullptr;
++                on_destroy.disconnect();
++            }
++            delete this;
++        });
 +        on_destroy.connect(&inhibitor->events.destroy);
 +    }
 +};
@@ -573,7 +554,7 @@ index caf70932..11be3033 100644
      });
      vptr_created.connect(&protocols.vptr_manager->events.new_virtual_pointer);
  
-@@ -288,12 +308,13 @@ void wf::compositor_core_impl_t::init()
+@@ -288,9 +308,9 @@ void wf::compositor_core_impl_t::init()
      pointer_constraint_added.connect(
          &protocols.pointer_constraints->events.new_constraint);
  
@@ -586,33 +567,29 @@ index caf70932..11be3033 100644
  
      protocols.presentation = wlr_presentation_create(display, backend);
      protocols.viewporter   = wlr_viewporter_create(display);
-+//    wlr_fractional_scale_manager_v1_create(display);
- 
-     protocols.foreign_registry = wlr_xdg_foreign_registry_create(display);
-     protocols.foreign_v1 = wlr_xdg_foreign_v1_create(display,
-@@ -301,6 +322,21 @@ void wf::compositor_core_impl_t::init()
+@@ -301,6 +321,21 @@ void wf::compositor_core_impl_t::init()
      protocols.foreign_v2 = wlr_xdg_foreign_v2_create(display,
          protocols.foreign_registry);
  
 +    protocols.keyboard_inhibit = wlr_keyboard_shortcuts_inhibit_v1_create(display);
 +    keyboard_inhibit_new.set_callback([&] (void *data)
-+                                      {
-+                                          auto inhibitor = (struct wlr_keyboard_shortcuts_inhibitor_v1*)data;
-+                                          auto& keyboard_focus = wf::get_core_impl().seat->keyboard_focus;
-+                                          if (keyboard_focus && (keyboard_focus->priv->wsurface == inhibitor->surface))
-+                                          {
-+                                              keyboard_focus->keyboard_inhibit = inhibitor;
-+                                              wlr_keyboard_shortcuts_inhibitor_v1_activate(inhibitor);
-+                                              inhibitor->data = keyboard_focus.get();
-+                                              new wlr_keyboard_inhibitor(inhibitor);
-+                                          }
-+                                      });
++    {
++        auto inhibitor = (struct wlr_keyboard_shortcuts_inhibitor_v1*)data;
++        auto& keyboard_focus = wf::get_core_impl().seat->keyboard_focus;
++        if (keyboard_focus && (keyboard_focus->priv->wsurface == inhibitor->surface))
++        {
++            keyboard_focus->keyboard_inhibit = inhibitor;
++            wlr_keyboard_shortcuts_inhibitor_v1_activate(inhibitor);
++            inhibitor->data = keyboard_focus.get();
++            new wlr_keyboard_inhibitor(inhibitor);
++        }
++    });
 +    keyboard_inhibit_new.connect(&protocols.keyboard_inhibit->events.new_inhibitor);
 +
      wf_shell  = wayfire_shell_create(display);
      gtk_shell = wf_gtk_shell_create(display);
  
-@@ -780,7 +816,8 @@ pid_t wf::compositor_core_impl_t::run(std::string command)
+@@ -780,7 +815,8 @@ pid_t wf::compositor_core_impl_t::run(std::string command)
      static constexpr size_t WRITE_END = 1;
      pid_t pid;
      int pipe_fd[2];
@@ -622,7 +599,21 @@ index caf70932..11be3033 100644
  
      /* The following is a "hack" for disowning the child processes,
       * otherwise they will simply stay as zombie processes */
-@@ -811,7 +848,7 @@ pid_t wf::compositor_core_impl_t::run(std::string command)
+@@ -802,16 +838,17 @@ pid_t wf::compositor_core_impl_t::run(std::string command)
+             }
+ 
+ #endif
+-            int dev_null = open("/dev/null", O_WRONLY);
+-            dup2(dev_null, 1);
+-            dup2(dev_null, 2);
+-            close(dev_null);
++            // int dev_null = open("/dev/null", O_WRONLY);
++            // dup2(dev_null, 1);
++            // dup2(dev_null, 2);
++            // close(dev_null);
++            restore_nofile_limit();
+ 
+             _exit(execl("/bin/sh", "/bin/sh", "-c", command.c_str(), NULL));
          } else
          {
              close(pipe_fd[READ_END]);
@@ -641,18 +632,10 @@ index caf70932..11be3033 100644
          close(pipe_fd[READ_END]);
  
 diff --git a/src/core/opengl.cpp b/src/core/opengl.cpp
-index dcf25fba..3cf58a3d 100644
+index dcf25fba..908f7bec 100644
 --- a/src/core/opengl.cpp
 +++ b/src/core/opengl.cpp
-@@ -7,7 +7,6 @@
- #include <wayfire/nonstd/wlroots-full.hpp>
- 
- #include <glm/gtc/matrix_transform.hpp>
--
- #include "shaders.tpp"
- 
- const char *gl_error_string(const GLenum err)
-@@ -250,9 +249,11 @@ void render_rectangle(wf::geometry_t geometry, wf::color_t color,
+@@ -250,9 +250,11 @@ void render_rectangle(wf::geometry_t geometry, wf::color_t color,
  
  void render_begin()
  {
@@ -662,35 +645,34 @@ index dcf25fba..3cf58a3d 100644
 +    if (eglGetCurrentContext() != context)
      {
 -        wlr_egl_make_current(wf::get_core_impl().egl);
-+        eglMakeCurrent(wlr_egl_get_display(egl), EGL_NO_SURFACE, EGL_NO_SURFACE, context);
++	eglMakeCurrent(wlr_egl_get_display(egl), EGL_NO_SURFACE, EGL_NO_SURFACE, context);
      }
  
      GL_CALL(glEnable(GL_BLEND));
 diff --git a/src/core/output-layout.cpp b/src/core/output-layout.cpp
-index 732bda82..1efcb714 100644
+index 732bda82..7b7b2f36 100644
 --- a/src/core/output-layout.cpp
 +++ b/src/core/output-layout.cpp
-@@ -1423,8 +1423,9 @@ class output_layout_t::impl
+@@ -1421,10 +1421,6 @@ class output_layout_t::impl
+             {
+                 ++count_enabled;
                  wlr_output_layout_add_auto(output_layout, handle);
- 
-                 /* Get the correct position */
+-
+-                /* Get the correct position */
 -                auto box = wlr_output_layout_get_box(output_layout, handle);
 -                assert(box);
-+                wlr_box box;
-+                wlr_output_layout_get_box(output_layout, handle, &box);
-+                assert(!wlr_box_empty(&box));
                  lo->apply_state(state);
              }
          }
-@@ -1473,11 +1474,12 @@ class output_layout_t::impl
+@@ -1473,11 +1469,12 @@ class output_layout_t::impl
              auto head = wlr_output_configuration_head_v1_create(
                  wlr_configuration, output.first);
  
 -            auto box = wlr_output_layout_get_box(output_layout, output.first);
 -            if (box)
-+            wlr_box box;
++            struct wlr_box box;
 +            wlr_output_layout_get_box(output_layout, output.first, &box);
-+            if (!wlr_box_empty(&box))
++            if (box.width)
              {
 -                head->state.x = box->x;
 -                head->state.y = box->y;
@@ -726,7 +708,7 @@ index fc57a2ab..4a5597e8 100644
      /**
       * Handle a buttonbinding pressed by the user.
 diff --git a/src/core/seat/cursor.cpp b/src/core/seat/cursor.cpp
-index 9ef011ca..c73634fb 100644
+index 9ef011ca..bb1f720b 100644
 --- a/src/core/seat/cursor.cpp
 +++ b/src/core/seat/cursor.cpp
 @@ -59,7 +59,7 @@ void wf::cursor_t::setup_listeners()
@@ -734,7 +716,7 @@ index 9ef011ca..c73634fb 100644
      on_ ## evname.set_callback([&] (void *data) { \
          set_touchscreen_mode(false); \
 -        auto ev   = static_cast<wlr_event_pointer_ ## evname*>(data); \
-+        auto ev   = static_cast<wlr_pointer_##evname## _event*>(data); \
++        auto ev   = static_cast<wlr_pointer_ ## evname ## _event*>(data); \
          auto mode = emit_device_event_signal("pointer_" #evname, ev); \
          seat->lpointer->handle_pointer_ ## evname(ev, mode); \
          wlr_idle_notify_activity(core.protocols.idle, core.get_current_seat()); \
@@ -743,7 +725,7 @@ index 9ef011ca..c73634fb 100644
      on_tablet_ ## evname.set_callback([&] (void *data) { \
          set_touchscreen_mode(false); \
 -        auto ev = static_cast<wlr_event_tablet_tool_ ## evname*>(data); \
-+        auto ev = static_cast<wlr_tablet_tool_##evname## _event*>(data); \
++        auto ev = static_cast<wlr_tablet_tool_ ## evname ## _event*>(data); \
          auto handling_mode = emit_device_event_signal("tablet_" #evname, ev); \
 -        if (ev->device->tablet->data) { \
 +        if (ev->tablet->data) { \
@@ -754,27 +736,29 @@ index 9ef011ca..c73634fb 100644
          } \
          wlr_idle_notify_activity(wf::get_core().protocols.idle, seat->seat); \
 diff --git a/src/core/seat/input-manager.cpp b/src/core/seat/input-manager.cpp
-index 6480a1c3..e5efe65c 100644
+index 6480a1c3..25e3b7da 100644
 --- a/src/core/seat/input-manager.cpp
 +++ b/src/core/seat/input-manager.cpp
-@@ -43,8 +43,9 @@ static std::unique_ptr<wf::input_device_impl_t> create_wf_device_for_device(
+@@ -43,8 +43,12 @@ static std::unique_ptr<wf::input_device_impl_t> create_wf_device_for_device(
  
  void wf::input_manager_t::handle_new_input(wlr_input_device *dev)
  {
 -    LOGI("handle new input: ", dev->name,
 -        ", default mapping: ", dev->output_name);
-+//    LOGI("handle new input: ", dev->name,
-+//        ", default mapping: ", wlr_pointer_from_input_device(dev)->output_name);
++    if(strncmp(dev->name, "WH-1000XM2 (AVRCP)", 19) == 0) {
++        LOGI("ignore new input: ", dev->name);
++        return;
++    }
 +    LOGI("handle new input: ", dev->name);
++        // ", default mapping: ", dev->output_name);
      input_devices.push_back(create_wf_device_for_device(dev));
  
      wf::input_device_signal data;
-@@ -73,7 +74,10 @@ void wf::input_manager_t::refresh_device_mappings()
+@@ -73,7 +77,9 @@ void wf::input_manager_t::refresh_device_mappings()
          auto mapped_output = section->get_option("output")->get_value_str();
          if (mapped_output.empty())
          {
 -            mapped_output = nonull(dev->output_name);
-+//            mapped_output = nonull(wlr_pointer_from_input_device(dev)->output_name);
 +            LOGD("Mapping input ", dev->name, " to output null because not configured.");
 +            wlr_cursor_map_input_to_output(cursor, dev, nullptr);
 +            continue;
@@ -782,7 +766,7 @@ index 6480a1c3..e5efe65c 100644
  
          auto wo = wf::get_core().output_layout->find_output(mapped_output);
 diff --git a/src/core/seat/keyboard.cpp b/src/core/seat/keyboard.cpp
-index 0de03074..66305f69 100644
+index 0de03074..9673887c 100644
 --- a/src/core/seat/keyboard.cpp
 +++ b/src/core/seat/keyboard.cpp
 @@ -23,7 +23,7 @@ void wf::keyboard_t::setup_listeners()
@@ -821,8 +805,30 @@ index 0de03074..66305f69 100644
  }
  
  uint32_t wf::keyboard_t::get_modifiers()
+@@ -276,6 +276,12 @@ bool wf::keyboard_t::handle_keyboard_key(uint32_t key, uint32_t state)
+ 
+     input->locked_mods = this->get_locked_mods();
+ 
++    auto view = seat->keyboard_focus.get();
++    if (view && view->keyboard_inhibit && view->keyboard_inhibit->active)
++    {
++        return false;
++    }
++
+     if (state == WLR_KEY_PRESSED)
+     {
+         auto session = wlr_backend_get_session(wf::get_core().backend);
+@@ -320,7 +326,7 @@ bool wf::keyboard_t::handle_keyboard_key(uint32_t key, uint32_t state)
+         mod_binding_key = 0;
+     }
+ 
+-    auto iv = interactive_view_from_view(seat->keyboard_focus.get());
++    auto iv = interactive_view_from_view(view);
+     if (iv && !handled_in_plugin)
+     {
+         iv->handle_key(key, state);
 diff --git a/src/core/seat/pointer.cpp b/src/core/seat/pointer.cpp
-index d87d55d0..585a4144 100644
+index d87d55d0..587d4172 100644
 --- a/src/core/seat/pointer.cpp
 +++ b/src/core/seat/pointer.cpp
 @@ -329,7 +329,7 @@ void wf::pointer_t::grab_surface(wf::surface_interface_t *surface)
@@ -845,8 +851,8 @@ index d87d55d0..585a4144 100644
 +        if (handled_in_binding || !modifiers ||
 +            !(view && view->keyboard_inhibit && view->keyboard_inhibit->active))
 +        {
-+            handled_in_binding |= input->get_active_bindings().handle_button(
-+                    wf::buttonbinding_t{modifiers, ev->button});
++          handled_in_binding |= input->get_active_bindings().handle_button(
++              wf::buttonbinding_t{modifiers, ev->button});
 +        }
      } else
      {
@@ -869,12 +875,11 @@ index d87d55d0..585a4144 100644
      input_event_processing_mode_t mode)
  {
      if (input->input_grabbed() &&
-@@ -483,16 +489,17 @@ void wf::pointer_t::handle_pointer_motion(wlr_event_pointer_motion *ev,
+@@ -483,16 +489,16 @@ void wf::pointer_t::handle_pointer_motion(wlr_event_pointer_motion *ev,
      }
  
      /* XXX: maybe warp directly? */
 -    wlr_cursor_move(seat->cursor->cursor, ev->device, dx, dy);
-+
 +    wlr_cursor_move(seat->cursor->cursor, &ev->pointer->base, dx, dy);
      update_cursor_position(ev->time_msec);
  }
@@ -890,7 +895,7 @@ index d87d55d0..585a4144 100644
          ev->x, ev->y, &cx, &cy);
  
      // send relative motion
-@@ -517,11 +524,21 @@ void wf::pointer_t::handle_pointer_motion_absolute(
+@@ -517,11 +523,21 @@ void wf::pointer_t::handle_pointer_motion_absolute(
      update_cursor_position(ev->time_msec);
  }
  
@@ -907,15 +912,15 @@ index d87d55d0..585a4144 100644
 +    if (!input->active_grab && modifiers &&
 +        (view && view->keyboard_inhibit && view->keyboard_inhibit->active))
 +    {
-+        // do not use for binding
++      // do not use for binding
 +    } else
 +    {
-+        handled_in_binding = input->get_active_bindings().handle_axis(modifiers, ev);
++      handled_in_binding = input->get_active_bindings().handle_axis(modifiers, ev);
 +    }
      seat->break_mod_bindings();
  
      if (input->active_grab)
-@@ -557,7 +574,7 @@ void wf::pointer_t::handle_pointer_axis(wlr_event_pointer_axis *ev,
+@@ -557,7 +573,7 @@ void wf::pointer_t::handle_pointer_axis(wlr_event_pointer_axis *ev,
          mult * ev->delta, mult * ev->delta_discrete, ev->source);
  }
  
@@ -924,7 +929,7 @@ index d87d55d0..585a4144 100644
      input_event_processing_mode_t mode)
  {
      wlr_pointer_gestures_v1_send_swipe_begin(
-@@ -566,14 +583,14 @@ void wf::pointer_t::handle_pointer_swipe_begin(wlr_event_pointer_swipe_begin *ev
+@@ -566,14 +582,14 @@ void wf::pointer_t::handle_pointer_swipe_begin(wlr_event_pointer_swipe_begin *ev
  }
  
  void wf::pointer_t::handle_pointer_swipe_update(
@@ -941,7 +946,7 @@ index d87d55d0..585a4144 100644
      input_event_processing_mode_t mode)
  {
      wlr_pointer_gestures_v1_send_swipe_end(
-@@ -581,7 +598,7 @@ void wf::pointer_t::handle_pointer_swipe_end(wlr_event_pointer_swipe_end *ev,
+@@ -581,7 +597,7 @@ void wf::pointer_t::handle_pointer_swipe_end(wlr_event_pointer_swipe_end *ev,
          ev->time_msec, ev->cancelled);
  }
  
@@ -950,7 +955,7 @@ index d87d55d0..585a4144 100644
      input_event_processing_mode_t mode)
  {
      wlr_pointer_gestures_v1_send_pinch_begin(
-@@ -590,14 +607,14 @@ void wf::pointer_t::handle_pointer_pinch_begin(wlr_event_pointer_pinch_begin *ev
+@@ -590,14 +606,14 @@ void wf::pointer_t::handle_pointer_pinch_begin(wlr_event_pointer_pinch_begin *ev
  }
  
  void wf::pointer_t::handle_pointer_pinch_update(
@@ -967,7 +972,7 @@ index d87d55d0..585a4144 100644
      input_event_processing_mode_t mode)
  {
      wlr_pointer_gestures_v1_send_pinch_end(
-@@ -605,7 +622,7 @@ void wf::pointer_t::handle_pointer_pinch_end(wlr_event_pointer_pinch_end *ev,
+@@ -605,7 +621,7 @@ void wf::pointer_t::handle_pointer_pinch_end(wlr_event_pointer_pinch_end *ev,
          ev->time_msec, ev->cancelled);
  }
  
@@ -976,7 +981,7 @@ index d87d55d0..585a4144 100644
      input_event_processing_mode_t mode)
  {
      wlr_pointer_gestures_v1_send_hold_begin(
-@@ -613,7 +630,7 @@ void wf::pointer_t::handle_pointer_hold_begin(wlr_event_pointer_hold_begin *ev,
+@@ -613,7 +629,7 @@ void wf::pointer_t::handle_pointer_hold_begin(wlr_event_pointer_hold_begin *ev,
          ev->time_msec, ev->fingers);
  }
  
@@ -1056,16 +1061,10 @@ index 869e7c86..ea84e10f 100644
  
  void wf::seat_t::break_mod_bindings()
 diff --git a/src/core/seat/switch.cpp b/src/core/seat/switch.cpp
-index fc7dbe12..b3bd4d17 100644
+index fc7dbe12..28abede3 100644
 --- a/src/core/seat/switch.cpp
 +++ b/src/core/seat/switch.cpp
-@@ -1,4 +1,5 @@
- #include "switch.hpp"
-+#include <wayfire/nonstd/wlroots-full.hpp>
- #include <wayfire/signal-definitions.hpp>
- #include <wayfire/core.hpp>
- 
-@@ -7,12 +8,13 @@ wf::switch_device_t::switch_device_t(wlr_input_device *dev) :
+@@ -7,12 +7,12 @@ wf::switch_device_t::switch_device_t(wlr_input_device *dev) :
  {
      on_switch.set_callback([&] (void *data)
      {
@@ -1073,7 +1072,6 @@ index fc7dbe12..b3bd4d17 100644
 +        this->handle_switched((wlr_switch_toggle_event*)data);
      });
 -    on_switch.connect(&dev->switch_device->events.toggle);
-+
 +    on_switch.connect(&wlr_switch_from_input_device(dev)->events.toggle);
  }
  
@@ -1096,7 +1094,7 @@ index e214f2ef..16f25253 100644
      switch_device_t(wlr_input_device *dev);
      virtual ~switch_device_t() = default;
 diff --git a/src/core/seat/tablet.cpp b/src/core/seat/tablet.cpp
-index a1e1688f..b63885c5 100644
+index a1e1688f..28d3b2f6 100644
 --- a/src/core/seat/tablet.cpp
 +++ b/src/core/seat/tablet.cpp
 @@ -162,7 +162,7 @@ void wf::tablet_tool_t::set_focus(wf::surface_interface_t *surface)
@@ -1208,7 +1206,7 @@ index a1e1688f..b63885c5 100644
      on_strip.set_callback([=] (void *data)
      {
 -        auto ev = static_cast<wlr_event_tablet_pad_strip*>(data);
-+        auto ev = static_cast<wlr_tablet_pad_strip_event*>(data); // wlr_tablet_pad_ring_event
++        auto ev = static_cast<wlr_tablet_pad_strip_event*>(data);
          wlr_tablet_v2_tablet_pad_notify_strip(pad_v2, ev->strip, ev->position,
              ev->source == WLR_TABLET_PAD_STRIP_SOURCE_FINGER, ev->time_msec);
      });
@@ -1225,11 +1223,11 @@ index a1e1688f..b63885c5 100644
 -    on_button.connect(&pad->tablet_pad->events.button);
 -    on_strip.connect(&pad->tablet_pad->events.strip);
 -    on_ring.connect(&pad->tablet_pad->events.ring);
-+    auto wlr_tablet_pad = wlr_tablet_pad_from_input_device(pad);
-+    on_attach.connect(&wlr_tablet_pad->events.attach_tablet);
-+    on_button.connect(&wlr_tablet_pad->events.button);
-+    on_strip.connect(&wlr_tablet_pad->events.strip);
-+    on_ring.connect(&wlr_tablet_pad->events.ring);
++    struct wlr_tablet_pad* tablet_pad = wlr_tablet_pad_from_input_device(pad);
++    on_attach.connect(&tablet_pad->events.attach_tablet);
++    on_button.connect(&tablet_pad->events.button);
++    on_strip.connect(&tablet_pad->events.strip);
++    on_ring.connect(&tablet_pad->events.ring);
  }
  
  void wf::tablet_pad_t::update_focus()
@@ -1337,9 +1335,22 @@ index bbc66f72..86a3d9af 100644
          if (ev->event->state != WLR_BUTTON_PRESSED)
          {
 diff --git a/src/main.cpp b/src/main.cpp
-index d6092ab0..e089f24c 100644
+index d6092ab0..3e53eb42 100644
 --- a/src/main.cpp
 +++ b/src/main.cpp
+@@ -108,10 +108,10 @@ static void wlr_log_handler(wlr_log_importance level,
+ }
+ 
+ #ifdef PRINT_TRACE
+-static void signal_handler(int signal)
++static void signal_handler(int sig)
+ {
+     std::string error;
+-    switch (signal)
++    switch (sig)
+     {
+       case SIGSEGV:
+         error = "Segmentation fault";
 @@ -131,7 +131,8 @@ static void signal_handler(int signal)
  
      LOGE("Fatal error: ", error);
@@ -1350,8 +1361,68 @@ index d6092ab0..e089f24c 100644
  }
  
  #endif
+@@ -195,6 +196,29 @@ void parse_extended_debugging(const std::vector<std::string>& categories)
+     }
+ }
+ 
++static void increase_nofile_limit(void) {
++    if (getrlimit(RLIMIT_NOFILE, &original_nofile_rlimit) != 0) {
++        LOGE("Failed to bump max open files limit: getrlimit(NOFILE) failed");
++        return;
++    }
++
++    struct rlimit new_rlimit = original_nofile_rlimit;
++    new_rlimit.rlim_cur = new_rlimit.rlim_max;
++    if (setrlimit(RLIMIT_NOFILE, &new_rlimit) != 0) {
++        LOGE("Failed to bump max open files limit: setrlimit(NOFILE) failed");
++        LOGI("Running with %d max open files", (int)original_nofile_rlimit.rlim_cur);
++    }
++}
++
++void restore_nofile_limit(void) {
++    if (original_nofile_rlimit.rlim_cur == 0) {
++        return;
++    }
++    if (setrlimit(RLIMIT_NOFILE, &original_nofile_rlimit) != 0) {
++        LOGE("Failed to restore max open files limit: setrlimit(NOFILE) failed");
++    }
++}
++
+ int main(int argc, char *argv[])
+ {
+     wf::log::log_level_t log_level = wf::log::LOG_LEVEL_INFO;
+@@ -322,6 +346,8 @@ int main(int argc, char *argv[])
+         return EXIT_FAILURE;
+     }
+ 
++    increase_nofile_limit();
++
+     auto backend = load_backend(config_backend);
+     if (!backend)
+     {
+diff --git a/src/main.hpp b/src/main.hpp
+index 93d5f276..26d86978 100644
+--- a/src/main.hpp
++++ b/src/main.hpp
+@@ -1,10 +1,16 @@
+ #ifndef MAIN_HPP
+ #define MAIN_HPP
+ 
++#include <sys/resource.h>
++
+ extern struct wf_runtime_config
+ {
+     bool no_damage_track = false;
+     bool damage_debug    = false;
+ } runtime_config;
+ 
++void restore_nofile_limit(void);
++
++static struct rlimit original_nofile_rlimit;
++
+ #endif /* end of include guard: MAIN_HPP */
 diff --git a/src/meson.build b/src/meson.build
-index d5a3335c..47983bcc 100644
+index d5a3335c..22beb258 100644
 --- a/src/meson.build
 +++ b/src/meson.build
 @@ -48,7 +48,7 @@ wayfire_sources = ['geometry.cpp',
@@ -1359,7 +1430,7 @@ index d5a3335c..47983bcc 100644
  wayfire_dependencies = [wayland_server, wlroots, xkbcommon, libinput,
                         pixman, drm, egl, glesv2, glm, wf_protos, libdl,
 -                       wfconfig, libinotify, backtrace, wfutils, xcb, wftouch]
-+                       wfconfig, libinotify, backtrace, wfutils, xcb, xcbutilwm, wftouch]
++                       wfconfig, libinotify, backtrace, wfutils, xcb, xcb_icccm, wftouch]
  
  if conf_data.get('BUILD_WITH_IMAGEIO')
      wayfire_dependencies += [jpeg, png]
@@ -1373,7 +1444,7 @@ index d5a3335c..47983bcc 100644
  
  # First build a static library of all sources, so that it can be reused
 diff --git a/src/output/output.cpp b/src/output/output.cpp
-index 3c8fa934..f4fd970c 100644
+index 3c8fa934..7b7d6fe5 100644
 --- a/src/output/output.cpp
 +++ b/src/output/output.cpp
 @@ -163,11 +163,12 @@ wf::geometry_t wf::output_t::get_relative_geometry() const
@@ -1386,53 +1457,15 @@ index 3c8fa934..f4fd970c 100644
 +    struct wlr_box box;
 +    wlr_output_layout_get_box(
 +        wf::get_core().output_layout->get_handle(), handle, &box);
-+    if (!wlr_box_empty(&box))
++    if (box.width)
      {
 -        return *box;
 +        return box;
      } else
      {
          LOGE("Get layout geometry for an invalid output!");
-diff --git a/src/view/surface.cpp b/src/view/surface.cpp
-index 4404e306..bc280d5e 100644
---- a/src/view/surface.cpp
-+++ b/src/view/surface.cpp
-@@ -420,6 +420,7 @@ void wf::wlr_surface_base_t::update_output(wf::output_t *old_output,
-     if (new_output && surface)
-     {
-         wlr_surface_send_enter(surface, new_output->handle);
-+        // wlr_fractional_scale_v1_notify_scale(surface, new_output->handle->scale);
-     }
- }
- 
-diff --git a/src/view/view-impl.hpp b/src/view/view-impl.hpp
-index 83975e2d..056576c3 100644
---- a/src/view/view-impl.hpp
-+++ b/src/view/view-impl.hpp
-@@ -242,21 +242,15 @@ void emit_ping_timeout_signal(wayfire_view view);
- 
- wf::surface_interface_t *wf_surface_from_void(void *handle);
- wf::view_interface_t *wf_view_from_void(void *handle);
--
- void init_xdg_shell();
- void init_xwayland();
- void init_layer_shell();
--
- std::string xwayland_get_display();
- void xwayland_update_default_cursor();
--
- /* Ensure that the given surface is on top of the Xwayland stack order. */
- void xwayland_bring_to_front(wlr_surface *surface);
--
- /* Get the current Xwayland drag icon, if it exists. */
- wayfire_view get_xwayland_drag_icon();
--
- void init_desktop_apis();
- }
--
- #endif /* end of include guard: VIEW_IMPL_HPP */
 diff --git a/src/view/xdg-shell.cpp b/src/view/xdg-shell.cpp
-index 67deb3ec..12ae7e80 100644
+index 67deb3ec..c9d83b98 100644
 --- a/src/view/xdg-shell.cpp
 +++ b/src/view/xdg-shell.cpp
 @@ -38,12 +38,14 @@ void wayfire_xdg_popup::initialize()
@@ -1479,9 +1512,12 @@ index 67deb3ec..12ae7e80 100644
          set_toplevel_parent(parent);
      });
      on_ping_timeout.set_callback([&] (void*)
-@@ -263,9 +265,8 @@ void wayfire_xdg_view::initialize()
+@@ -261,11 +263,10 @@ void wayfire_xdg_view::initialize()
+         tile_request(xdg_toplevel->requested.maximized ?
+             wf::TILED_EDGES_ALL : 0);
      });
-     on_request_fullscreen.set_callback([&] (void *data)
+-    on_request_fullscreen.set_callback([&] (void *data)
++    on_request_fullscreen.set_callback([&] (void*)
      {
 -        auto ev = static_cast<wlr_xdg_toplevel_set_fullscreen_event*>(data);
 -        auto wo = wf::get_core().output_layout->find_output(ev->output);
@@ -1543,12 +1579,11 @@ index 67deb3ec..12ae7e80 100644
          wf::wlr_view_t::close();
      }
  }
-@@ -466,7 +467,8 @@ static wlr_xdg_shell *xdg_handle = nullptr;
+@@ -466,7 +467,7 @@ static wlr_xdg_shell *xdg_handle = nullptr;
  void wf::init_xdg_shell()
  {
      static wf::wl_listener_wrapper on_xdg_created;
 -    xdg_handle = wlr_xdg_shell_create(wf::get_core().display);
-+//    xdg_handle = wlr_xdg_shell_create(wf::get_core().display,wl_display_get_version(wf::get_core().display)); // guess TODO
 +    xdg_handle = wlr_xdg_shell_create(wf::get_core().display, 3);
  
      if (xdg_handle)
@@ -1567,7 +1602,7 @@ index 65659675..6da67ee6 100644
          parent_title_changed, parent_app_id_changed;
  
 diff --git a/src/view/xwayland.cpp b/src/view/xwayland.cpp
-index e8319c52..e50888be 100644
+index e8319c52..82a52edf 100644
 --- a/src/view/xwayland.cpp
 +++ b/src/view/xwayland.cpp
 @@ -596,7 +596,7 @@ class wayfire_xwayland_view : public wayfire_xwayland_view_base
@@ -1579,10 +1614,3 @@ index e8319c52..e50888be 100644
              {
                  data.demands_attention = true;
              }
-@@ -1163,6 +1163,5 @@ wayfire_view wf::get_xwayland_drag_icon()
-     }
- 
- #endif
--
-     return nullptr;
- }

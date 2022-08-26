@@ -32,8 +32,8 @@ stdenv.mkDerivation rec {
     # https://github.com/WayfireWM/wayfire/commit/883dacf8fe1eec5463269755879dfc71b481e7c9
     # https://github.com/WayfireWM/wayfire/commit/2daec9bc30920c995700252b4915bbc2839aa1a3
     ./upgrade-wlroots.diff
-  ];
-*/
+  ]; */
+
   nativeBuildInputs = [ cmake meson ninja pkg-config wayland ];
   buildInputs = [
     cairo doctest libdrm libexecinfo libinput libjpeg libxkbcommon wayland

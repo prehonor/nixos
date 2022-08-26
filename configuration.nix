@@ -14,6 +14,7 @@
       "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
       "hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ="
       "iohk.cachix.org-1:DpRUyj7h7V830dp/i6Nti+NEO2/nhblbov/8MW7Rqoo="
+      "ryantrinkle.com-1:JJiAKaRv9mWgpVAz8dwewnZe0AzzEAzPkagE9SP5NWI="
       "nixpkgs-wayland.cachix.org-1:3lwxaILxMRkVhehr5StQprHdEo4IrE8sRho9R9HOLYA="
     ];
     binaryCaches = [
@@ -24,6 +25,7 @@
       "https://nix-community.cachix.org"
       "https://hydra.iohk.io"
       "https://iohk.cachix.org"
+      "https://nixcache.reflex-frp.org"
       "https://nixpkgs-wayland.cachix.org"
     ];
 
@@ -216,6 +218,7 @@
     WEBKIT_DISABLE_COMPOSITING_MODE = "1";
     WLR_NO_HARDWARE_CURSORS = "1";
     MOZ_ENABLE_WAYLAND = "1";
+    # QT_QPA_PLATFORM = "xcb";
   };
 
   nixpkgs.overlays = [ (import ./nixpkgs-overlays) (import ./emacs-overlay) ];
@@ -271,7 +274,7 @@
     wget
     tsocks
     curl
-    wireshark
+    # wireshark
     netcat
     tcpdump
     ltrace
@@ -317,7 +320,7 @@
     # foliate epub阅读器
     # vlc blender  分别为视频和3d建模软件
     # oni2  masterpdfeditor
-    # krita sigil xournalpp
+    # krita  xournalpp
     # v2ray #github 手工维护 qv2ray
     #   yakuake # kde 桌面
     # mu isync msmtp w3m appimage-run  
@@ -326,14 +329,12 @@
     # digikam gimp inkscape synfigstudio natron scribus 不好使，删 edraw photoflare
     winetricks # A script to install DLLs needed to work around problems in Wine
     tdesktop
+    sigil # Free, open source, multi-platform ebook (ePub) editor
     texmacs
     firefox
-    qtcreator
     onlyoffice-bin # tor-browser-bundle-bin rstudio
-    dbeaver #  zotero
     goldendict
     qv2ray
-
     opencv
     convmv
     jpegoptim # Optimize JPEG files
@@ -355,16 +356,18 @@
     llvmPackages_latest.lldb
     llvmPackages_latest.clang
     llvmPackages_latest.libclang
+    libclang
+    libcxx
+    llvm
+    
     darcs   # a distributed, interactive, smart revision control system
     patchelf
-    jdk11
     jdk
     go
     lua_x
-    racket
-    chez
-    lispPackages.quicklisp
-    sbcl
+   # lispPackages.quicklisp
+    
+
     mono
     dotnet-sdk
     nodejs
@@ -375,13 +378,11 @@
     julia-bin
 
     # haskellPackages.ghcup # 使用 curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh 安装
-    # (python3.withPackages(ps: with ps; [ pip urllib3 ansible spyder jupyter sip pyqt5 pyqtwebengine epc lxml pysocks pymupdf]))
     # boost_x.dev
     # libmysqlclient_315
 
     cmake-language-server
 
-    python-with-my-packages
     streamlink
     you-get
     youtube-dl
@@ -489,7 +490,13 @@
       "time.windows.com"
     ]; # options.networking.timeServers.default ++ [ "ntp.example.com" ];
     hostName = "prehonor";
-    networkmanager.enable = true;
+    networkmanager = {
+      enable = true;
+      dns = "dnsmasq";
+      connectionConfig = {
+        "ipv6.ip6-privacy" = 2;
+      };
+    };
     dhcpcd.enable = false;
     useDHCP = false;
     # interfaces.enp3s0.useDHCP = true;
@@ -497,8 +504,7 @@
     # resolvconf.useLocalResolver = true;
     # If using dhcpcd:
     # dhcpcd.extraConfig = "nohook resolv.conf";
-    # If using NetworkManager:
-    networkmanager.dns = "dnsmasq";
+
     firewall = {
       enable = true; # 默认值为true 不用设置，这里仅做提醒
       allowedTCPPorts = [ 1716 ];
@@ -619,6 +625,7 @@
       "pulseaudio"
       "mysql"
       "wireshark"
+      "greeter"
     ]; # Enable ‘sudo’ for the user.
     subUidRanges = [{
       startUid = 100000;
