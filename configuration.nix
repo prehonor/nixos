@@ -41,6 +41,7 @@
   boot.loader.grub.efiSupport = true;
   boot.loader.grub.efiInstallAsRemovable = true;
   boot.loader.efi.efiSysMountPoint = "/boot";
+  boot.initrd.kernelModules = [ "amdgpu" ];   # amd
   # boot.kernelParams = [
   #    "nvidia-drm.modeset=1"
   # ];
@@ -189,15 +190,20 @@
   hardware = {
     opengl = {
       enable = true;
+      driSupport = true;  # amd
       driSupport32Bit = true;
       extraPackages = with pkgs; [
+        amdvlk               # amd
+        rocm-opencl-icd      # amd
+        rocm-opencl-runtime  # amd
         intel-media-driver # LIBVA_DRIVER_NAME=iHD
         vaapiIntel # LIBVA_DRIVER_NAME=i965 (older but works better for Firefox/Chromium)
-        vaapiVdpau
-        libvdpau-va-gl
+        # vaapiVdpau     # nvidia
+        # libvdpau-va-gl # nvidia
       ];
       extraPackages32 = with pkgs.pkgsi686Linux; [
-        libva
+        # libva # nvidia
+        driversi686Linux.amdvlk  # amd
         vaapiIntel # LIBVA_DRIVER_NAME=i965 (older but works better for Firefox/Chromium)
       ];
     };
@@ -362,9 +368,6 @@
     
     darcs   # a distributed, interactive, smart revision control system
     patchelf
-    jdk
-    go
-    lua_x
    # lispPackages.quicklisp
     
 
@@ -373,9 +376,13 @@
     nodejs
     yarn
     perl
+    jdk
+    go
+    lua_x
     flutter
     rustup
     julia-bin
+    ats2
 
     # haskellPackages.ghcup # 使用 curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh 安装
     # boost_x.dev
@@ -588,8 +595,8 @@
       "esperanto:qwerty"; # "caps:capslock,grp:win_space_toggle"; # win+Space switch layout
     xkbModel = "pc105";
 
-    videoDrivers = [ "nvidia" ]; # nouveau
-
+    videoDrivers = [ "amdgpu" ]; # nouveau amdgpu nvidia
+ 
     displayManager = {
 
       startx.enable = true;
@@ -608,7 +615,8 @@
     };
 
   };
-  hardware.nvidia.modesetting.enable = true; # wayland 环境
+ # hardware.nvidia.modesetting.enable = true; # wayland 环境
+ ## hardware.nvidia.package = config.boot.kernelPackages.nvidiaPackages.vulkan_beta;
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.prehonor = {

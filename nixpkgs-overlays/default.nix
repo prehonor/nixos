@@ -6,7 +6,10 @@ in rec {
    # ventoy-bin = super.callPackage ./pkgs/tools/cd-dvd/ventoy-bin { };
     tor-browser-bundle-bin = super.tor-browser-bundle-bin.overrideAttrs (
       oldAttrs: rec {
-        src = /home/prehonor/Downloads/tor-browser-linux64-10.5.6_en-US.tar.xz;
+        src = super.fetchurl {
+        urls = ["https://prehonor-generic.pkg.coding.net/yigeren/pkgs/tor-browser-linux64-11.5.6_en-US.tar.xz?version=latest"];
+        sha256 = "sha256-DTMY6n7GXokOz6WSrvFUkC64Siuo1Zy80A4UDolmIME=";
+        };
       }
     );
     microsoft-edge-stable = super.callPackage (import ./pkgs/applications/networking/browsers/edge).stable { };
@@ -44,6 +47,7 @@ in rec {
 
     cutter_x = super.libsForQt515.callPackage ./pkgs/development/tools/analysis/rizin/cutter.nix {  rizin = rizin_x; };
     sbcl = super.callPackage ./pkgs/development/compilers/sbcl/2.2.7.nix {};
+    boost_x = super.boost179.override { enablePython = true; python = super.pkgs.python3; };
 
     python3 = super.python3.override {
         packageOverrides = final: prev: {
@@ -78,6 +82,20 @@ in rec {
     python-with-my-packages = python3.withPackages (python3Packages: with python3Packages; [
         spyder
     ]);
+
+    buck = super.buck.overrideAttrs (
+      oldAttrs: rec {
+        pname = "buck";
+        version = "2022.05.05.01";
+        src = super.fetchFromGitHub {
+            owner = "facebook";
+            repo = pname;
+            rev = "v${version}";
+            sha256 = "sha256-mASJCLxW7320MXYUUWYfaxs9AbSdltxlae8OQsPUZJc=";
+        };
+      }
+    );
+
     # logseq = super.callPackage ./pkgs/applications/misc/logseq { };
     /*
     koreader_x = super.koreader.overrideAttrs (
