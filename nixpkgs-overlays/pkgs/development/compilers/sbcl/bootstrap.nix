@@ -8,9 +8,9 @@ let
       sha256 = "sha256-H0ALigXcWIypdA+fTf7jERscwbb7QIAfcoxCtGDh0RU=";
     };
     x86_64-darwin = {
-      version = "1.2.11";
+      version = "2.2.9";
       system = "x86-64-darwin";
-      sha256 = "0lh4gpvi8hl6g6b9321g5pwh8sk3218i7h4lx7p3vd9z0cf3lz85";
+      sha256 = "sha256-b1BLkoLIOELAYBYA9eBmMgm1OxMxJewzNP96C9ADfKY=";
     };
     x86_64-linux = {
       version = "1.3.16";
@@ -61,7 +61,6 @@ stdenv.mkDerivation rec {
   installPhase = ''
     mkdir -p $out/bin
     cp -p src/runtime/sbcl $out/bin
-
     mkdir -p $out/share/sbcl
     cp -p src/runtime/sbcl $out/share/sbcl
     cp -p output/sbcl.core $out/share/sbcl
@@ -78,7 +77,7 @@ stdenv.mkDerivation rec {
     description = "Lisp compiler";
     homepage = "http://www.sbcl.org";
     license = licenses.publicDomain; # and FreeBSD
-    maintainers = [maintainers.raskin maintainers.tohl];
+    maintainers = [ maintainers.raskin ];
     platforms = attrNames options;
   };
 }

@@ -147,7 +147,11 @@
     wireshark.enable = true;
     dconf.enable = true; # Running GNOME programs outside of GNOME
     xwayland.enable = true;
-    # steam.enable = true;
+    steam = {
+      enable = true;
+      remotePlay.openFirewall = true; # Open ports in the firewall for Steam Remote Play
+      dedicatedServer.openFirewall = true; # Open ports in the firewall for Source Dedicated Server
+    };
     /* evolution = {
          enable = true;
          plugins = [ pkgs.evolution-ews ];
@@ -181,7 +185,11 @@
   # $ nix search wget
   nixpkgs.config = {
     allowUnfree = true;
-
+    allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
+      "steam"
+      "steam-original"
+      "steam-runtime"
+    ];
     # packageOverrides = pkgs: {
     # vaapiIntel = pkgs.vaapiIntel.override { enableHybridCodec = true; };
     # };
@@ -296,6 +304,7 @@
 
     unityhub
     ventoy-bin
+    proxychains-ng
 
     liferea
     glade
@@ -330,7 +339,6 @@
     # v2ray #github 手工维护 qv2ray
     #   yakuake # kde 桌面
     # mu isync msmtp w3m appimage-run  
-    # steam-run
     # charles # Web Debugging Proxy
     # digikam gimp inkscape synfigstudio natron scribus 不好使，删 edraw photoflare
     winetricks # A script to install DLLs needed to work around problems in Wine

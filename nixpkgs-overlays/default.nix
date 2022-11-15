@@ -46,7 +46,7 @@ in rec {
     rizin_x = super.callPackage ./pkgs/development/tools/analysis/rizin { };
 
     cutter_x = super.libsForQt515.callPackage ./pkgs/development/tools/analysis/rizin/cutter.nix {  rizin = rizin_x; };
-    sbcl = super.callPackage ./pkgs/development/compilers/sbcl/2.2.7.nix {};
+    sbcl = super.callPackage ./pkgs/development/compilers/sbcl/2.x.nix { version = "2.2.9"; };
     boost_x = super.boost179.override { enablePython = true; python = super.pkgs.python3; };
 
     python3 = super.python3.override {
