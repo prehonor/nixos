@@ -2,29 +2,28 @@
 # nativeBuildInputs
 , qmake, pkg-config, cmake
 # Qt
-, qtbase, qtsvg, qtwebengine, qttools, syntax-highlighting
+, qtbase, qtsvg, qtwebengine, qttools
 # buildInputs
 , rizin
-, graphviz
 , python3
 , wrapQtAppsHook
 }:
 
 mkDerivation rec {
   pname = "cutter";
-  version = "2.1.0";
+  version = "2.1.2";
 
   src = fetchFromGitHub {
     owner = "rizinorg";
     repo = "cutter";
     rev = "v${version}";
-    sha256 = "sha256-JfJQuEUeLXCjzm4d0ZNHRVazF0Bk6fVAsNvBb+okoXs=";
+    sha256 = "sha256-rJYnKQYrwj2zSg3dBHOI7zxwXTAO7ImAj0dkbVmUvHU=";
     fetchSubmodules = true;
   };
 
   nativeBuildInputs = [ cmake qmake pkg-config python3 wrapQtAppsHook ];
   propagatedBuildInputs = [ python3.pkgs.pyside2 ];
-  buildInputs = [ graphviz qtbase qttools qtsvg qtwebengine rizin python3 syntax-highlighting ];
+  buildInputs = [ qtbase qttools qtsvg qtwebengine rizin python3 ];
 
   cmakeFlags = [
     "-DCUTTER_USE_BUNDLED_RIZIN=OFF"

@@ -48,26 +48,27 @@ in rec {
     cutter_x = super.libsForQt515.callPackage ./pkgs/development/tools/analysis/rizin/cutter.nix {  rizin = rizin_x; };
     sbcl = super.callPackage ./pkgs/development/compilers/sbcl/2.x.nix { version = "2.2.9"; };
     boost_x = super.boost179.override { enablePython = true; python = super.pkgs.python3; };
-
+    # dnsmasq = super.callPackage ./pkgs/tools/networking/dnsmasq { };
+/*
     python3 = super.python3.override {
         packageOverrides = final: prev: {
             pyzmq = prev.pyzmq.overridePythonAttrs (oldAttrs: 
                 rec {
-                    version = "23.2.0";
+                    version = "23.2.1";
                     pname = oldAttrs.pname;
                     src = prev.fetchPypi {
                         inherit pname version;
-                        sha256 = "sha256-pR8SqHGarZ3PtV1FYCLxa5CryN3n08qTzjEgtA4/oWk=";
+                        sha256 = "sha256-KzgaqGfs59CoLzCgx/PUOHt88uBpfjPvqlvtbFeEq80=";
                     };
                 }
             );
             qtpy = prev.qtpy.overridePythonAttrs (oldAttrs: 
                 rec {
-                    version = "2.1.0";
+                    version = "2.2.0";
                     pname = oldAttrs.pname;
                     src = prev.fetchPypi {
                         inherit pname version;
-                        sha256 = "sha256-yozUIXF1GGNEKZ7kwPfnrc82LHCFK6NbJVpTQHcCXAY=";
+                        sha256 = "sha256-2F8bEh8kpBrSbFXERuZqvbfFKIOfjE8R8VbsRUGQORQ=";
                     };
                 }
             );
@@ -78,11 +79,13 @@ in rec {
             spyder = final.callPackage ./pkgs/development/python-modules/spyder {};
         };
     };
-    # spyder = with python3.pkgs; toPythonApplication super.spyder;
+
+    spyder = with python3.pkgs; toPythonApplication super.spyder;
     python-with-my-packages = python3.withPackages (python3Packages: with python3Packages; [
         spyder
     ]);
-
+    */
+/*
     buck = super.buck.overrideAttrs (
       oldAttrs: rec {
         pname = "buck";
@@ -95,7 +98,7 @@ in rec {
         };
       }
     );
-
+*/
     # logseq = super.callPackage ./pkgs/applications/misc/logseq { };
     /*
     koreader_x = super.koreader.overrideAttrs (

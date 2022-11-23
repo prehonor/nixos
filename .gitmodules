@@ -1,3 +1,0 @@
-[submodule "emacs-overlay"]
-	path = emacs-overlay
-	url = git@github.com:nix-community/emacs-overlay.git

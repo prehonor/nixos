@@ -36,18 +36,20 @@
   };
 
   # Use the GRUB 2 boot loader.
-  boot.loader.grub.enable = true;
-  boot.loader.grub.version = 2;
-  boot.loader.grub.efiSupport = true;
-  boot.loader.grub.efiInstallAsRemovable = true;
-  boot.loader.efi.efiSysMountPoint = "/boot";
+ # boot.loader.grub.enable = true;
+ # boot.loader.grub.version = 2;
+ # boot.loader.grub.efiSupport = true;
+ # boot.loader.grub.efiInstallAsRemovable = true;
+ # boot.loader.efi.efiSysMountPoint = "/boot";
+  boot.loader.systemd-boot.enable = true;
+  boot.loader.systemd-boot.consoleMode = "max";
   boot.initrd.kernelModules = [ "amdgpu" ];   # amd
   # boot.kernelParams = [
   #    "nvidia-drm.modeset=1"
   # ];
   # Define on which hard drive you want to install Grub.
   # boot.loader.grub.systemd-boot.enable = true;
-  boot.loader.grub.device = "nodev"; # or "nodev" for efi only
+ # boot.loader.grub.device = "nodev"; # or "nodev" for efi only
   fileSystems."/".options = [ "noatime" "nodiratime" "discard" ];
   fileSystems."/gh" = {
     device = "/dev/disk/by-uuid/2e8a3786-0be3-4ab7-9733-8ccbcefeb358";
@@ -57,6 +59,14 @@
     device = "/dev/disk/by-uuid/7e25d235-3d5c-4714-8cd8-24b53f01f0e7";
     fsType = "ext4";
   };
+  fileSystems."/nh" = {
+    device = "/dev/disk/by-uuid/d58ea7fa-2ca4-4602-b94b-b57d512137cd";
+    fsType = "ext4";
+  };
+    fileSystems."/rt" = {
+    device = "/dev/disk/by-uuid/af7960bc-65b4-45dc-bf2b-994f49784870";
+    fsType = "ext4";
+  };
 
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplican
 
@@ -64,7 +74,7 @@
   # Per-interface useDHCP will be mandatory in the future, so this generated config
   # replicates the default behaviour.
   # networking.useDHCP = false;
-  # networking.interfaces.enp3s0.useDHCP = true;
+  # networking.interfaces.enp4s0.useDHCP = true;
   nix.autoOptimiseStore = true;
   /* systemd = {
        timers.simple-timer = {
@@ -282,13 +292,13 @@
     gnuplot # A portable command-line driven graphing utility for many platforms
     socat # Utility for bidirectional data transfer between two independent data channels
     wmctrl
+    pavucontrol # PulseAudio Volume Control
     xdotool
     aria
-
+    konsole
     wget
-    tsocks
     curl
-    # wireshark
+    # wireshark  #  use nixpkgs option instead
     netcat
     tcpdump
     ltrace
@@ -297,14 +307,13 @@
     nmap
     john
     crunch
-    ghidra-bin
+    # ghidra-bin
     nasm
     fasm
-    wineWowPackages.stable
 
-    unityhub
     ventoy-bin
-    proxychains-ng
+    tsocks
+    # proxychains-ng
 
     liferea
     glade
@@ -346,7 +355,6 @@
     sigil # Free, open source, multi-platform ebook (ePub) editor
     texmacs
     firefox
-    onlyoffice-bin # tor-browser-bundle-bin rstudio
     goldendict
     qv2ray
     opencv
@@ -380,14 +388,12 @@
     
 
     mono
-    dotnet-sdk
+    # dotnet-sdk
     nodejs
     yarn
-    perl
-    jdk
+
     go
     lua_x
-    flutter
     rustup
     julia-bin
     ats2
@@ -452,7 +458,7 @@
     package = pkgs.mysql80;
     user = "prehonor"; # 这里不能设置root 或mysql
     group = "users";
-    dataDir = "/ah/prehonor/Programmers/mysql/data_5";
+    dataDir = "/run/media/prehonor/Elements/data";
     settings = {
       mysqld = {
         # socket = "/tmp/mysql.sock"; -> our module is hard coded to expect /run/mysql/mysqld.sock
@@ -514,7 +520,7 @@
     };
     dhcpcd.enable = false;
     useDHCP = false;
-    # interfaces.enp3s0.useDHCP = true;
+    # interfaces.enp4s0.useDHCP = true;
     nameservers = [ "::1" "127.0.0.1" ];
     # resolvconf.useLocalResolver = true;
     # If using dhcpcd:
@@ -741,12 +747,12 @@
          no-poll
          server=::1#5658
          server=127.0.0.1#5658
-         interface=enp3s0
+         interface=enp4s0
          listen-address=::1,127.0.0.1
          cache-size=966
          log-queries
          log-facility=/var/log/dnsmasq.log
-         # conf-dir=/etc/nixos/dnsmasq.d/,*.conf
+         conf-dir=/etc/nixos/dnsmasq.d/,*.conf
        '';
     */
   };
