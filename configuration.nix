@@ -8,32 +8,6 @@
   imports = [ # Include the results of the hardware scan.
     ./hardware-configuration.nix
   ];
-  nix = {
-    binaryCachePublicKeys = [
-      "nixos-cn.cachix.org-1:L0jEaL6w7kwQOPlLoCR3ADx+E3Q8SEFEcB9Jaibl0Xg="
-      "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
-      "hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ="
-      "iohk.cachix.org-1:DpRUyj7h7V830dp/i6Nti+NEO2/nhblbov/8MW7Rqoo="
-      "ryantrinkle.com-1:JJiAKaRv9mWgpVAz8dwewnZe0AzzEAzPkagE9SP5NWI="
-      "nixpkgs-wayland.cachix.org-1:3lwxaILxMRkVhehr5StQprHdEo4IrE8sRho9R9HOLYA="
-    ];
-    binaryCaches = [
-      "https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store"
-      "https://cache.nixos.org/"
-      "https://mirrors.bfsu.edu.cn/nix-channels/store"
-      "https://nixos-cn.cachix.org"
-      "https://nix-community.cachix.org"
-      "https://hydra.iohk.io"
-      "https://iohk.cachix.org"
-      "https://nixcache.reflex-frp.org"
-      "https://nixpkgs-wayland.cachix.org"
-    ];
-
-    extraOptions = ''
-      experimental-features = nix-command flakes
-    '';
-
-  };
 
   # Use the GRUB 2 boot loader.
  # boot.loader.grub.enable = true;
@@ -50,22 +24,30 @@
   # Define on which hard drive you want to install Grub.
   # boot.loader.grub.systemd-boot.enable = true;
  # boot.loader.grub.device = "nodev"; # or "nodev" for efi only
-  fileSystems."/".options = [ "noatime" "nodiratime" "discard" ];
-  fileSystems."/gh" = {
-    device = "/dev/disk/by-uuid/2e8a3786-0be3-4ab7-9733-8ccbcefeb358";
-    fsType = "ext4";
-  };
-  fileSystems."/ah" = {
-    device = "/dev/disk/by-uuid/7e25d235-3d5c-4714-8cd8-24b53f01f0e7";
-    fsType = "ext4";
-  };
-  fileSystems."/nh" = {
-    device = "/dev/disk/by-uuid/d58ea7fa-2ca4-4602-b94b-b57d512137cd";
-    fsType = "ext4";
-  };
-    fileSystems."/rt" = {
-    device = "/dev/disk/by-uuid/af7960bc-65b4-45dc-bf2b-994f49784870";
-    fsType = "ext4";
+  fileSystems = {
+
+    "/".options = [ "compress=zstd" "discard=async" ];
+    "/home".options = [ "compress=zstd" ];
+    "/nix".options = [ "compress=zstd" "noatime" ];
+    
+    "/data" = {
+      device = "/dev/disk/by-uuid/59d5170a-62e5-48fe-af65-fa57e69bb507";
+      fsType = "xfs";
+      options = [ "discard" ];
+    };
+    "/gh" = {
+      device = "/dev/disk/by-uuid/2e8a3786-0be3-4ab7-9733-8ccbcefeb358";
+      fsType = "ext4";
+    };
+    "/ah" = {
+      device = "/dev/disk/by-uuid/7e25d235-3d5c-4714-8cd8-24b53f01f0e7";
+      fsType = "ext4";
+    };
+    "/nh" = {
+      device = "/dev/disk/by-uuid/d58ea7fa-2ca4-4602-b94b-b57d512137cd";
+      fsType = "ext4";
+    };
+
   };
 
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplican
@@ -75,7 +57,7 @@
   # replicates the default behaviour.
   # networking.useDHCP = false;
   # networking.interfaces.enp4s0.useDHCP = true;
-  nix.autoOptimiseStore = true;
+
   /* systemd = {
        timers.simple-timer = {
          wantedBy = [ "timers.target" ];
@@ -200,6 +182,10 @@
       "steam-original"
       "steam-runtime"
     ];
+    permittedInsecurePackages = [
+      "qtwebkit-5.212.0-alpha4"
+    ];
+
     # packageOverrides = pkgs: {
     # vaapiIntel = pkgs.vaapiIntel.override { enableHybridCodec = true; };
     # };
@@ -245,7 +231,7 @@
     # QT_QPA_PLATFORM = "xcb";
   };
 
-  nixpkgs.overlays = [ (import ./nixpkgs-overlays) (import ./emacs-overlay) ];
+  nixpkgs.overlays = [ (import ./nixpkgs-overlays) ];
   # (import "${builtins.fetchTarball "https://github.com/nix-community/nixpkgs-wayland/archive/master.tar.gz"}/overlay.nix")
 
   nix.nixPath = options.nix.nixPath.default
@@ -254,38 +240,37 @@
   environment.systemPackages = with pkgs; [
     sudo
     parted
+    libxfs.bin # SGI XFS utilities
     # finger_bsd # means ? bsd-finger # User information lookup program
     pciutils # A collection of programs for inspecting and manipulating configuration of PCI devices
     libva-utils # A collection of utilities and examples for VA-API
     vdpauinfo # Tool to query the Video Decode and Presentation API for Unix (VDPAU) abilities of the system
-    file # A program that shows the type of files
+    # file # A program that shows the type of files
     # binutils-unwrapped # Tools for manipulating binaries (linker, assembler, etc.) 
     # bind         # Domain name server
     # bashInteractive.dev # GNU Bourne-Again Shell, the de facto standard shell on Linux
-    getconf
-    fontconfig # A library for font customization and configuration
-    xorg.xhost
-    xorg.xwininfo
-    xorg.xprop
+    # getconf
+    # fontconfig # A library for font customization and configuration
     xclip # Tool to access the X clipboard from a console application
+    xdotool
 
     dos2unix # Convert text files with DOS or Mac line breaks to Unix line breaks and vice versa
     dpkg # The Debian package manager
+
+    unrar # Utility for RAR archives
     unzip # An extraction utility for archives compressed in .zip format
     zip # Compressor/archiver for creating and modifying zipfiles
     p7zip # A new p7zip fork with additional codecs and improvements (forked from https://sourceforge.net/projects/p7zip/)
-    tmux # Terminal multiplexer
+    
     ntfs3g # FUSE-based NTFS driver with full write support
     usbutils # Tools for working with USB devices, such as lsusb
     lsof # A tool to list open files
-    unrar # Utility for RAR archives
+
     fd # A simple, fast and user-friendly alternative to find
     ripgrep # A utility that combines the usability of The Silver Searcher with the raw speed of grep
 
     rtags # C/C++ client-server indexer based on clang
     nixfmt # An opinionated formatter for Nix
-    sqlite # A self-contained, serverless, zero-configuration, transactional SQL database engine
-    texlive.combined.scheme-medium # TeX Live environment for scheme-medium
     shellcheck # Shell script analysis tool
     rnix-lsp # A work-in-progress language server for Nix, with syntax checking and basic completion
     bear # Tool that generates a compilation database for clang tooling
@@ -293,9 +278,9 @@
     socat # Utility for bidirectional data transfer between two independent data channels
     wmctrl
     pavucontrol # PulseAudio Volume Control
-    xdotool
+    
     aria
-    konsole
+    
     wget
     curl
     # wireshark  #  use nixpkgs option instead
@@ -311,12 +296,11 @@
     nasm
     fasm
 
-    ventoy-bin
+    
     tsocks
     # proxychains-ng
 
-    liferea
-    glade
+
     # gnome-builder
     gnome.adwaita-icon-theme # Running GNOME programs outside of GNOME
 
@@ -337,9 +321,6 @@
        # gnome 桌面 end
     */
 
-    mpv
-    sublime4
-
     #  vim风格 epub pdf 阅读器
     # foliate epub阅读器
     # vlc blender  分别为视频和3d建模软件
@@ -350,15 +331,10 @@
     # mu isync msmtp w3m appimage-run  
     # charles # Web Debugging Proxy
     # digikam gimp inkscape synfigstudio natron scribus 不好使，删 edraw photoflare
-    winetricks # A script to install DLLs needed to work around problems in Wine
-    tdesktop
-    sigil # Free, open source, multi-platform ebook (ePub) editor
-    texmacs
-    firefox
-    goldendict
-    qv2ray
-    opencv
-    convmv
+    
+    
+    # opencv
+    convmv # Converts filenames from one encoding to another
     jpegoptim # Optimize JPEG files
 
     podman
@@ -367,46 +343,15 @@
     slirp4netns
     fuse-overlayfs
 
-    electron
-    ccls
-    cmake
     gcc
-    gdb
-    clang_x
-    llvmPackages_latest.llvm
-    llvmPackages_latest.lld
-    llvmPackages_latest.lldb
-    llvmPackages_latest.clang
-    llvmPackages_latest.libclang
-    libclang
-    libcxx
-    llvm
     
     darcs   # a distributed, interactive, smart revision control system
     patchelf
    # lispPackages.quicklisp
-    
-
-    mono
-    # dotnet-sdk
-    nodejs
-    yarn
-
-    go
-    lua_x
-    rustup
-    julia-bin
-    ats2
 
     # haskellPackages.ghcup # 使用 curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh 安装
     # boost_x.dev
     # libmysqlclient_315
-
-    cmake-language-server
-
-    streamlink
-    you-get
-    youtube-dl
 
     wofi
     wlogout
@@ -420,13 +365,11 @@
     xdg-desktop-portal-wlr
     wayfire
     wcm
-    zathura
     ranger
-    swappy
-    drawing
+    tmux # Terminal multiplexer
+
     # i3status-rust # Very resource-friendly and feature-rich replacement for i3status
-    pcmanfm
-    spaceFM
+    
     nemiver
     wl-clipboard
     # mpvpaper
@@ -458,7 +401,7 @@
     package = pkgs.mysql80;
     user = "prehonor"; # 这里不能设置root 或mysql
     group = "users";
-    dataDir = "/run/media/prehonor/Elements/data";
+    dataDir = "/data/data_sina";
     settings = {
       mysqld = {
         # socket = "/tmp/mysql.sock"; -> our module is hard coded to expect /run/mysql/mysqld.sock
@@ -498,10 +441,42 @@
     }];
   };
 
-  nix.optimise.automatic = true;
-  nix.trustedUsers = [ "root" "@wheel" ];
-  #  nix.sandboxPaths = [ "/ah" "/gh" "/home" ];
-  nix.useSandbox = true;
+  nix = {
+
+    # sandboxPaths = [ "/ah" "/gh" "/home" ];
+    extraOptions = ''
+      experimental-features = nix-command flakes
+    '';
+
+    settings = {
+      sandbox = true;
+      trusted-users = [ "root" "@wheel" ];
+      auto-optimise-store = true;
+      trusted-public-keys = [
+        "nixos-cn.cachix.org-1:L0jEaL6w7kwQOPlLoCR3ADx+E3Q8SEFEcB9Jaibl0Xg="
+        "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+        "hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ="
+        "iohk.cachix.org-1:DpRUyj7h7V830dp/i6Nti+NEO2/nhblbov/8MW7Rqoo="
+        "ryantrinkle.com-1:JJiAKaRv9mWgpVAz8dwewnZe0AzzEAzPkagE9SP5NWI="
+        "nixpkgs-wayland.cachix.org-1:3lwxaILxMRkVhehr5StQprHdEo4IrE8sRho9R9HOLYA="
+      ];
+
+      substituters = [
+        "https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store"
+        "https://cache.nixos.org/"
+        "https://mirrors.bfsu.edu.cn/nix-channels/store"
+        "https://nixos-cn.cachix.org"
+        "https://nix-community.cachix.org"
+        "https://hydra.iohk.io"
+        "https://iohk.cachix.org"
+        "https://nixcache.reflex-frp.org"
+        "https://nixpkgs-wayland.cachix.org"
+      ];
+      
+    };
+
+  };
+
   networking = {
     timeServers = [
       "ntp.aliyun.com"
@@ -587,12 +562,12 @@
   systemd.services.dnscrypt-proxy2.serviceConfig = {
     StateDirectory = "dnscrypt-proxy";
   };
-
+/*
   services.fstrim = {
     enable = true;
-    interval = "tuesday";
+    interval = "weekly";
   };
-
+*/
   # Enable CUPS to print documents.
   # services.printing.enable = true;
 
@@ -762,7 +737,7 @@
   # this value at the release version of the first install of this system.
   # Before changing this value read the documentation for this option
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
-  system.stateVersion = "22.05";
+  system.stateVersion = "22.11";
 
 }
 

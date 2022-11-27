@@ -43,11 +43,11 @@ in rec {
     wf-config = super.callPackage ./pkgs/applications/window-managers/wayfire/wf-config.nix { };
     mpvpaper = super.callPackage ./pkgs/applications/graphics/mpvpaper { };
 
-    rizin_x = super.callPackage ./pkgs/development/tools/analysis/rizin { };
+    rizin_x = super.rizin; # super.callPackage ./pkgs/development/tools/analysis/rizin { };
 
-    cutter_x = super.libsForQt515.callPackage ./pkgs/development/tools/analysis/rizin/cutter.nix {  rizin = rizin_x; };
-    sbcl = super.callPackage ./pkgs/development/compilers/sbcl/2.x.nix { version = "2.2.9"; };
-    boost_x = super.boost179.override { enablePython = true; python = super.pkgs.python3; };
+    cutter_x = super.cutter; # super.libsForQt515.callPackage ./pkgs/development/tools/analysis/rizin/cutter.nix {  rizin = rizin_x; };
+    sbcl = super.sbcl; # super.callPackage ./pkgs/development/compilers/sbcl/2.x.nix { version = "2.2.9"; };
+    boost_x = super.boost; # super.boost179.override { enablePython = true; python = super.pkgs.python3; };
     # dnsmasq = super.callPackage ./pkgs/tools/networking/dnsmasq { };
 /*
     python3 = super.python3.override {
