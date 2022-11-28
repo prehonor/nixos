@@ -1,28 +1,19 @@
 { stdenv, lib, fetchFromGitHub, cmake, meson, ninja, pkg-config
-, doctest, glm, libevdev, libxml2
+, doctest, glm, libevdev, libxml2, cairo, pango, libdrm, libinput, libxkbcommon, wayland, wayland-protocols
 }:
 
 stdenv.mkDerivation rec {
-/*
-  pname = "wf-config";
-  version = "0.7.1";
 
-  src = fetchurl {
-    url = "https://github.com/WayfireWM/wf-config/releases/download/v${version}/wf-config-${version}.tar.xz";
-    sha256 = "1w75yxhz0nvw4mlv38sxp8k8wb5h99b51x3fdvizc3yaxanqa8kx";
-  };
-  */
-  # url = "https://github.com/WayfireWM/${name}.git";
   pname = "wf-config";
   version = "0.8.0";
   src = fetchFromGitHub {
     owner = "WayfireWM";
     repo = "${pname}";
-    rev = "e42a3870fb194842a505ad5a9671be1aebda0b0b";
-    sha256 = "0n6i3hizbqixxjh33950ya8avwqil5k94jbgff1pimcbh9ahpgrr"; 
+    rev = "578b0bf3c81ef8f94e5e9b4f427720846bc7a5c5";
+    sha256 = "sha256-v3QjYEpaxZNnFEQ9wPvds/lmLJwo8kUD07GENI7mlJk="; # 0000000000000000000000000000000000000000000000000000
   };
-  nativeBuildInputs = [ cmake meson ninja pkg-config ];
-  buildInputs = [ doctest libevdev libxml2 ];
+  nativeBuildInputs = [ cmake meson ninja pkg-config wayland-protocols ];
+  buildInputs = [ doctest libevdev libxml2 wayland cairo pango libdrm libinput libxkbcommon ];
   propagatedBuildInputs = [ glm ];
 
   # CMake is just used for finding doctest.

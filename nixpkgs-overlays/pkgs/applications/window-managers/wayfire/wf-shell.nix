@@ -1,5 +1,5 @@
 { stdenv, lib, fetchFromGitHub, cmake, meson, ninja, pkg-config, wayland, git
-, alsa-lib, gtkmm3, gtk-layer-shell, pulseaudio, wayfire, wf-config, wlroots
+, alsa-lib, gtkmm3, gtk-layer-shell, pulseaudio, wayfire, wf-config, wlroots_0_16
 }:
 
 stdenv.mkDerivation rec {
@@ -17,14 +17,14 @@ stdenv.mkDerivation rec {
   src = fetchFromGitHub { 
     owner = "WayfireWM";
     repo = "${pname}";
-    rev = "8caa6a05e4e646af3bd16a470fefbf3639096d93";
-    sha256 = "sha256-u2qWtpAqJ9CZkGjzZgtiKYZEYiw+Aq2KDQUtveu11Ec="; # 0000000000000000000000000000000000000000000000000000
+    rev = "c9639087aca3ad69bbd8f56f4213768639b4c8d0";
+    sha256 = "sha256-eCga6ZdxqJYKc9yAI77fZUXOSaee8ijCE0XiJRJtDAg="; # 0000000000000000000000000000000000000000000000000000
     fetchSubmodules = true;
   };
   dontUseCmakeConfigure = true;
   nativeBuildInputs = [ cmake meson ninja pkg-config wayland ];
   buildInputs = [
-    alsa-lib gtkmm3 gtk-layer-shell pulseaudio wayfire wf-config wlroots 
+    alsa-lib gtkmm3 gtk-layer-shell pulseaudio wayfire wf-config wlroots_0_16 
   ];
 
   mesonFlags = [ "--sysconfdir" "/etc" ];

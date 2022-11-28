@@ -13,7 +13,7 @@
   pkg-config,
   stdenv,
   wf-config,
-  wlroots,
+  wlroots_0_16,
   wayfire,
   wayland,
   wayland-protocols,
@@ -21,33 +21,14 @@
 
 stdenv.mkDerivation rec {
 
-  
-/*
-  pname = "wayfire-plugins-extra";
-  version = "0.7.0";
-
-  src = fetchurl {
-    url = "https://github.com/WayfireWM/${pname}/releases/download/v${version}/${pname}-${version}.tar.xz";
-    sha256 = "1sr195n2ch31j182bf3nkch17dk1dyx6vx51z3w9ql6mrr0b1p01";
-  };
-
-  pname = "wayfire-plugins-extra";
-  version = "0.7.3";
-  src = fetchFromGitHub {
-    owner = "WayfireWM";
-    repo = "${pname}";
-    rev = "cf95ac721fb1909244d24ea5acaa5d04765696c7";
-    sha256 = "sha256-QXEc/ZiDm7ihxvkM0T3HTwo9OL4/aJ8+HmB4NNTpGhY=";
-  };
-*/  
   # url = "https://github.com/WayfireWM/${name}.git";
   pname = "wayfire-plugins-extra";
   version = "0.8.0";
   src = fetchFromGitHub {
     owner = "WayfireWM";
     repo = "${pname}";
-    rev = "9c862ebfdcf4f06faaa94b3fa1116d260f3c6658";
-    sha256 = "1zayh9wflj7pi4g5mss6srgvrj7pn1wkscam1xi9wbwwgi9mxwp1";
+    rev = "f6a083c2f42ae84212a61a770c9d2087d35cf392";
+    sha256 = "sha256-EOAGjjHklnqhurqXiXi/wKK6HAFyw2YQB2VxPB20q1k="; # 0000000000000000000000000000000000000000000000000000
   };
   /* patches = [
     ./event-patch.diff
@@ -71,7 +52,7 @@ stdenv.mkDerivation rec {
     libxkbcommon
     xcbutilwm
     pango
-    wlroots
+    wlroots_0_16
     wf-config
     wayfire
     wayland

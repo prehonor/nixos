@@ -25,10 +25,10 @@ in rec {
 
     lua_x = super.lua5_4;
 
-    wlr-protocols_x = super.callPackage ./pkgs/development/libraries/wlroots/protocols.nix { };
-    wlroots_x = super.callPackage ./pkgs/development/libraries/wlroots {
-        inherit (super.xorg) xcbutilrenderutil;
-    };
+    # wlr-protocols_x = super.callPackage ./pkgs/development/libraries/wlroots/protocols.nix { };
+
+    inherit (super.callPackages ./pkgs/development/libraries/wlroots {}) wlroots_0_16;
+ 
 
     wayfireApplications = wayfireApplications-unwrapped.withPlugins (plugins: [ plugins.wf-shell plugins.wf-info plugins.wayfire-plugins-extra ]); 
     inherit (wayfireApplications) wayfire wcm ;

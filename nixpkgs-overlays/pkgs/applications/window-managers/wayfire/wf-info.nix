@@ -1,4 +1,4 @@
-{ stdenv, lib, fetchFromGitHub, meson, ninja, pkg-config, cmake, wayland, wayland-protocols, libxkbcommon, pango, cairo, wayfire, wf-config, wlroots
+{ stdenv, lib, fetchFromGitHub, meson, ninja, pkg-config, cmake, wayland, wayland-protocols, libxkbcommon, pango, cairo, wayfire, wf-config, wlroots_0_16, gtkmm3, gobject-introspection ,libpulseaudio ,alsa-lib
 }:
 
 stdenv.mkDerivation rec {
@@ -8,13 +8,14 @@ stdenv.mkDerivation rec {
   src = fetchFromGitHub {
     owner = "soreau";
     repo = "${pname}";
-    rev = "561c21365d3af07459dbca42156252018685a0f4";
-    sha256 = "06zf23isq53whpvlhlck6bri5n3h51d42iwd8sv30x74g8zngisb"; 
+    rev = "022800f180b1e6adfd4824c770ea9fd94ea4b5bf";
+    sha256 = "sha256-eCga6ZdxqJYKc9yAI77fZUXOSaee8ijCE0XiJRJtDAg="; # 0000000000000000000000000000000000000000000000000000
   };
 
   nativeBuildInputs = [ meson ninja pkg-config cmake wayland ];
   buildInputs = [
-    pango cairo wayfire wf-config wlroots wayland wayland-protocols libxkbcommon
+    pango cairo wayfire wf-config wlroots_0_16 wayland wayland-protocols 
+    libxkbcommon gtkmm3 gobject-introspection libpulseaudio alsa-lib
   ];
   
   PKG_CONFIG_WAYFIRE_LIBDIR = "lib";
