@@ -228,6 +228,7 @@
     WEBKIT_DISABLE_COMPOSITING_MODE = "1";
     WLR_NO_HARDWARE_CURSORS = "1";
     MOZ_ENABLE_WAYLAND = "1";
+    # RUSTUP_HOME = "/nh/prehonor/.rustup";
     # QT_QPA_PLATFORM = "xcb";
   };
 
@@ -367,7 +368,6 @@
     wcm
     ranger
     tmux # Terminal multiplexer
-
     # i3status-rust # Very resource-friendly and feature-rich replacement for i3status
     
     nemiver
@@ -634,7 +634,19 @@
     }];
     shell = pkgs.zsh;
   };
-
+/*
+  services.tor = {
+      enable = true;
+        settings = {
+        UseBridges = true;
+        ClientTransportPlugin = "obfs4 exec ${pkgs.obfs4}/bin/obfs4proxy";
+        Bridge = "obfs4 217.103.30.38:12974 0E3139C6F423462FBAE609DF13A5149F03C09252 cert=+eCUL7ZjA+IAkMBtK2+FGhvYeqGwOwxuKCCVT+8sxZwlfhyXYJMmlygd+OKRMHLmCmZ+Kg iat-mode=0";
+        Socks5Proxy = "127.0.0.1:1080";
+      };
+      
+      client.enable = true;
+  };
+  */
   # services.netdata.enable = true; # kde 环境
   /* services.samba = {
        enable = true;
