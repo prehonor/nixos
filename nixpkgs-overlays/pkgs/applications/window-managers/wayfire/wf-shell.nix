@@ -3,15 +3,7 @@
 }:
 
 stdenv.mkDerivation rec {
-/*
-  pname = "wf-shell";
-  version = "0.7.0";
-  src = fetchurl {
-  url = "https://github.com/WayfireWM/${name}.git";
-    url = "https://github.com/WayfireWM/wf-shell/releases/download/v${version}/wf-shell-${version}.tar.xz";
-    sha256 = "1isybm9lcpxwyf6zh2vzkwrcnw3q7qxm21535g4f08f0l68cd5bl";
-  };
-*/
+
   pname = "wf-shell";
   version = "0.8.0";
   src = fetchFromGitHub { 

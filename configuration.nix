@@ -9,21 +9,34 @@
     ./hardware-configuration.nix
   ];
 
-  # Use the GRUB 2 boot loader.
- # boot.loader.grub.enable = true;
- # boot.loader.grub.version = 2;
- # boot.loader.grub.efiSupport = true;
- # boot.loader.grub.efiInstallAsRemovable = true;
- # boot.loader.efi.efiSysMountPoint = "/boot";
-  boot.loader.systemd-boot.enable = true;
-  boot.loader.systemd-boot.consoleMode = "max";
-  boot.initrd.kernelModules = [ "amdgpu" ];   # amd
-  # boot.kernelParams = [
-  #    "nvidia-drm.modeset=1"
-  # ];
+  /**** Use the GRUB 2 boot loader. *****
+  boot.loader.grub.enable = true;
+  boot.loader.grub.version = 2;
+  boot.loader.grub.efiSupport = true;
+  boot.loader.grub.efiInstallAsRemovable = true;
+  boot.loader.efi.efiSysMountPoint = "/boot";
+  ***************************************/
   # Define on which hard drive you want to install Grub.
   # boot.loader.grub.systemd-boot.enable = true;
- # boot.loader.grub.device = "nodev"; # or "nodev" for efi only
+  # boot.loader.grub.device = "nodev"; # or "nodev" for efi only
+
+  boot.loader.systemd-boot.enable = true;
+  boot.loader.systemd-boot.consoleMode = "max";
+  boot.initrd.kernelModules = [ 
+    "amdgpu" # amd
+    "vfio" "vfio_iommu_type1" "vfio_pci" "vfio_virqfd"  # These modules are required for PCI passthrough, and must come before early modesetting stuff
+  ];
+
+  # CHANGE: Don't forget to put your own PCI IDs here
+  # boot.extraModprobeConfig ="options vfio-pci ids=1002:67b1,1002:aac8";
+  boot.kernelParams = [
+    # "nvidia-drm.modeset=1"
+    /*** CHANGE: intel_iommu enables iommu for intel CPUs with VT-d
+         use amd_iommu if you have an AMD CPU with AMD-Vi  ***/
+    "amd_iommu=on" # use intel_iommu if you have an intel CPU with VT-d
+  ];
+  
+
   fileSystems = {
 
     "/".options = [ "compress=zstd" "discard=async" ];
@@ -242,6 +255,8 @@
     sudo
     parted
     libxfs.bin # SGI XFS utilities
+    virt-manager # Desktop user interface for managing virtual machines
+    # 已经由option启用 qemu # A generic and open source machine emulator and virtualizer
     # finger_bsd # means ? bsd-finger # User information lookup program
     pciutils # A collection of programs for inspecting and manipulating configuration of PCI devices
     libva-utils # A collection of utilities and examples for VA-API
@@ -293,7 +308,6 @@
     nmap
     john
     crunch
-    # ghidra-bin
     nasm
     fasm
 
@@ -338,15 +352,9 @@
     convmv # Converts filenames from one encoding to another
     jpegoptim # Optimize JPEG files
 
-    podman
-    runc
-    conmon
-    slirp4netns
-    fuse-overlayfs
 
     gcc
-    
-    darcs   # a distributed, interactive, smart revision control system
+    cachix # Command line client for Nix binary cache hosting https://cachix.org
     patchelf
    # lispPackages.quicklisp
 
@@ -354,24 +362,24 @@
     # boost_x.dev
     # libmysqlclient_315
 
-    wofi
-    wlogout
-    swaylock
-    kanshi
-    grim
-    mako
-    wlsunset
-    swayidle
-    slurp
-    xdg-desktop-portal-wlr
+    wofi # A launcher/menu program for wlroots based wayland compositors such as sway
+    wlogout # A wayland based logout menu
+    swaylock # Screen locker for Wayland
+    kanshi # Dynamic display configuration tool
+    grim # Grab images from a Wayland compositor
+    mako # A lightweight Wayland notification daemon
+    wlsunset # Day/night gamma adjustments for Wayland
+    swayidle # Idle management daemon for Wayland
+    slurp # Select a region in a Wayland compositor
+    xdg-desktop-portal-wlr # xdg-desktop-portal backend for wlroots
     wayfire
     wcm
-    ranger
-    tmux # Terminal multiplexer
+    wl-clipboard # Command-line copy/paste utilities for Wayland
+    # ranger
+    # tmux # Terminal multiplexer
     # i3status-rust # Very resource-friendly and feature-rich replacement for i3status
+
     
-    nemiver
-    wl-clipboard
     # mpvpaper
     # xfce.thunar xfce.thunar-archive-plugin 
     #  waylandPkgs.waybar waylandPkgs.swaybg wl-clipboard
@@ -419,14 +427,22 @@
   };
 
   virtualisation = {
-    docker.enable = false;
-    virtualbox.host.enable = true;
-    # waydroid.enable = true;
-    # lxd.enable = true;
+    # docker.enable = false; 
+    # virtualbox.host.enable = true;
+    libvirtd = {
+      enable = true;
+      qemu.verbatimConfig = ''
+        # OVMF :Sample UEFI firmware for QEMU and KVM
+        nvram = [ "${pkgs.OVMF}/FV/OVMF.fd:${pkgs.OVMF}/FV/OVMF_VARS.fd" ]
+      '';
+    };
+    /**************** waydroid ***************/
+    waydroid.enable = true; 
+    lxd.enable = true;
+    /*****************************************/
     # anbox.enable = true;
   };
-
-  users.extraGroups.vboxusers.members = [ "user-with-access-to-virtualbox" ];
+  # users.extraGroups.vboxusers.members = [ "user-with-access-to-virtualbox" ];
 
   security.sudo = {
     enable = true;
@@ -454,11 +470,12 @@
       auto-optimise-store = true;
       trusted-public-keys = [
         "nixos-cn.cachix.org-1:L0jEaL6w7kwQOPlLoCR3ADx+E3Q8SEFEcB9Jaibl0Xg="
+        "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
         "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
-        "hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ="
         "iohk.cachix.org-1:DpRUyj7h7V830dp/i6Nti+NEO2/nhblbov/8MW7Rqoo="
         "ryantrinkle.com-1:JJiAKaRv9mWgpVAz8dwewnZe0AzzEAzPkagE9SP5NWI="
         "nixpkgs-wayland.cachix.org-1:3lwxaILxMRkVhehr5StQprHdEo4IrE8sRho9R9HOLYA="
+        # "hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ="
       ];
 
       substituters = [
@@ -467,10 +484,10 @@
         "https://mirrors.bfsu.edu.cn/nix-channels/store"
         "https://nixos-cn.cachix.org"
         "https://nix-community.cachix.org"
-        "https://hydra.iohk.io"
         "https://iohk.cachix.org"
         "https://nixcache.reflex-frp.org"
         "https://nixpkgs-wayland.cachix.org"
+        # "https://hydra.iohk.io"
       ];
       
     };
@@ -562,6 +579,9 @@
   systemd.services.dnscrypt-proxy2.serviceConfig = {
     StateDirectory = "dnscrypt-proxy";
   };
+  systemd.tmpfiles.rules = [
+    "L+    /opt/rocm/hip   -    -    -     -    ${pkgs.hip}"
+  ];
 /*
   services.fstrim = {
     enable = true;
@@ -623,6 +643,7 @@
       "mysql"
       "wireshark"
       "greeter"
+      "libvirtd"
     ]; # Enable ‘sudo’ for the user.
     subUidRanges = [{
       startUid = 100000;

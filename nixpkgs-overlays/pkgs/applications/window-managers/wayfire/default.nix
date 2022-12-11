@@ -15,8 +15,8 @@ stdenv.mkDerivation rec {
   src = fetchFromGitHub {
     owner = "WayfireWM";
     repo = "${pname}";
-    rev = "c3b1edf11e377778f5e267c7ad7cf93d22078903";
-    sha256 = "sha256-OpKBAtvktIW/6/G3k/CIDFscQx59x0yP6TtBDqKSilE="; # 0000000000000000000000000000000000000000000000000000
+    rev = "d296170e28ccefc38586cd6ab8ee5de39e046563"; # c3b1edf11e377778f5e267c7ad7cf93d22078903
+    sha256 = "sha256-yItoMoBY4OR+S0f4uEbcnkZS+byZ3Ot4dI/BjoITcto="; # 0000000000000000000000000000000000000000000000000000
     fetchSubmodules = true;
   };
   /* patches = [

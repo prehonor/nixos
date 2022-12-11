@@ -8,7 +8,7 @@ stdenv.mkDerivation rec {
     domain = "gitlab.freedesktop.org";
     owner = "wlroots";
     repo = "wlr-protocols";
-    rev = "d998ee6fc64ea7e066014023653d1271b7702c09";
+    rev = "4264185db3b7e961e7f157e1cc4fd0ab75137568";
     sha256 = "1vw8b10d1pwsj6f4sr3imvwsy55d3435sp068sj4hdszkxc6axsr";
   };
 

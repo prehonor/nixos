@@ -25,7 +25,7 @@ in rec {
 
     lua_x = super.lua5_4;
 
-    # wlr-protocols_x = super.callPackage ./pkgs/development/libraries/wlroots/protocols.nix { };
+    wlr-protocols = super.callPackage ./pkgs/development/libraries/wlroots/protocols.nix { };
 
     inherit (super.callPackages ./pkgs/development/libraries/wlroots {}) wlroots_0_16;
  
