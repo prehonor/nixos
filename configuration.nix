@@ -182,8 +182,8 @@
   */
 
   services.emacs = {
-    install = true;
-    package = pkgs.emacsNativeComp;
+    install = false;
+    package = pkgs.emacsPgtk;
   };
 
   # List packages installed in system profile. To search, run:
@@ -213,15 +213,15 @@
         amdvlk               # amd
         rocm-opencl-icd      # amd
         rocm-opencl-runtime  # amd
-        intel-media-driver # LIBVA_DRIVER_NAME=iHD
-        vaapiIntel # LIBVA_DRIVER_NAME=i965 (older but works better for Firefox/Chromium)
+        # intel-media-driver # LIBVA_DRIVER_NAME=iHD
+        # vaapiIntel # LIBVA_DRIVER_NAME=i965 (older but works better for Firefox/Chromium)
         # vaapiVdpau     # nvidia
         # libvdpau-va-gl # nvidia
       ];
       extraPackages32 = with pkgs.pkgsi686Linux; [
-        # libva # nvidia
+        # libva # intel 核显得api
         driversi686Linux.amdvlk  # amd
-        vaapiIntel # LIBVA_DRIVER_NAME=i965 (older but works better for Firefox/Chromium)
+        # vaapiIntel # LIBVA_DRIVER_NAME=i965 (older but works better for Firefox/Chromium)
       ];
     };
     pulseaudio = {
@@ -243,10 +243,27 @@
     MOZ_ENABLE_WAYLAND = "1";
     # RUSTUP_HOME = "/nh/prehonor/.rustup";
     # QT_QPA_PLATFORM = "xcb";
+    # Steam needs this to find Proton-GE
+    STEAM_EXTRA_COMPAT_TOOLS_PATHS = "\${HOME}/.steam/root/compatibilitytools.d";
+    /*
+    XDG_CACHE_HOME  = "\${HOME}/.cache";
+    XDG_CONFIG_HOME = "\${HOME}/.config";
+    XDG_BIN_HOME    = "\${HOME}/.local/bin";
+    XDG_DATA_HOME   = "\${HOME}/.local/share";
+    # note: this doesn't replace PATH, it just adds this to it
+    PATH = [ 
+      "\${XDG_BIN_HOME}"
+    ];
+    */
   };
 
-  nixpkgs.overlays = [ (import ./nixpkgs-overlays) ];
-  # (import "${builtins.fetchTarball "https://github.com/nix-community/nixpkgs-wayland/archive/master.tar.gz"}/overlay.nix")
+  nixpkgs.overlays = [
+    (import ./nixpkgs-overlays)
+    /* (import (builtins.fetchTarball {
+      url = https://github.com/nix-community/emacs-overlay/archive/master.tar.gz;
+    })) */
+  ];
+
 
   nix.nixPath = options.nix.nixPath.default
     ++ [ "nixpkgs-overlays=/etc/nixos/overlays-compat" ];
@@ -260,7 +277,7 @@
     # finger_bsd # means ? bsd-finger # User information lookup program
     pciutils # A collection of programs for inspecting and manipulating configuration of PCI devices
     libva-utils # A collection of utilities and examples for VA-API
-    vdpauinfo # Tool to query the Video Decode and Presentation API for Unix (VDPAU) abilities of the system
+    # vdpauinfo # Tool to query the Video Decode and Presentation API for Unix (VDPAU) abilities of the system # for NVIDIA
     # file # A program that shows the type of files
     # binutils-unwrapped # Tools for manipulating binaries (linker, assembler, etc.) 
     # bind         # Domain name server
@@ -295,7 +312,7 @@
     wmctrl
     pavucontrol # PulseAudio Volume Control
     
-    aria
+    # aria # A lightweight, multi-protocol, multi-source, command-line download utility
     
     wget
     curl
@@ -425,6 +442,11 @@
       };
     };
   };
+  services.postgresql = {
+    enable = true;
+    package = pkgs.postgresql_15;
+    dataDir = "/data/psql";
+  };
 
   virtualisation = {
     # docker.enable = false; 
@@ -460,13 +482,10 @@
   nix = {
 
     # sandboxPaths = [ "/ah" "/gh" "/home" ];
-    extraOptions = ''
-      experimental-features = nix-command flakes
-    '';
-
     settings = {
       sandbox = true;
       trusted-users = [ "root" "@wheel" ];
+      experimental-features = [ "nix-command" "flakes" ];
       auto-optimise-store = true;
       trusted-public-keys = [
         "nixos-cn.cachix.org-1:L0jEaL6w7kwQOPlLoCR3ADx+E3Q8SEFEcB9Jaibl0Xg="
@@ -644,6 +663,7 @@
       "wireshark"
       "greeter"
       "libvirtd"
+      "adbusers"
     ]; # Enable ‘sudo’ for the user.
     subUidRanges = [{
       startUid = 100000;

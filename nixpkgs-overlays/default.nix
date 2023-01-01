@@ -12,18 +12,27 @@ in rec {
         };
       }
     );
-    microsoft-edge-stable = super.callPackage (import ./pkgs/applications/networking/browsers/edge).stable { };
-    microsoft-edge-beta = super.callPackage (import ./pkgs/applications/networking/browsers/edge).beta { };
-    microsoft-edge-dev = super.callPackage (import ./pkgs/applications/networking/browsers/edge).dev { };
+    charles = super.charles.overrideAttrs (
+      oldAttrs: rec {
+        src = super.fetchurl {
+        url = "https://prehonor-generic.pkg.coding.net/yigeren/pkgs/charles-proxy-4.6.2_amd64.tar.gz?version=latest";
+        sha256 = "0r5rann7cq665ih0pa66k52081gylk85ashrwq1khbv2jf80yy52";
+        };
+      }
+    );
+    gnirehtet = super.callPackage ./pkgs/tools/networking/gnirehtet { };
     
     llvm_x = super.llvmPackages_latest.llvm;
     libclang_x = super.llvmPackages_latest.libclang;
     lld_x = super.llvmPackages_latest.lld;
     lldb_x = super.llvmPackages_latest.lldb;
     clang_x = super.llvmPackages_latest.clang;
+    libcxx_x = super.llvmPackages_latest.libcxx;
     c2ffi = super.callPackage ./pkgs/development/tools/misc/c2ffi { llvmPackages = super.llvmPackages_13; };
 
     lua_x = super.lua5_4;
+    mysql_x = super.mysql80;
+    postgresql_x = super.postgresql_15;
 
     wlr-protocols = super.callPackage ./pkgs/development/libraries/wlroots/protocols.nix { };
 
@@ -47,7 +56,60 @@ in rec {
 
     cutter_x = super.cutter; # super.libsForQt515.callPackage ./pkgs/development/tools/analysis/rizin/cutter.nix {  rizin = rizin_x; };
     sbcl = super.sbcl; # super.callPackage ./pkgs/development/compilers/sbcl/2.x.nix { version = "2.2.9"; };
-    boost_x = super.boost; # super.boost179.override { enablePython = true; python = super.pkgs.python3; };
+    boost_x = super.boost.override { enablePython = true; python = super.pkgs.python3; }; # super.boost179.override { enablePython = true; python = super.pkgs.python3; };
+
+
+    python3 = super.python3.override {
+        packageOverrides = final: prev: {
+        /*
+            scikit-build = prev.scikit-build.overridePythonAttrs (oldAttrs: 
+                rec {
+                    version = "0.16.4";
+                    pname = oldAttrs.pname;
+                    src = prev.fetchPypi {
+                        inherit pname version;
+                        # sha256 = "sha256-/y5k6JANAZ0EiTo/cObcD4etg/S6GWtNYl2yLs9QbH8=";
+                        sha256 = "sha256-KiDEreqzwq7BHXC86WkJlc/w5Tvq/jIae1MACayo5zE=";
+                    };
+                }
+            );
+
+            pybind11 = prev.pybind11.overridePythonAttrs (oldAttrs: 
+                rec {
+                    version = "2.10.2";
+                    pname = oldAttrs.pname;
+                    src = super.fetchFromGitHub {
+                        owner = "pybind";
+                        repo = pname;
+                        rev = "v${version}";
+                        hash = "sha256-/X8DZPFsNrKGbhjZ1GFOj17/NU6p4R+saCW3pLKVNeA=";
+                    };
+                }
+            );   
+            */
+        };
+    };
+    myPython = python: version: {
+    ryxpy = python.withPackages (ps:
+          with ps; [
+            # pip
+            urllib3
+            # # pytorch-bin
+            # # torchvision-bin
+            pyside2
+            cython_3  # An optimising static compiler for both the Python programming language and the extended Cython programming language
+            dbus-python
+            pygobject3
+            gst-python
+            jedi-language-server
+            setuptools  # Utilities to facilitate the installation of Python packages
+            scikit-build  # Improved build system generator for CPython C/C++/Fortran/Cython extensions
+            pybind11
+            wheel
+          ]);
+        ryxpy_v = version;
+    };
+    inherit (myPython python3 "python3.10") ryxpy ryxpy_v;
     # dnsmasq = super.callPackage ./pkgs/tools/networking/dnsmasq { };
 /*
     python3 = super.python3.override {
@@ -62,21 +124,8 @@ in rec {
                     };
                 }
             );
-            qtpy = prev.qtpy.overridePythonAttrs (oldAttrs: 
-                rec {
-                    version = "2.2.0";
-                    pname = oldAttrs.pname;
-                    src = prev.fetchPypi {
-                        inherit pname version;
-                        sha256 = "sha256-2F8bEh8kpBrSbFXERuZqvbfFKIOfjE8R8VbsRUGQORQ=";
-                    };
-                }
-            );
             whatthepatch = final.callPackage ./pkgs/development/python-modules/whatthepatch {};
             python-lsp-server = final.callPackage ./pkgs/development/python-modules/python-lsp-server {};
-            jupyter-client = final.callPackage ./pkgs/development/python-modules/jupyter-client {};
-            spyder-kernels = final.callPackage ./pkgs/development/python-modules/spyder-kernels {};
-            spyder = final.callPackage ./pkgs/development/python-modules/spyder {};
         };
     };
 
@@ -192,7 +241,6 @@ in rec {
         pip urllib3 ansible jupyter sip pyqtwebengine epc lxml pysocks pymupdf 
         pytaglib qrcode pyqt5  # pyqt5_with_qtmultimedia
     ]);
-  	boost_x = super.boost175.override { enablePython = true; python = super.pkgs.python3; };
 
     libmysqlclient_315 = super.libmysqlclient.override { version = "3.1.5"; };
     */

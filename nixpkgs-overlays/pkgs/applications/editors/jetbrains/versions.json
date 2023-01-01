@@ -3,11 +3,11 @@
     "clion": {
       "update-channel": "CLion RELEASE",
       "url-template": "https://prehonor-generic.pkg.coding.net/yigeren/pkgs/CLion-{version}.tar.gz",
-      "version": "2022.2.4",
-      "sha256": "bf66c1c2bb978708a7d50f24824b29c2dfdcf749549f4b84169a83c724efe74c",
-      "url": "https://prehonor-generic.pkg.coding.net/yigeren/pkgs/CLion-2022.2.4.tar.gz",
-      "version-major-minor": "2022.2",
-      "build_number": "222.4345.21"
+      "version": "2022.3.1",
+      "sha256": "03d3a754ac9934ce24c8a96d4e997030f9769f3e6de0ce918a68c7d7869447bc",
+      "url": "https://prehonor-generic.pkg.coding.net/yigeren/pkgs/CLion-2022.3.1.tar.gz",
+      "version-major-minor": "2022.3",
+      "build_number": "223.8214.51"
     },
     "datagrip": {
       "update-channel": "DataGrip RELEASE",
@@ -48,11 +48,11 @@
     "idea-ultimate": {
       "update-channel": "IntelliJ IDEA RELEASE",
       "url-template": "https://prehonor-generic.pkg.coding.net/yigeren/pkgs/ideaIU-{version}.tar.gz",
-      "version": "2022.2.4",
-      "sha256": "8ff5e7eb2392cb45e54ff970c4b7256e6bb8069cb101f6771e7f78369dac31c0",
-      "url": "https://prehonor-generic.pkg.coding.net/yigeren/pkgs/ideaIU-2022.2.4.tar.gz",
-      "version-major-minor": "2022.2",
-      "build_number": "222.4459.24"
+      "version": "2022.3.1",
+      "sha256": "303071ea4f9501de05ecf80fdc7b5d23ab9688c4a89ab9e7e6ca998c2d4f21ec",
+      "url": "https://prehonor-generic.pkg.coding.net/yigeren/pkgs/ideaIU-2022.3.1.tar.gz",
+      "version-major-minor": "2022.3",
+      "build_number": "223.8214.52"
     },
     "mps": {
       "update-channel": "MPS RELEASE",
