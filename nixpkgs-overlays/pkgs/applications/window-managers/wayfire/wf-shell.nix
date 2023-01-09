@@ -1,4 +1,4 @@
-{ stdenv, lib, fetchFromGitHub, cmake, meson, ninja, pkg-config, wayland, git
+{ stdenv, lib, fetchgit, cmake, meson, ninja, pkg-config, wayland, git
 , alsa-lib, gtkmm3, gtk-layer-shell, pulseaudio, wayfire, wf-config, wlroots_0_16
 }:
 
@@ -6,11 +6,16 @@ stdenv.mkDerivation rec {
 
   pname = "wf-shell";
   version = "0.8.0";
-  src = fetchFromGitHub { 
+  src = fetchgit { 
+    url = "https://gitee.com/github-10784632_admin_admin/${pname}.git";
+    rev = "c9639087aca3ad69bbd8f56f4213768639b4c8d0";
+    sha256 = "sha256-eCga6ZdxqJYKc9yAI77fZUXOSaee8ijCE0XiJRJtDAg=";
+    /*
     owner = "WayfireWM";
     repo = "${pname}";
     rev = "c9639087aca3ad69bbd8f56f4213768639b4c8d0";
     sha256 = "sha256-eCga6ZdxqJYKc9yAI77fZUXOSaee8ijCE0XiJRJtDAg="; # 0000000000000000000000000000000000000000000000000000
+    */
     fetchSubmodules = true;
   };
   dontUseCmakeConfigure = true;

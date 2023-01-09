@@ -180,7 +180,7 @@
        # gnome.gnome-terminal
      ];
   */
-
+  services.udisks2.enable = true;
   services.emacs = {
     install = false;
     package = pkgs.emacsPgtk;
@@ -194,9 +194,6 @@
       "steam"
       "steam-original"
       "steam-runtime"
-    ];
-    permittedInsecurePackages = [
-      "qtwebkit-5.212.0-alpha4"
     ];
 
     # packageOverrides = pkgs: {
@@ -234,7 +231,7 @@
     # PYCHARM_JDK = "/gh/prehonor/gitproject/JetBrainsRuntime/build/linux-x86_64-normal-server-release/jdk";
     # DATAGRIP_JDK = PYCHARM_JDK;
     # IDEA_JDK = PYCHARM_JDK;
-    # WEBIDE_JDK = PYCHARM_JDK;
+    # WEBIDE_JDK = PYCHARM_JDK; # 挪到 ./config/nixpkgs/config.nix中
   };
 
   environment.sessionVariables = {
@@ -325,12 +322,6 @@
     nmap
     john
     crunch
-    nasm
-    fasm
-
-    
-    tsocks
-    # proxychains-ng
 
 
     # gnome-builder
@@ -392,6 +383,7 @@
     wayfire
     wcm
     wl-clipboard # Command-line copy/paste utilities for Wayland
+    udiskie # Removable disk automounter for udisks
     # ranger
     # tmux # Terminal multiplexer
     # i3status-rust # Very resource-friendly and feature-rich replacement for i3status
@@ -399,7 +391,7 @@
     
     # mpvpaper
     # xfce.thunar xfce.thunar-archive-plugin 
-    #  waylandPkgs.waybar waylandPkgs.swaybg wl-clipboard
+    # waybar waylandPkgs.swaybg wl-clipboard
   ];
 
   services.greetd = {
@@ -601,6 +593,8 @@
   systemd.tmpfiles.rules = [
     "L+    /opt/rocm/hip   -    -    -     -    ${pkgs.hip}"
   ];
+  
+  # services.onlyoffice.enable = true;
 /*
   services.fstrim = {
     enable = true;

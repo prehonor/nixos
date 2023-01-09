@@ -123,8 +123,8 @@ rec {
   };
 
   wlroots_0_16 = generic {
-    version = "f1bea43ccccd5824097d8660a2d20b5d0bf506be"; # 0.16.0
-    hash = "sha256-nAaB1EHVStg4oGZCwpA0l/GSmqQAEGcq3aHckuLN39c="; # sha256-k7BFx1xvvsdCXNWX0XeZYwv8H/myk4p42i2Y6vjILqM=
+    version = "0911a41f17df2f684c383923772994a3807ce416"; # 0.16.0
+    hash = "sha256-UyPN7zmytre4emwx/ztZ4JefXHwixPV6UEEqnhSLbIY=";
     extraBuildInputs = [ vulkan-loader ];
     extraNativeBuildInputs = [ glslang ];
     extraPatch = ''

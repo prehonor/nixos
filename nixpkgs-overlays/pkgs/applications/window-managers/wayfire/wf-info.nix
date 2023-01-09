@@ -1,16 +1,23 @@
-{ stdenv, lib, fetchFromGitHub, meson, ninja, pkg-config, cmake, wayland, wayland-protocols, libxkbcommon, pango, cairo, wayfire, wf-config, wlroots_0_16
+{ stdenv, lib, fetchgit, meson, ninja, pkg-config, cmake, wayland, wayland-protocols, libxkbcommon, pango, cairo, wayfire, wf-config, wlroots_0_16
 , gtkmm3, gobject-introspection ,libpulseaudio , alsa-lib, udev ,xcbutilwm ,libinput
 }:
 
 stdenv.mkDerivation rec {
-  # url = "https://github.com/soreau/${name}.git";
+
   pname = "wf-info";
   version = "0.7.0";
-  src = fetchFromGitHub {
+  src = fetchgit {
+    url = "https://gitee.com/github-10784632_admin_admin/${pname}.git";
+    rev = "8247cd209ce5ad821b399841ea7adc993f929f79";
+    sha256 = "sha256-4NRsoUUUyPIJ983U+nnDqZQ5X8Yv46ksv+GjZhsxqVg=";
+    /*
+    url = "https://gitee.com/github-10784632_admin_admin/${pname}/repository/archive/${version}.zip";
+    sha256 = "sha256-JOqKS4PXLGw1QHtQHALznxxHTMCAN7b1Fq3MBM0GSw8=";
+
     owner = "soreau";
     repo = "${pname}";
-    rev = "022800f180b1e6adfd4824c770ea9fd94ea4b5bf";
-    sha256 = "sha256-JOqKS4PXLGw1QHtQHALznxxHTMCAN7b1Fq3MBM0GSw8="; # 0000000000000000000000000000000000000000000000000000
+    rev = "8247cd209ce5ad821b399841ea7adc993f929f79";
+    sha256 = "sha256-JOqKS4PXLGw1QHtQHALznxxHTMCAN7b1Fq3MBM0GSw8=";*/
   };
 
   nativeBuildInputs = [ meson ninja pkg-config cmake wayland ];

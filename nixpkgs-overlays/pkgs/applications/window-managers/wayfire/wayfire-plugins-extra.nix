@@ -1,6 +1,6 @@
 {
   cairo,
-  fetchFromGitHub,
+  fetchgit,
   glibmm,
   glm,
   cmake,
@@ -21,14 +21,18 @@
 
 stdenv.mkDerivation rec {
 
-  # url = "https://github.com/WayfireWM/${name}.git";
+  # 包含子模块，但是由于项目默认没有使用子模块所以暂时用fetchgit以备万一
   pname = "wayfire-plugins-extra";
   version = "0.8.0";
-  src = fetchFromGitHub {
+  src = fetchgit {
+    url = "https://gitee.com/github-10784632_admin_admin/${pname}.git";
+    rev = "ac7b7ed57f66793695f8725939b7df93cd10a27a";
+    sha256 = "sha256-ZOkqsOvzuozsZc4EKLoVEUS8QMTIkqxbBKYb83VPSIo=";
+    /*
     owner = "WayfireWM";
     repo = "${pname}";
-    rev = "945c01c9733644aba65af5595cc596c3c45a81cf"; # f6a083c2f42ae84212a61a770c9d2087d35cf392
-    sha256 = "sha256-+XkZ+PXDWlf+32Ffq3Uc1LHQVKF9WCO4CDaRw+RmUhA="; # sha256-EOAGjjHklnqhurqXiXi/wKK6HAFyw2YQB2VxPB20q1k=
+    rev = "ac7b7ed57f66793695f8725939b7df93cd10a27a";
+    sha256 = "sha256-ZOkqsOvzuozsZc4EKLoVEUS8QMTIkqxbBKYb83VPSIo=";*/
   };
   /* patches = [
     ./event-patch.diff

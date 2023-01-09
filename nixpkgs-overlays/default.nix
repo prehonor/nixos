@@ -7,19 +7,34 @@ in rec {
     tor-browser-bundle-bin = super.tor-browser-bundle-bin.overrideAttrs (
       oldAttrs: rec {
         src = super.fetchurl {
-        urls = ["https://prehonor-generic.pkg.coding.net/yigeren/pkgs/tor-browser-linux64-11.5.6_en-US.tar.xz?version=latest"];
-        sha256 = "sha256-DTMY6n7GXokOz6WSrvFUkC64Siuo1Zy80A4UDolmIME=";
+          urls = ["https://prehonor-generic.pkg.coding.net/yigeren/pkgs/tor-browser-linux64-11.5.6_en-US.tar.xz?version=latest"];
+          sha256 = "sha256-DTMY6n7GXokOz6WSrvFUkC64Siuo1Zy80A4UDolmIME=";
         };
       }
     );
     charles = super.charles.overrideAttrs (
       oldAttrs: rec {
-        src = super.fetchurl {
-        url = "https://prehonor-generic.pkg.coding.net/yigeren/pkgs/charles-proxy-4.6.2_amd64.tar.gz?version=latest";
-        sha256 = "0r5rann7cq665ih0pa66k52081gylk85ashrwq1khbv2jf80yy52";
+          src = super.fetchurl {
+          url = "https://prehonor-generic.pkg.coding.net/yigeren/pkgs/charles-proxy-4.6.2_amd64.tar.gz?version=latest";
+          sha256 = "0r5rann7cq665ih0pa66k52081gylk85ashrwq1khbv2jf80yy52";
         };
       }
     );
+    /*
+    qv2ray_x = super.qv2ray.overrideAttrs (
+      oldAttrs: rec {
+        
+        src = super.fetchFromGitHub {
+          owner = "Qv2ray";
+          repo = "Qv2ray";
+          rev = "e70ede85180a85360207ba5c8dae978e6a86ce69";
+          # sha256 = "sha256-afFTGX/zrnwq/p5p1kj+ANU4WeN7jNq3ieeW+c+GO5M=";
+          fetchSubmodules = true;
+        };
+      }
+    );
+    */
+    
     gnirehtet = super.callPackage ./pkgs/tools/networking/gnirehtet { };
     
     llvm_x = super.llvmPackages_latest.llvm;
@@ -28,7 +43,7 @@ in rec {
     lldb_x = super.llvmPackages_latest.lldb;
     clang_x = super.llvmPackages_latest.clang;
     libcxx_x = super.llvmPackages_latest.libcxx;
-    c2ffi = super.callPackage ./pkgs/development/tools/misc/c2ffi { llvmPackages = super.llvmPackages_13; };
+    c2ffi_x = super.callPackage ./pkgs/development/tools/misc/c2ffi { llvmPackages = super.llvmPackages_13; };
 
     lua_x = super.lua5_4;
     mysql_x = super.mysql80;
@@ -38,7 +53,8 @@ in rec {
 
     inherit (super.callPackages ./pkgs/development/libraries/wlroots {}) wlroots_0_16;
  
-
+    wf-config = super.callPackage ./pkgs/applications/window-managers/wayfire/wf-config.nix { };
+    
     wayfireApplications = wayfireApplications-unwrapped.withPlugins (plugins: [ plugins.wf-shell plugins.wf-info plugins.wayfire-plugins-extra ]); 
     inherit (wayfireApplications) wayfire wcm ;
     wayfireApplications-unwrapped = super.recurseIntoAttrs (
@@ -49,8 +65,9 @@ in rec {
         super.callPackage ./pkgs/applications/window-managers/wayfire/plugins.nix {
         inherit (wayfireApplications-unwrapped) wayfire;
     });
-    wf-config = super.callPackage ./pkgs/applications/window-managers/wayfire/wf-config.nix { };
+    
     mpvpaper = super.callPackage ./pkgs/applications/graphics/mpvpaper { };
+    qv2ray_x = super.libsForQt5.callPackage ./pkgs/applications/networking/qv2ray {};
 
     rizin_x = super.rizin; # super.callPackage ./pkgs/development/tools/analysis/rizin { };
 

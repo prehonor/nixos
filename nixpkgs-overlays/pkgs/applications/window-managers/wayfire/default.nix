@@ -1,4 +1,4 @@
-{ lib, stdenv, fetchFromGitHub, cmake, meson, ninja, pkg-config
+{ lib, stdenv, fetchgit, cmake, meson, ninja, pkg-config
 , wayland, wayland-protocols, wf-config, wlroots_0_16, mesa
 , cairo, pango, vulkan-headers, vulkan-loader, xorg, xwayland
 , doctest, libdrm, libexecinfo, libinput, libjpeg, libxkbcommon, glslang, xcbutilerrors, xcbutilwm, seatd
@@ -9,15 +9,20 @@
 
 stdenv.mkDerivation rec {
 
-  # url = "https://github.com/WayfireWM/${name}.git";
   pname = "wayfire";
   version = "0.8.0";
-  src = fetchFromGitHub {
+  src = fetchgit {
+    url = "https://gitee.com/github-10784632_admin_admin/${pname}.git";
+    rev = "dceeb5f1775aec4ef59edb28ec3a2da93c7585fa";
+    sha256 = "sha256-Kt4FDvhowF4+wm/wblMuAIZtKonzrAjj90KlAXzDfSw=";
+/*
     owner = "WayfireWM";
     repo = "${pname}";
-    rev = "d296170e28ccefc38586cd6ab8ee5de39e046563"; # c3b1edf11e377778f5e267c7ad7cf93d22078903
-    sha256 = "sha256-yItoMoBY4OR+S0f4uEbcnkZS+byZ3Ot4dI/BjoITcto="; # 0000000000000000000000000000000000000000000000000000
+    rev = "6308d6ddecdda2cc62b488ef6b26a407960bd1fe";
+    sha256 = "sha256-n++wu5bToYwdMenPUo/w3O7FvHCUQ6GuBy/HBVPvmkE=";
+    */
     fetchSubmodules = true;
+
   };
   /* patches = [
     # https://github.com/WayfireWM/wayfire/commit/2daec9bc30920c995700252b4915bbc2839aa1a3#diff-fff9797dc434bcdbb9cb1f1cb46f3a4f6de611034a0eaefe53dd0882b1095778
