@@ -10,16 +10,16 @@
 stdenv.mkDerivation rec {
 
   pname = "wayfire";
-  version = "0.8.0";
+  version = "0.7.x";
   src = fetchgit {
     url = "https://gitee.com/github-10784632_admin_admin/${pname}.git";
-    rev = "dceeb5f1775aec4ef59edb28ec3a2da93c7585fa";
-    sha256 = "sha256-Kt4FDvhowF4+wm/wblMuAIZtKonzrAjj90KlAXzDfSw=";
+    rev = "1e9092b5ffe878d1cdecefa1997de4a665cf6212";
+    # sha256 = "sha256-Kt4FDvhowF4+wm/wblMuAIZtKonzrAjj90KlAXzDfSw=";
 /*
     owner = "WayfireWM";
     repo = "${pname}";
-    rev = "6308d6ddecdda2cc62b488ef6b26a407960bd1fe";
-    sha256 = "sha256-n++wu5bToYwdMenPUo/w3O7FvHCUQ6GuBy/HBVPvmkE=";
+    rev = "dceeb5f1775aec4ef59edb28ec3a2da93c7585fa";
+    sha256 = "sha256-Kt4FDvhowF4+wm/wblMuAIZtKonzrAjj90KlAXzDfSw=";
     */
     fetchSubmodules = true;
 

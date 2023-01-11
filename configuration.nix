@@ -181,8 +181,10 @@
      ];
   */
   services.udisks2.enable = true;
+  # services.gnome.tracker-miners.enable = true;
+  # services.gnome.tracker.enable = true;
   services.emacs = {
-    install = false;
+    install = true;
     package = pkgs.emacsPgtk;
   };
 
@@ -242,7 +244,7 @@
     # QT_QPA_PLATFORM = "xcb";
     # Steam needs this to find Proton-GE
     STEAM_EXTRA_COMPAT_TOOLS_PATHS = "\${HOME}/.steam/root/compatibilitytools.d";
-    /*
+  
     XDG_CACHE_HOME  = "\${HOME}/.cache";
     XDG_CONFIG_HOME = "\${HOME}/.config";
     XDG_BIN_HOME    = "\${HOME}/.local/bin";
@@ -251,14 +253,14 @@
     PATH = [ 
       "\${XDG_BIN_HOME}"
     ];
-    */
+
   };
 
   nixpkgs.overlays = [
     (import ./nixpkgs-overlays)
-    /* (import (builtins.fetchTarball {
+    (import (builtins.fetchTarball {
       url = https://github.com/nix-community/emacs-overlay/archive/master.tar.gz;
-    })) */
+    }))
   ];
 
 
@@ -347,14 +349,9 @@
     #  vim风格 epub pdf 阅读器
     # foliate epub阅读器
     # vlc blender  分别为视频和3d建模软件
-    # oni2  masterpdfeditor
     # krita  xournalpp
-    # v2ray #github 手工维护 qv2ray
     #   yakuake # kde 桌面
     # mu isync msmtp w3m appimage-run  
-    # charles # Web Debugging Proxy
-    # digikam gimp inkscape synfigstudio natron scribus 不好使，删 edraw photoflare
-    
     
     # opencv
     convmv # Converts filenames from one encoding to another
@@ -383,7 +380,7 @@
     wayfire
     wcm
     wl-clipboard # Command-line copy/paste utilities for Wayland
-    udiskie # Removable disk automounter for udisks
+    # udiskie # Removable disk automounter for udisks
     # ranger
     # tmux # Terminal multiplexer
     # i3status-rust # Very resource-friendly and feature-rich replacement for i3status

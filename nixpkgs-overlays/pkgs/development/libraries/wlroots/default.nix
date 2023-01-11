@@ -123,7 +123,7 @@ rec {
   };
 
   wlroots_0_16 = generic {
-    version = "0911a41f17df2f684c383923772994a3807ce416"; # 0.16.0
+    version = "0911a41f17df2f684c383923772994a3807ce416"; # 0.16.1
     hash = "sha256-UyPN7zmytre4emwx/ztZ4JefXHwixPV6UEEqnhSLbIY=";
     extraBuildInputs = [ vulkan-loader ];
     extraNativeBuildInputs = [ glslang ];
