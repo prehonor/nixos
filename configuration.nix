@@ -183,10 +183,11 @@
   services.udisks2.enable = true;
   # services.gnome.tracker-miners.enable = true;
   # services.gnome.tracker.enable = true;
+  /*
   services.emacs = {
     install = true;
     package = pkgs.emacsPgtk;
-  };
+  }; */
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
@@ -258,9 +259,10 @@
 
   nixpkgs.overlays = [
     (import ./nixpkgs-overlays)
+    /*
     (import (builtins.fetchTarball {
       url = https://github.com/nix-community/emacs-overlay/archive/master.tar.gz;
-    }))
+    })) */
   ];
 
 
@@ -273,7 +275,7 @@
     libxfs.bin # SGI XFS utilities
     virt-manager # Desktop user interface for managing virtual machines
     # 已经由option启用 qemu # A generic and open source machine emulator and virtualizer
-    # finger_bsd # means ? bsd-finger # User information lookup program
+    # bsd-finger # User information lookup program
     pciutils # A collection of programs for inspecting and manipulating configuration of PCI devices
     libva-utils # A collection of utilities and examples for VA-API
     # vdpauinfo # Tool to query the Video Decode and Presentation API for Unix (VDPAU) abilities of the system # for NVIDIA
@@ -431,6 +433,8 @@
       };
     };
   };
+ services.resolved.enable = false;
+  # services.dnsmasq.enable = true;
   services.postgresql = {
     enable = true;
     package = pkgs.postgresql_15;
@@ -521,7 +525,8 @@
     dhcpcd.enable = false;
     useDHCP = false;
     # interfaces.enp4s0.useDHCP = true;
-    nameservers = [ "::1" "127.0.0.1" ];
+    nameservers = [ "127.0.0.1" "::1"];
+    resolvconf.enable = pkgs.lib.mkForce false;
     # resolvconf.useLocalResolver = true;
     # If using dhcpcd:
     # dhcpcd.extraConfig = "nohook resolv.conf";
@@ -666,19 +671,7 @@
     }];
     shell = pkgs.zsh;
   };
-/*
-  services.tor = {
-      enable = true;
-        settings = {
-        UseBridges = true;
-        ClientTransportPlugin = "obfs4 exec ${pkgs.obfs4}/bin/obfs4proxy";
-        Bridge = "obfs4 217.103.30.38:12974 0E3139C6F423462FBAE609DF13A5149F03C09252 cert=+eCUL7ZjA+IAkMBtK2+FGhvYeqGwOwxuKCCVT+8sxZwlfhyXYJMmlygd+OKRMHLmCmZ+Kg iat-mode=0";
-        Socks5Proxy = "127.0.0.1:1080";
-      };
-      
-      client.enable = true;
-  };
-  */
+
   # services.netdata.enable = true; # kde 环境
   /* services.samba = {
        enable = true;
@@ -773,7 +766,26 @@
          log-facility=/var/log/dnsmasq.log
          conf-dir=/etc/nixos/dnsmasq.d/,*.conf
        '';
-    */
+    
+    "dnsmasq.conf".text =  ''
+         domain-needed
+         bogus-priv
+         strict-order
+         dnssec #为nixos新加的，不知道效果如何
+         trust-anchor=.,19036,8,2,49AAC11D7B6F6446702E54A1607371607A1A41855200FD2CE1CDDE32F24E8FB5
+         trust-anchor=.,20326,8,2,E06D44B80B8F1D39A95C0B0D7C65D08458E880409BBC683457104237C7F8EC8D
+         dnssec-check-unsigned #同上
+         no-resolv
+         no-poll
+         server=::1#5658
+         server=127.0.0.1#5658
+         interface=enp4s0
+         listen-address=::1,127.0.0.1
+         cache-size=966
+         log-queries
+         log-facility=/var/log/dnsmasq.log     
+       '';
+       */
   };
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions

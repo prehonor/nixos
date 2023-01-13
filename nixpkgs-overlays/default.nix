@@ -51,11 +51,11 @@ in rec {
 
     wlr-protocols = super.callPackage ./pkgs/development/libraries/wlroots/protocols.nix { };
 
-    inherit (super.callPackages ./pkgs/development/libraries/wlroots {}) wlroots_0_16;
+    inherit (super.callPackages ./pkgs/development/libraries/wlroots {}) wlroots;
  
     wf-config = super.callPackage ./pkgs/applications/window-managers/wayfire/wf-config.nix { };
     
-    wayfireApplications = wayfireApplications-unwrapped.withPlugins (plugins: [ plugins.wf-shell plugins.wf-info plugins.wayfire-plugins-extra ]); 
+    wayfireApplications = wayfireApplications-unwrapped.withPlugins (plugins: [ plugins.wf-shell plugins.wayfire-plugins-extra ]); # plugins.wf-info 
     inherit (wayfireApplications) wayfire wcm ;
     wayfireApplications-unwrapped = super.recurseIntoAttrs (
         super.callPackage ./pkgs/applications/window-managers/wayfire/applications.nix { }

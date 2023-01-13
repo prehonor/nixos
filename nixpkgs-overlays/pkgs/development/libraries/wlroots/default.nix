@@ -122,8 +122,8 @@ rec {
     extraNativeBuildInputs = [ glslang ];
   };
 
-  wlroots_0_16 = generic {
-    version = "0911a41f17df2f684c383923772994a3807ce416"; # 0.16.1
+  wlroots_0_16_1 = generic {
+    version = "0911a41f17df2f684c383923772994a3807ce416"; # 0.16.1 
     hash = "sha256-UyPN7zmytre4emwx/ztZ4JefXHwixPV6UEEqnhSLbIY=";
     extraBuildInputs = [ vulkan-loader ];
     extraNativeBuildInputs = [ glslang ];
@@ -132,7 +132,19 @@ rec {
         --replace /usr/share/hwdata/ ${hwdata}/share/hwdata/
     '';
   };
+  
+  wlroots_0_16_2 = generic {
+    version = "ad5175118b7421e998631ea1875cc3397ff08edd"; # 0.16.2 
+    hash = "sha256-8z+Cmiq+o2ypTQjY5fhg9DKoMfRdjycA24D9CKmoEAs=";
+    extraBuildInputs = [ vulkan-loader ];
+    extraNativeBuildInputs = [ glslang ];
+    extraPatch = ''
+      substituteInPlace backend/drm/meson.build \
+        --replace /usr/share/hwdata/ ${hwdata}/share/hwdata/
+    '';
+  };
+  
 
-  wlroots = wlroots_0_16;
+  wlroots = wlroots_0_16_2;
 
 }

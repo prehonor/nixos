@@ -1,26 +1,34 @@
 { lib, stdenv, fetchgit, cmake, meson, ninja, pkg-config
-, wayland, wayland-protocols, wf-config, wlroots_0_16, mesa
+, wayland, wayland-protocols, wf-config, wlroots, mesa
 , cairo, pango, vulkan-headers, vulkan-loader, xorg, xwayland
 , doctest, libdrm, libexecinfo, libinput, libjpeg, libxkbcommon, glslang, xcbutilerrors, xcbutilwm, seatd
 , libevdev, nlohmann_json
 # , glm, freetype, pixman, libcap
 # , libuuid, libxml2, libpng
 }:
-
+let
+  source = {
+    stable = {
+      rev = "1e9092b5ffe878d1cdecefa1997de4a665cf6212";
+      sha256 = "sha256-Z+rR9pY244I3i/++XZ4ROIkq3vtzMgcxxHvJNxFD9is=";
+    };
+    master = {
+      rev = "b8b8486613b297b8fe02ce1a0439e18577cfbbea";
+      sha256 = "sha256-4Xmwn9H0l3eGKQ/ITSVfM22LBOMBrvQBL0qBmUA70AA=";
+    };
+  };
+in
 stdenv.mkDerivation rec {
 
   pname = "wayfire";
-  version = "0.7.x";
+  version = "0.7.5";
+  
+  
   src = fetchgit {
     url = "https://gitee.com/github-10784632_admin_admin/${pname}.git";
-    rev = "1e9092b5ffe878d1cdecefa1997de4a665cf6212";
-    # sha256 = "sha256-Kt4FDvhowF4+wm/wblMuAIZtKonzrAjj90KlAXzDfSw=";
-/*
-    owner = "WayfireWM";
-    repo = "${pname}";
-    rev = "dceeb5f1775aec4ef59edb28ec3a2da93c7585fa";
-    sha256 = "sha256-Kt4FDvhowF4+wm/wblMuAIZtKonzrAjj90KlAXzDfSw=";
-    */
+    
+    inherit (source.master) rev sha256;
+    
     fetchSubmodules = true;
 
   };
@@ -34,7 +42,7 @@ stdenv.mkDerivation rec {
   nativeBuildInputs = [ cmake meson ninja pkg-config wayland ];
   buildInputs = [
     cairo doctest libdrm libexecinfo libinput libjpeg libxkbcommon wayland
-    wayland-protocols wf-config wlroots_0_16 mesa pango
+    wayland-protocols wf-config wlroots mesa pango
     vulkan-headers vulkan-loader xwayland xorg.xcbutilrenderutil 
     glslang xcbutilerrors seatd xcbutilwm
     # libuuid libxml2 libpng

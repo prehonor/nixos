@@ -13,26 +13,32 @@
   pkg-config,
   stdenv,
   wf-config,
-  wlroots_0_16,
+  wlroots,
   wayfire,
   wayland,
   wayland-protocols,
 }:
-
+let
+  source = {
+    stable = {
+      rev = "b698f613763d02c30cdc642b35d6e8e98252b936";
+      sha256 = "sha256-hnsRwIrl0+pRKhRlrF/Wdlu6HkzLfYukGk4Hzx3wNeo=";
+    };
+    master = {
+      rev = "1c0d8471d1bd859cd3db478ca75609fdf214152d";
+      sha256 = "sha256-PCMWtl+kYSqsyXhM1gf4Aqao4VKqQHXYXKwVkKXmS8U=";
+    };
+  };
+in
 stdenv.mkDerivation rec {
 
   # 包含子模块，但是由于项目默认没有使用子模块所以暂时用fetchgit以备万一
   pname = "wayfire-plugins-extra";
-  version = "0.8.0";
+  version = "0.7.5";
+  
   src = fetchgit {
     url = "https://gitee.com/github-10784632_admin_admin/${pname}.git";
-    rev = "ac7b7ed57f66793695f8725939b7df93cd10a27a";
-    sha256 = "sha256-ZOkqsOvzuozsZc4EKLoVEUS8QMTIkqxbBKYb83VPSIo=";
-    /*
-    owner = "WayfireWM";
-    repo = "${pname}";
-    rev = "ac7b7ed57f66793695f8725939b7df93cd10a27a";
-    sha256 = "sha256-ZOkqsOvzuozsZc4EKLoVEUS8QMTIkqxbBKYb83VPSIo=";*/
+    inherit (source.master) rev sha256;
   };
   /* patches = [
     ./event-patch.diff
@@ -56,7 +62,7 @@ stdenv.mkDerivation rec {
     libxkbcommon
     xcbutilwm
     pango
-    wlroots_0_16
+    wlroots
     wf-config
     wayfire
     wayland
