@@ -312,9 +312,7 @@
     socat # Utility for bidirectional data transfer between two independent data channels
     wmctrl
     pavucontrol # PulseAudio Volume Control
-    
-    # aria # A lightweight, multi-protocol, multi-source, command-line download utility
-    
+  
     wget
     curl
     # wireshark  #  use nixpkgs option instead
@@ -326,8 +324,6 @@
     nmap
     john
     crunch
-
-
     # gnome-builder
     gnome.adwaita-icon-theme # Running GNOME programs outside of GNOME
 
@@ -348,14 +344,6 @@
        # gnome 桌面 end
     */
 
-    #  vim风格 epub pdf 阅读器
-    # foliate epub阅读器
-    # vlc blender  分别为视频和3d建模软件
-    # krita  xournalpp
-    #   yakuake # kde 桌面
-    # mu isync msmtp w3m appimage-run  
-    
-    # opencv
     convmv # Converts filenames from one encoding to another
     jpegoptim # Optimize JPEG files
 
@@ -595,8 +583,7 @@
   systemd.tmpfiles.rules = [
     "L+    /opt/rocm/hip   -    -    -     -    ${pkgs.hip}"
   ];
-  
-  # services.onlyoffice.enable = true;
+
 /*
   services.fstrim = {
     enable = true;
