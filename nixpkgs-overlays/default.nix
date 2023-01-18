@@ -4,36 +4,21 @@ let
    # 暂时没有临时变量 
 in rec {
    # ventoy-bin = super.callPackage ./pkgs/tools/cd-dvd/ventoy-bin { };
-    tor-browser-bundle-bin = super.tor-browser-bundle-bin.overrideAttrs (
+    peazip = super.libsForQt5.callPackage ./pkgs/tools/archivers/peazip { };
+
+    cudatext_x = super.cudatext.overrideAttrs (
       oldAttrs: rec {
-        src = super.fetchurl {
-          urls = ["https://prehonor-generic.pkg.coding.net/yigeren/pkgs/tor-browser-linux64-11.5.6_en-US.tar.xz?version=latest"];
-          sha256 = "sha256-DTMY6n7GXokOz6WSrvFUkC64Siuo1Zy80A4UDolmIME=";
-        };
-      }
-    );
-    charles = super.charles.overrideAttrs (
-      oldAttrs: rec {
-          src = super.fetchurl {
-          url = "https://prehonor-generic.pkg.coding.net/yigeren/pkgs/charles-proxy-4.6.2_amd64.tar.gz?version=latest";
-          sha256 = "0r5rann7cq665ih0pa66k52081gylk85ashrwq1khbv2jf80yy52";
-        };
-      }
-    );
-    /*
-    qv2ray_x = super.qv2ray.overrideAttrs (
-      oldAttrs: rec {
-        
+        pname = "cudatext";
+        version = "1.181.0";
         src = super.fetchFromGitHub {
-          owner = "Qv2ray";
-          repo = "Qv2ray";
-          rev = "e70ede85180a85360207ba5c8dae978e6a86ce69";
-          # sha256 = "sha256-afFTGX/zrnwq/p5p1kj+ANU4WeN7jNq3ieeW+c+GO5M=";
-          fetchSubmodules = true;
+          owner = "Alexey-T";
+          repo = "CudaText";
+          rev = version;
+          hash = "sha256-BZHH6xkz4eSrOi7dL+reJQmpx2RHyQt052+pRQA+ZxU=";
         };
-      }
-    );
-    */
+      });
+      
+    waybar = super.waybar.override {swaySupport = false;}; # ../applications/misc/waybar {};
     
     gnirehtet = super.callPackage ./pkgs/tools/networking/gnirehtet { };
     
@@ -55,7 +40,7 @@ in rec {
  
     wf-config = super.callPackage ./pkgs/applications/window-managers/wayfire/wf-config.nix { };
     
-    wayfireApplications = wayfireApplications-unwrapped.withPlugins (plugins: [ plugins.wf-shell plugins.wayfire-plugins-extra ]); # plugins.wf-info plugins.wayfire-plugin_dbus_interface
+    wayfireApplications = wayfireApplications-unwrapped.withPlugins (plugins: [ plugins.wf-shell plugins.wayfire-plugins-extra plugins.wf-info ]); # plugins.wf-info plugins.wayfire-plugin_dbus_interface
     inherit (wayfireApplications) wayfire wcm ;
     wayfireApplications-unwrapped = super.recurseIntoAttrs (
         super.callPackage ./pkgs/applications/window-managers/wayfire/applications.nix { }
@@ -127,7 +112,7 @@ in rec {
         ryxpy_v = version;
     };
     inherit (myPython python3 "python3.10") ryxpy ryxpy_v;
-    # dnsmasq = super.callPackage ./pkgs/tools/networking/dnsmasq { };
+
 /*
     python3 = super.python3.override {
         packageOverrides = final: prev: {
@@ -151,52 +136,8 @@ in rec {
         spyder
     ]);
     */
-/*
-    buck = super.buck.overrideAttrs (
-      oldAttrs: rec {
-        pname = "buck";
-        version = "2022.05.05.01";
-        src = super.fetchFromGitHub {
-            owner = "facebook";
-            repo = pname;
-            rev = "v${version}";
-            sha256 = "sha256-mASJCLxW7320MXYUUWYfaxs9AbSdltxlae8OQsPUZJc=";
-        };
-      }
-    );
-*/
-    # logseq = super.callPackage ./pkgs/applications/misc/logseq { };
-    /*
-    koreader_x = super.koreader.overrideAttrs (
-      oldAttrs: rec {
 
-        pname = "koreader";
-        version = "2022.03.1";
-
-        src = super.fetchurl {
-            url =
-                "https://github.com/koreader/koreader/releases/download/v${version}/koreader-${version}-amd64.deb";
-            sha256 = "sha256-ZoqITWPR60G4xY9InrtIY9rCWUk0PidGFZokHLWl5ps=";
-        };
-
-      }
-    );
-    */
-    /*
-    logseq = super.logseq.overrideAttrs (
-      oldAttrs: rec {
-
-        pname = "logseq";
-        version = "0.5.4";
-
-        src = super.fetchurl {
-          url = "https://github.com/logseq/logseq/releases/download/${version}/logseq-linux-x64-${version}.AppImage";
-          sha256 = "PGrx2JBYmp5vQ8jLpOfiT1T1+SNeRt0W5oHUjHNKuBE=";
-          name = "${pname}-${version}.AppImage";
-        };
-
-      }
-    );
+     /*
     unityhub = super.unityhub.overrideAttrs (
       oldAttrs: rec {
 
@@ -290,13 +231,7 @@ in rec {
     inherit (super.recurseIntoAttrs (super.callPackage ./pkgs/applications/editors/sublime/4/packages.nix { }))
     sublime4
     sublime4-dev;
-/*
-    cmake_x = super.libsForQt5.callPackage ./pkgs/development/tools/build-managers/cmake {
-        inherit (super.darwin.apple_sdk.frameworks) SystemConfiguration;
-    };
 
-*/
-    # libsForQt5_my = super.recurseIntoAttrs (super.lib.makeScope qt515_my.newScope super.mkLibsForQt5);
 
     # edraw = libsForQt5_my.callPackage ./pkgs/applications/misc/edraw {};
 

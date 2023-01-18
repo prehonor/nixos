@@ -24,9 +24,10 @@ let
       rev = "b698f613763d02c30cdc642b35d6e8e98252b936";
       sha256 = "sha256-hnsRwIrl0+pRKhRlrF/Wdlu6HkzLfYukGk4Hzx3wNeo=";
     };
-    master = {
-      rev = "1c0d8471d1bd859cd3db478ca75609fdf214152d";
-      sha256 = "sha256-PCMWtl+kYSqsyXhM1gf4Aqao4VKqQHXYXKwVkKXmS8U=";
+
+    fast = {
+      rev = "325a4109c7774df1515a907922729c2baf08c1c2";
+      sha256 = "sha256-nzNbVlrZOuL5AFwTRJs6jRvxVzUz/cDONdkYiGRRGgQ=";
     };
   };
 in
@@ -38,7 +39,7 @@ stdenv.mkDerivation rec {
   
   src = fetchgit {
     url = "https://gitee.com/github-10784632_admin_admin/${pname}.git";
-    inherit (source.master) rev sha256;
+    inherit (source.stable) rev sha256;
   };
   /* patches = [
     ./event-patch.diff

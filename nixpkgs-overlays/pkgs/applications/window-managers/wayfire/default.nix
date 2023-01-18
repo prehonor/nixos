@@ -12,10 +12,12 @@ let
       rev = "1e9092b5ffe878d1cdecefa1997de4a665cf6212";
       sha256 = "sha256-Z+rR9pY244I3i/++XZ4ROIkq3vtzMgcxxHvJNxFD9is=";
     };
-    master = {
-      rev = "b8b8486613b297b8fe02ce1a0439e18577cfbbea";
-      sha256 = "sha256-4Xmwn9H0l3eGKQ/ITSVfM22LBOMBrvQBL0qBmUA70AA=";
+
+    fast = {
+      rev = "c566170b67cd6c1080fbe1938b69ea6d4736a17d";
+      sha256 = "sha256-h3AHtpH/UUrS+ie9vJ/fYcmtkEnyPjC7BcrVdOobitU=";
     };
+
   };
 in
 stdenv.mkDerivation rec {
@@ -27,7 +29,7 @@ stdenv.mkDerivation rec {
   src = fetchgit {
     url = "https://gitee.com/github-10784632_admin_admin/${pname}.git";
     
-    inherit (source.master) rev sha256;
+    inherit (source.stable) rev sha256;
     
     fetchSubmodules = true;
 

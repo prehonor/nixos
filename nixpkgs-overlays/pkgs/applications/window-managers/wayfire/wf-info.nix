@@ -8,8 +8,8 @@ let
       sha256 = "sha256-JOqKS4PXLGw1QHtQHALznxxHTMCAN7b1Fq3MBM0GSw8=";
     };
     master = {
-      rev = "8247cd209ce5ad821b399841ea7adc993f929f79";
-      sha256 = "sha256-4NRsoUUUyPIJ983U+nnDqZQ5X8Yv46ksv+GjZhsxqVg=";
+      rev = "b63b4dde6f2930e567401d34538b79d514c676b5";
+      sha256 = "sha256-58/ZdrPZCUhTGRZvTOXSS/pslf+Mj7ajdaiCDScZxcU=";
     };
   };
 in
@@ -20,7 +20,7 @@ stdenv.mkDerivation rec {
 
   src = fetchgit {
     url = "https://gitee.com/github-10784632_admin_admin/${pname}.git";
-    inherit (source.master) rev sha256;
+    inherit (source.stable) rev sha256;
   };
 
   nativeBuildInputs = [ meson ninja pkg-config cmake wayland ];

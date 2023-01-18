@@ -20,7 +20,7 @@ stdenv.mkDerivation rec {
 
   src = fetchgit { 
     url = "https://gitee.com/github-10784632_admin_admin/${pname}.git";
-    inherit (source.master) rev sha256;
+    inherit (source.stable) rev sha256;
 
     fetchSubmodules = true;
   };
