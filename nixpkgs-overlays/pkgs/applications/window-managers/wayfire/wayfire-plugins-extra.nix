@@ -26,7 +26,7 @@ let
     };
 
     fast = {
-      rev = "325a4109c7774df1515a907922729c2baf08c1c2";
+      rev = "69c3414b07818a6dc655e35ef025681c80e9027f";
       sha256 = "sha256-nzNbVlrZOuL5AFwTRJs6jRvxVzUz/cDONdkYiGRRGgQ=";
     };
   };

@@ -131,13 +131,15 @@ in
       wqy_microhei
       wqy_zenhei
       fantasque-sans-mono # A font family with a great monospaced variant for programmers
+      jetbrains-mono
       iosevka # Slender monospace sans-serif and slab-serif typeface inspired by Pragmata Pro, M+ and PF DIN Mono, designed to be the ideal font for programming
       fira-code # Monospace font with programming ligatures
       fira-code-symbols # FiraCode unicode ligature glyphs in private use area
       # (nerdfonts.override { fonts = [ "FiraCode" "DroidSansMono" ]; })
       symbola # Basic Latin, Greek, Cyrillic and many Symbol blocks of Unicode
+      
       # roboto # need for sddm
-      # ttf-wps-fonts
+      # ttf-wps-fonts # 安装到home下
     ];
     /* fontconfig = {
          defaultFonts = {
@@ -410,7 +412,7 @@ in
     
     # mpvpaper
     # xfce.thunar xfce.thunar-archive-plugin 
-    waybar # waylandPkgs.swaybg wl-clipboard
+    # waybar # waylandPkgs.swaybg wl-clipboard
   ];
 
   services.greetd = {
