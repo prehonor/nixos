@@ -4,11 +4,13 @@
 let
   source = {
     stable = {
+      version = "0.7.5";
       rev = "5a82f0a0c76c7878f8a5e78dd02dc563202547a0";
       sha256 = "sha256-ZImg1oQ2ly6ExaJ+sK1BPUzmhj7sy5cGRVjNszFXYMs=";
     };
     master = {
-      rev = "5a82f0a0c76c7878f8a5e78dd02dc563202547a0";
+      version = "0.8.0";
+      rev = "09511f10020c9d7ea5a50d1dd2927c6669595a9c";
       sha256 = "sha256-ZImg1oQ2ly6ExaJ+sK1BPUzmhj7sy5cGRVjNszFXYMs=";
     };
   };
@@ -16,7 +18,7 @@ in
 stdenv.mkDerivation rec {
 
   pname = "wcm";
-  version = "0.7.5";
+  inherit (source.stable) version;
   
   src = fetchgit {
     url = "https://gitee.com/github-10784632_admin_admin/${pname}.git";

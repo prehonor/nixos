@@ -141,8 +141,8 @@ rec {
   };
   
   wlroots_0_16 = generic {
-    version = "9c7db7124edea044a89c5872742f8bd09adb1140"; # 0.16 
-    hash = "sha256-bYCSXRSAtVMOfJQ44uwC2gqlfjDcetI7X1bbVzrRZzU=";
+    version = "0a32b5a74db06a27bee55a47205951bb277a9657"; # 0.16 与最新0.16.2一致
+    hash = "sha256-qggEM/QFHXCM9Fxc806z4wLc6Nl/IL4JRZR7Y3mJo7Q=";
     extraBuildInputs = [ vulkan-loader ];
     extraNativeBuildInputs = [ glslang ];
     extraPatch = ''
@@ -151,6 +151,6 @@ rec {
     '';
   };
   
-  wlroots = wlroots_0_16_0;
+  wlroots = wlroots_0_16;
 
 }

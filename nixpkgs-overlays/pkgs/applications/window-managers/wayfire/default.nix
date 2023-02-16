@@ -9,13 +9,15 @@
 let
   source = {
     stable = {
+      version = "0.7.5";
       rev = "1e9092b5ffe878d1cdecefa1997de4a665cf6212";
       sha256 = "sha256-Z+rR9pY244I3i/++XZ4ROIkq3vtzMgcxxHvJNxFD9is=";
     };
 
-    fast = {
-      rev = "3711f658e539ce4f50a1e5f5219ae7922f0e8fe4";
-      sha256 = "sha256-h3AHtpH/UUrS+ie9vJ/fYcmtkEnyPjC7BcrVdOobitU=";
+    master = {
+      version = "0.8.0";
+      rev = "a1f575701ab3ba41006a38c0a01f39d31fdf2dbb";
+      sha256 = "sha256-GfvtD1UEHTcYRH5/E7mtL7g3253PsPQbxuQOP9lbejU";
     };
 
   };
@@ -23,7 +25,7 @@ in
 stdenv.mkDerivation rec {
 
   pname = "wayfire";
-  version = "0.7.5";
+  inherit (source.stable) version;
   
   
   src = fetchgit {

@@ -2,8 +2,13 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, options, lib , nixpkgs_flake , ... }: # hyprland ,
+{ config, pkgs, options, lib, nixpkgs_flake, ... }: # hyprland ,
 let
+  # GeForce GTX 750
+  gpuIDs = [
+    "10de:1381" # Graphics
+    "10de:0fbc" # Audio
+  ];
   my_overlays = [
     (import ./nixpkgs-overlays)
     /*
@@ -33,8 +38,8 @@ in
   boot.loader.systemd-boot.enable = true;
   boot.loader.systemd-boot.consoleMode = "max";
   boot.initrd.kernelModules = [ 
-    "amdgpu" # amd
     "vfio" "vfio_iommu_type1" "vfio_pci" "vfio_virqfd"  # These modules are required for PCI passthrough, and must come before early modesetting stuff
+    "amdgpu" # amd
   ];
 
   # CHANGE: Don't forget to put your own PCI IDs here
@@ -44,7 +49,7 @@ in
     /*** CHANGE: intel_iommu enables iommu for intel CPUs with VT-d
          use amd_iommu if you have an AMD CPU with AMD-Vi  ***/
     "amd_iommu=on" # use intel_iommu if you have an intel CPU with VT-d
-  ];
+  ] ++ [("vfio-pci.ids=" + lib.concatStringsSep "," gpuIDs)];
   
 
   fileSystems = {
@@ -52,34 +57,26 @@ in
     "/".options = [ "compress=zstd" "discard=async" ];
     "/home".options = [ "compress=zstd" ];
     "/nix".options = [ "compress=zstd" "noatime" ];
-    
+
     "/data" = {
-      device = "/dev/disk/by-uuid/59d5170a-62e5-48fe-af65-fa57e69bb507";
+      device = "/dev/disk/by-uuid/3e04a537-342d-41ff-a971-937c82043002";
       fsType = "xfs";
       options = [ "discard" ];
     };
-    "/gh" = {
-      device = "/dev/disk/by-uuid/2e8a3786-0be3-4ab7-9733-8ccbcefeb358";
+    "/space" = {
+      device = "/dev/disk/by-uuid/16a190b8-8752-4f0c-83b5-468c017da6cf";
       fsType = "ext4";
     };
-    "/ah" = {
-      device = "/dev/disk/by-uuid/7e25d235-3d5c-4714-8cd8-24b53f01f0e7";
+    "/var" = {
+      device = "/dev/disk/by-uuid/2eab9381-a119-4adc-9c67-705062e115d6";
       fsType = "ext4";
     };
-    "/nh" = {
-      device = "/dev/disk/by-uuid/d58ea7fa-2ca4-4602-b94b-b57d512137cd";
+    "/opt" = {
+      device = "/dev/disk/by-uuid/1fd93a19-b077-49c2-87e1-3c04cb7d76dd";
       fsType = "ext4";
     };
 
   };
-
-  # networking.wireless.enable = true;  # Enables wireless support via wpa_supplican
-
-  # The global useDHCP flag is deprecated, therefore explicitly set to false here.
-  # Per-interface useDHCP will be mandatory in the future, so this generated config
-  # replicates the default behaviour.
-  # networking.useDHCP = false;
-  # networking.interfaces.enp4s0.useDHCP = true;
 
   /* systemd = {
        timers.simple-timer = {
@@ -189,7 +186,7 @@ in
      ];
   */
   services.udisks2.enable = true;
-  security.pam.services.swaylock = {};
+  security.pam.services.swaylock = {}; # 保证锁屏
   # services.gnome.tracker-miners.enable = true;
   # services.gnome.tracker.enable = true;
 
@@ -201,6 +198,9 @@ in
         "steam-original"
         "steam-runtime"
       ];
+      permittedInsecurePackages = [
+        "qtwebkit-5.212.0-alpha4"
+      ];
       /* packageOverrides = pkgs: {
         vaapiIntel = pkgs.vaapiIntel.override { enableHybridCodec = true; };
       }; */
@@ -211,8 +211,8 @@ in
   nix = {
   
     nixPath = options.nix.nixPath.default
-    ++ [ addNixPath4NixTools ];  # 非flake模式，home下 nix tools 可以找到系统范围的overlays
-    # sandboxPaths = [ "/ah" "/gh" "/home" ];
+     ++ [ addNixPath4NixTools ];  # 非flake模式，home下 nix tools 可以找到系统范围的overlays
+    # sandboxPaths = [ "/home" ];
     settings = {
       sandbox = true;
       nix-path = options.nix.nixPath.default ++ [ "nixpkgs=${nixpkgs_flake}" addNixPath4NixTools ];  # flake模式，home下 nix tools 可以找到系统范围的overlays
@@ -260,7 +260,7 @@ in
         # vaapiVdpau     # nvidia
         # libvdpau-va-gl # nvidia
       ];
-      extraPackages32 = with pkgs.pkgsi686Linux; [
+      extraPackages32 = with pkgs; [
         # libva # intel 核显得api
         driversi686Linux.amdvlk  # amd
         # vaapiIntel # LIBVA_DRIVER_NAME=i965 (older but works better for Firefox/Chromium)
@@ -301,6 +301,7 @@ in
 
   environment.systemPackages = with pkgs; [
     sudo
+    git
     parted
     libxfs.bin # SGI XFS utilities
     virt-manager # Desktop user interface for managing virtual machines
@@ -386,7 +387,6 @@ in
 
     # haskellPackages.ghcup # 使用 curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh 安装
     # boost_x.dev
-    # libmysqlclient_315
 
     # wofi # A launcher/menu program for wlroots based wayland compositors such as sway
     ulauncher # A fast application launcher for Linux, written in Python, using GTK
@@ -436,7 +436,7 @@ in
   services.dbus.packages = with pkgs;
     [ gnome2.GConf ]; # Running ancient gnome applications
   services.mysql = {
-    enable = true;
+    enable = false;
     package = pkgs.mysql80;
     user = "prehonor"; # 这里不能设置root 或mysql
     group = "users";
@@ -474,9 +474,10 @@ in
         nvram = [ "${pkgs.OVMF}/FV/OVMF.fd:${pkgs.OVMF}/FV/OVMF_VARS.fd" ]
       '';
     };
+    spiceUSBRedirection.enable = true;
     /**************** waydroid ***************/
     waydroid.enable = true; 
-    lxd.enable = true;
+    # lxd.enable = true;
     /*****************************************/
     # anbox.enable = true;
   };
@@ -514,8 +515,8 @@ in
     };
     dhcpcd.enable = false;
     useDHCP = false;
-    # interfaces.enp4s0.useDHCP = true;
-    nameservers = [ "127.0.0.1" "::1"];
+    # interfaces.enp5s0.useDHCP = true;
+    # nameservers = [ "127.0.0.1" "::1"];
     resolvconf.enable = pkgs.lib.mkForce false;
     # resolvconf.useLocalResolver = true;
     # If using dhcpcd:
@@ -523,9 +524,11 @@ in
 
     firewall = {
       enable = true; # 默认值为true 不用设置，这里仅做提醒
-      allowedTCPPorts = [ 1716 ];
-      allowedUDPPorts = [ 1716 ];
+      trustedInterfaces = [ "virbr0" ];
+      allowedTCPPorts = [ 1716 5357 ];
+      allowedUDPPorts = [ 1716 3702 ];
     };
+    
   };
 
   services.dnscrypt-proxy2 = {
@@ -660,48 +663,39 @@ in
     }];
     shell = pkgs.zsh;
   };
+  services.gvfs.enable = true;
 
-  # services.netdata.enable = true; # kde 环境
-  /* services.samba = {
-       enable = true;
-       enableNmbd = false;
-       securityType = "user";
-       extraConfig = ''
-         workgroup = WORKGROUP
-         server string = smbnix
-         netbios name = smbnix
-         security = user
-         #use sendfile = yes
-         #max protocol = smb2
-         hosts allow = 192.168.0  localhost
-         hosts deny = 0.0.0.0/0
-         guest account = nobody
-         map to guest = bad user
-       '';
-       shares = {
-         public = {
-           path = "/mnt/Shares/Public";
-           browseable = "yes";
-           "read only" = "no";
-           "guest ok" = "yes";
-           "create mask" = "0644";
-           "directory mask" = "0755";
-           "force user" = "prehonor";
-            "force group" = "samba";
-         };
-         private = {
-           path = "/mnt/Shares/Private";
-           browseable = "yes";
-           "read only" = "no";
-           "guest ok" = "no";
-           "create mask" = "0644";
-           "directory mask" = "0755";
-           "force user" = "prehonor";
-           "force group" = "samba";
-         };
-       };
-     };
-  */
+  services.samba-wsdd.enable = true;
+  services.samba = {
+    enable = true;
+    securityType = "user";
+    extraConfig = ''
+      workgroup = WORKGROUP
+      server string = smbnix
+      netbios name = smbnix
+      security = user 
+      #use sendfile = yes
+      #max protocol = smb2
+      # note: localhost is the ipv6 localhost ::1
+      hosts allow = 192.168.0. 127.0.0.1 localhost
+      hosts deny = 0.0.0.0/0
+      guest account = nobody
+      map to guest = bad user
+    '';
+    shares = {
+      public = {
+        path = "/space/download";
+        browseable = "yes";
+        "read only" = "no";
+        "guest ok" = "yes";
+        "create mask" = "0644";
+        "directory mask" = "0755";
+        "force user" = "prehonor";
+        "force group" = "users";
+      };
+    };
+  };
+  
   environment.etc = {
     "containers/policy.json" = {
       mode = "0644";
@@ -748,7 +742,7 @@ in
          no-poll
          server=::1#5658
          server=127.0.0.1#5658
-         interface=enp4s0
+         interface=enp5s0
          listen-address=::1,127.0.0.1
          cache-size=966
          log-queries
@@ -768,7 +762,7 @@ in
          no-poll
          server=::1#5658
          server=127.0.0.1#5658
-         interface=enp4s0
+         interface=enp5s0
          listen-address=::1,127.0.0.1
          cache-size=966
          log-queries
@@ -776,12 +770,7 @@ in
        '';
        */
   };
-  # This value determines the NixOS release from which the default
-  # settings for stateful data, like file locations and database versions
-  # on your system were taken. It‘s perfectly fine and recommended to leave
-  # this value at the release version of the first install of this system.
-  # Before changing this value read the documentation for this option
-  # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
+
   system.stateVersion = "22.11";
 
 }

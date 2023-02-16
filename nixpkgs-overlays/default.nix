@@ -20,7 +20,7 @@ in rec {
       
     waybar = super.waybar.override {swaySupport = false;}; # ../applications/misc/waybar {};
     
-    gnirehtet = super.callPackage ./pkgs/tools/networking/gnirehtet { };
+    gnirehtet_x = super.callPackage ./pkgs/tools/networking/gnirehtet { };
     
     llvm_x = super.llvmPackages_latest.llvm;
     libclang_x = super.llvmPackages_latest.libclang;
@@ -277,14 +277,11 @@ in rec {
     inherit (atomPackages) atom atom-beta;
 */
 
-	
-/*
-    androidStudioPackages = super.recurseIntoAttrs
+    androidStudioPackages_x = super.recurseIntoAttrs
       (super.callPackage ./pkgs/applications/editors/android-studio {
         buildFHSUserEnv = super.buildFHSUserEnvBubblewrap;
       });
-    android-studio = androidStudioPackages.stable;
- */
+    android-studio = androidStudioPackages_x.stable;
 
 
     # dotnetCorePackages = super.recurseIntoAttrs (super.callPackage ./pkgs/development/compilers/dotnet {});

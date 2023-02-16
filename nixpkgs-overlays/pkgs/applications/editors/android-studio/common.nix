@@ -6,6 +6,7 @@
 , cacert
 , coreutils
 , dbus
+, e2fsprogs
 , expat
 , fetchurl
 , findutils
@@ -46,16 +47,20 @@
 , stdenv
 , systemd
 , unzip
+, usbutils
 , which
 , runCommand
 , xkeyboard_config
 , zlib
 , makeDesktopItem
+, tiling_wm # if we are using a tiling wm, need to set _JAVA_AWT_WM_NONREPARENTING in wrapper
+, jdk ? jetbrains.jdk
 }:
 
 let
   drvName = "android-studio-${channel}-${version}";
   filename = "android-studio-${version}-linux.tar.gz";
+  jdk=${jdk.home}
 
   androidStudio = stdenv.mkDerivation {
     name = "${drvName}-unwrapped";
@@ -76,9 +81,10 @@ let
     installPhase = ''
       cp -r . $out
       wrapProgram $out/bin/studio.sh \
-        --set-default JAVA_HOME "$out/jre" \
+        --set-default JAVA_HOME "$jdk" \
         --set ANDROID_EMULATOR_USE_SYSTEM_LIBS 1 \
         --set QT_XKB_CONFIG_ROOT "${xkeyboard_config}/share/X11/xkb" \
+        ${lib.optionalString tiling_wm "--set _JAVA_AWT_WM_NONREPARENTING 1"} \
         --set FONTCONFIG_FILE ${fontsConf} \
         --prefix PATH : "${lib.makeBinPath [
           # Checked in studio.sh
@@ -98,6 +104,7 @@ let
           # Runtime stuff
           git
           ps
+          usbutils
         ]}" \
         --prefix LD_LIBRARY_PATH : "${lib.makeLibraryPath [
           # Crash at startup without these
@@ -107,6 +114,8 @@ let
           libXi
           libXrender
           libXtst
+          # No crash, but attempted to load at startup
+          e2fsprogs
           # Gradle wants libstdc++.so.6
           stdenv.cc.cc.lib
           # mksdcard wants 32 bit libstdc++.so.6
@@ -147,14 +156,14 @@ let
   };
 
   desktopItem = makeDesktopItem {
-    name = drvName;
+    name = pname;
     exec = pname;
-    icon = drvName;
+    icon = pname;
     desktopName = "Android Studio (${channel} channel)";
     comment = "The official Android IDE";
-    categories = "Development;IDE;";
-    startupNotify = "true";
-    extraEntries="StartupWMClass=jetbrains-studio";
+    categories = [ "Development" "IDE" ];
+    startupNotify = true;
+    startupWMClass = "jetbrains-studio";
   };
 
   # Android Studio downloads prebuilt binaries as part of the SDK. These tools
@@ -178,7 +187,7 @@ in runCommand
   {
     startScript = ''
       #!${bash}/bin/bash
-      ${fhsEnv}/bin/${drvName}-fhs-env ${androidStudio}/bin/studio.sh
+      ${fhsEnv}/bin/${drvName}-fhs-env ${androidStudio}/bin/studio.sh "$@"
     '';
     preferLocalBuild = true;
     allowSubstitutes = false;
@@ -204,9 +213,9 @@ in runCommand
       # source-code itself).
       platforms = [ "x86_64-linux" ];
       maintainers = with maintainers; rec {
-        stable = [ meutraa fabianhjr ];
-        beta = [ meutraa fabianhjr ];
-        canary = [ meutraa fabianhjr ];
+        stable = [ alapshin ];
+        beta = [ alapshin ];
+        canary = [ alapshin ];
         dev = canary;
       }."${channel}";
     };
@@ -215,6 +224,6 @@ in runCommand
     mkdir -p $out/{bin,share/pixmaps}
     echo -n "$startScript" > $out/bin/${pname}
     chmod +x $out/bin/${pname}
-    ln -s ${androidStudio}/bin/studio.png $out/share/pixmaps/${drvName}.png
+    ln -s ${androidStudio}/bin/studio.png $out/share/pixmaps/${pname}.png
     ln -s ${desktopItem}/share/applications $out/share/applications
   ''

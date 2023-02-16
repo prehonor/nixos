@@ -4,10 +4,12 @@
 let
   source = {
     stable = {
+      version = "0.7.0";
       rev = "022800f180b1e6adfd4824c770ea9fd94ea4b5bf";
       sha256 = "sha256-JOqKS4PXLGw1QHtQHALznxxHTMCAN7b1Fq3MBM0GSw8=";
     };
     master = {
+      version = "0.8.0";
       rev = "b63b4dde6f2930e567401d34538b79d514c676b5";
       sha256 = "sha256-58/ZdrPZCUhTGRZvTOXSS/pslf+Mj7ajdaiCDScZxcU=";
     };
@@ -16,7 +18,7 @@ in
 stdenv.mkDerivation rec {
 
   pname = "wf-info";
-  version = "0.7.0";
+  inherit (source.stable) version;
 
   src = fetchgit {
     url = "https://gitee.com/github-10784632_admin_admin/${pname}.git";
